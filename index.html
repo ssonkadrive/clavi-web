@@ -78,10 +78,8 @@
     .chip[data-industry="music"] input:checked+.chip-face{background:linear-gradient(135deg,#ffb088,#ff7eb3)}
     .chip[data-industry="art"] input:checked+.chip-face{background:linear-gradient(135deg,#5dd9c1,#6b8cff)}
     .chip[data-industry="general"] input:checked+.chip-face{background:linear-gradient(135deg,#8892b0,#5b6cff)}
-    
     .special-panel{background:linear-gradient(180deg,#fafbff 0%,#f6f8ff 100%);border:1.5px solid rgba(91,108,255,0.25);border-radius:var(--radius-sm);padding:14px;min-height:100px;background-color:var(--primary-soft);transition:opacity .25s ease,transform .25s ease}
     .special-panel.is-fading{opacity:0;transform:translateY(6px);pointer-events:none}
-    
     .special-grid{display:grid;grid-template-columns:repeat(2, 1fr) !important;gap:8px}
     .check-item{position:relative;cursor:pointer}
     .check-item input{position:absolute;opacity:0;width:0;height:0}
@@ -89,10 +87,8 @@
     .check-item .check-box{width:18px;height:18px;border:2px solid #c8cfe0;border-radius:5px;flex-shrink:0;display:grid;place-items:center;margin-top:1px;transition:all .2s;font-size:.65rem;color:transparent}
     .check-item input:checked+.check-face{border-color:var(--primary);background:#fff;box-shadow:0 4px 10px rgba(91,108,255,0.06)}
     .check-item input:checked+.check-face .check-box{background:var(--primary);border-color:var(--primary);color:#fff}
-    
     .check-item .check-text strong{display:block;font-size:.85rem;font-weight:400;margin-bottom:1px;color:var(--text);letter-spacing:-0.01em}
     .check-item .check-text span{display:block;font-size:.73rem;color:var(--text-muted);line-height:1.25}
-    
     .pay-type-group{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
     @media (max-width:520px){
       .pay-type-group{grid-template-columns:1fr}
@@ -133,17 +129,12 @@
 
     <form id="applyForm" novalidate>
       <div class="form-stack">
-
         <section class="card">
           <h2 class="card-title">🛡 학원 및 사업자 인증</h2>
           <p class="card-desc">안전하고 신뢰도 높은 강사 매칭을 위해 학원 정보를 인증해 주세요.</p>
           <div class="verify-grid">
-            <button type="button" class="verify-btn edu" id="btnEduVerify">
-              <span>💬</span> 카카오 사업자 정식 실시간 인증하기
-            </button>
-            <button type="button" class="verify-btn screening" id="btnScreening">
-              <span>🔒</span> 학원 설립·운영 등록증 정보 조회 동의하기
-            </button>
+            <button type="button" class="verify-btn edu" id="btnEduVerify"><span>💬</span> 카카오 사업자 정식 실시간 인증하기</button>
+            <button type="button" class="verify-btn screening" id="btnScreening"><span>🔒</span> 학원 설립·운영 등록증 정보 조회 동의하기</button>
           </div>
           <div class="verify-status" id="verifyStatus"></div>
         </section>
@@ -167,33 +158,15 @@
         <section class="card">
           <h2 class="card-title">👤 공고 기본 정보</h2>
           <p class="card-desc">강사님들이 학원과 모집 요강을 정확히 파악할 수 있게 적어주세요.</p>
-          <div class="field">
-            <label class="section-label" for="name">학원명<span class="required">*</span></label>
-            <input type="text" id="name" name="name" placeholder="예) 클라비 액터스 학원" required />
-          </div>
-          <div class="field">
-            <label class="section-label" for="intro">공고 제목<span class="required">*</span></label>
-            <textarea id="intro" name="intro" placeholder="예) 주말 입시반 및 매체연기 담당 파트타임 강사님 모집합니다." required></textarea>
-          </div>
-          <div class="field">
-            <label class="section-label" for="subjects">담당 모집 과목<span class="required">*</span></label>
-            <input type="text" id="subjects" name="subjects" placeholder="예) 매체 연기, 독백 디렉팅, 뮤지컬 보컬" required />
-          </div>
+          <div class="field"><label class="section-label" for="name">학원명<span class="required">*</span></label><input type="text" id="name" name="name" placeholder="예) 클라비 액터스 학원" required /></div>
+          <div class="field"><label class="section-label" for="intro">공고 제목<span class="required">*</span></label><textarea id="intro" name="intro" placeholder="예) 주말 입시반 및 매체연기 담당 파트타임 강사님 모집합니다." required></textarea></div>
+          <div class="field"><label class="section-label" for="subjects">담당 모집 과목<span class="required">*</span></label><input type="text" id="subjects" name="subjects" placeholder="예) 매체 연기, 독백 디렉팅, 뮤지컬 보컬" required /></div>
           <div class="field">
             <label class="section-label">지급 급여 형태 (복수 제안 가능)<span class="required">*</span></label>
             <div class="pay-type-group" id="payTypeGroup" role="group" aria-label="지급 급여 형태">
-              <label class="pay-type-btn">
-                <input type="checkbox" name="payType" value="hourly" checked />
-                <div class="btn-face"><span class="icon">⏱</span><span class="label">시급</span><span class="hint">시간당</span></div>
-              </label>
-              <label class="pay-type-btn">
-                <input type="checkbox" name="payType" value="monthly" />
-                <div class="btn-face"><span class="icon">📅</span><span class="label">월급</span><span class="hint">월 고정</span></div>
-              </label>
-              <label class="pay-type-btn">
-                <input type="checkbox" name="payType" value="ratio" />
-                <div class="btn-face"><span class="icon">📊</span><span class="label">비율제</span><span class="hint">수강료 %</span></div>
-              </label>
+              <label class="pay-type-btn"><input type="checkbox" name="payType" value="hourly" checked /><div class="btn-face"><span class="icon">⏱</span><span class="label">시급</span></div></label>
+              <label class="pay-type-btn"><input type="checkbox" name="payType" value="monthly" /><div class="btn-face"><span class="icon">📅</span><span class="label">월급</span></div></label>
+              <label class="pay-type-btn"><input type="checkbox" name="payType" value="ratio" /><div class="btn-face"><span class="icon">📊</span><span class="label">비율제</span></div></label>
             </div>
             <div class="pay-amount-fields" id="payAmountFields"></div>
           </div>
@@ -201,16 +174,23 @@
 
         <div class="submit-wrap">
           <button type="submit" class="submit-btn">✨ 구인 공고 등록하고 강사 찾기</button>
-          <p class="submit-hint">등록 완료 후 CLAVI가 조건에 딱 맞는 맞춤형 매칭 강사 리스트를 추천합니다</p>
         </div>
-
       </div>
     </form>
+
+    <div style="text-align: center; margin-top: 50px;">
+      <h2>CLAVI에 로그인하세요</h2>
+      <div style="display: flex; flex-direction: column; gap: 10px; align-items: center; margin-top: 20px;">
+        <button onclick="alert('구글 로그인 준비 중!')" style="padding: 10px 20px; width: 200px; background-color: #4285F4; color: white; border: none; border-radius: 5px; cursor: pointer;">구글로 로그인</button>
+        <button onclick="alert('카카오 로그인 준비 중!')" style="padding: 10px 20px; width: 200px; background-color: #FEE500; color: black; border: none; border-radius: 5px; cursor: pointer;">카카오로 로그인</button>
+        <button onclick="alert('네이버 로그인 준비 중!')" style="padding: 10px 20px; width: 200px; background-color: #03C75A; color: white; border: none; border-radius: 5px; cursor: pointer;">네이버로 로그인</button>
+      </div>
+    </div>
   </div>
+
   <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
   <script>
-    // 강사 페이지와 동일한 체크 형태를 가지되 원장 관점의 우대 조건 문구로 세련되게 세팅
     const SPECIAL_SKILLS = {
       acting: [
         { id: "media_acting", label: "매체 연기 / 오디션", desc: "카메라 연기 및 독백 연출 가능자 우대" },
@@ -442,28 +422,6 @@
 
     renderSpecialSkills("acting", false);
     renderPayAmountFields();
-    <!-- 로그인 버튼 영역 -->
-<div style="text-align: center; margin-top: 50px;">
-  <h2>CLAVI에 로그인하세요</h2>
-  <div style="display: flex; flex-direction: column; gap: 10px; align-items: center;">
-    
-    <!-- 구글 로그인 -->
-    <button onclick="alert('구글 로그인 연결 준비 중!')" style="padding: 10px 20px; width: 200px; background-color: #4285F4; color: white; border: none; border-radius: 5px; cursor: pointer;">
-      구글로 로그인
-    </button>
-    
-    <!-- 카카오 로그인 -->
-    <button onclick="alert('카카오 로그인 연결 준비 중!')" style="padding: 10px 20px; width: 200px; background-color: #FEE500; color: black; border: none; border-radius: 5px; cursor: pointer;">
-      카카오로 로그인
-    </button>
-    
-    <!-- 네이버 로그인 -->
-    <button onclick="alert('네이버 로그인 연결 준비 중!')" style="padding: 10px 20px; width: 200px; background-color: #03C75A; color: white; border: none; border-radius: 5px; cursor: pointer;">
-      네이버로 로그인
-    </button>
-    
-  </div>
-</div>
   </script>
 </body>
 </html>
