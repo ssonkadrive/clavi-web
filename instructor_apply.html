@@ -1,0 +1,450 @@
+<!DOCTYPE html>
+<html lang="ko">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CLAVI · 강사 프로필 등록</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=Jua&display=swap" rel="stylesheet" />
+  <style>
+    :root {
+      --font: "Jua", sans-serif;
+      --bg: #f4f6fb;
+      --surface: #ffffff;
+      --text: #1e2433;
+      --text-muted: #6b7289;
+      --border: #e4e8f2;
+      --primary: #5b6cff;
+      --primary-soft: #eef0ff;
+      --accent: #ff7eb3;
+      --mint: #5dd9c1;
+      --mint-soft: #e8faf6;
+      --lavender-soft: #f3efff;
+      --peach-soft: #fff4ee;
+      --shadow-sm: 0 2px 8px rgba(30,36,51,0.06);
+      --shadow-md: 0 8px 28px rgba(30,36,51,0.08);
+      --shadow-lg: 0 16px 48px rgba(91,108,255,0.12);
+      --radius: 16px;
+      --radius-sm: 12px;
+      --radius-pill: 999px;
+    }
+    *,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
+    body{font-family:var(--font);background:var(--bg);color:var(--text);line-height:1.55;min-height:100vh;-webkit-font-smoothing:antialiased}
+    body::before{content:"";position:fixed;inset:0;background:radial-gradient(circle at 8% 12%,rgba(91,108,255,0.08) 0%,transparent 40%),radial-gradient(circle at 92% 8%,rgba(255,126,179,0.07) 0%,transparent 38%),radial-gradient(circle at 50% 100%,rgba(93,217,193,0.06) 0%,transparent 45%);pointer-events:none;z-index:0}
+    .page{position:relative;z-index:1;max-width:760px;margin:0 auto;padding:32px 20px 64px}
+    .header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:24px;flex-wrap:wrap}
+    .brand{display:flex;align-items:center;gap:14px}
+    .brand-icon{width:52px;height:52px;border-radius:18px;background:linear-gradient(135deg,#a8b4ff 0%,#ffb8d9 50%,#8ee8d4 100%);display:grid;place-items:center;box-shadow:var(--shadow-md);position:relative;flex-shrink:0}
+    .brand-icon::before{content:"";width:22px;height:22px;border-radius:50%;background:rgba(255,255,255,0.85);box-shadow:0 0 0 4px rgba(255,255,255,0.35)}
+    .brand-icon::after{content:"";position:absolute;bottom:10px;right:10px;width:10px;height:10px;border-radius:50%;background:#fff;opacity:.7}
+    .brand-text h1{font-size:1.65rem;font-weight:400;letter-spacing:-.02em;line-height:1.2}
+    .brand-text h1 span{color:var(--primary)}
+    .brand-text p{font-size:.92rem;color:var(--text-muted);margin-top:2px}
+    .header-badge{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-pill);font-size:.88rem;color:var(--text-muted);box-shadow:var(--shadow-sm)}
+    .header-badge .dot{width:8px;height:8px;border-radius:50%;background:var(--accent);animation:pulse 2s infinite}
+    @keyframes pulse{0%,100%{opacity:1;transform:scale(1)}50%{opacity:.6;transform:scale(.85)}}
+    .form-stack{display:flex;flex-direction:column;gap:20px}
+    .card{background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:28px;box-shadow:var(--shadow-sm)}
+    .card-title{font-size:1.15rem;margin-bottom:6px;display:flex;align-items:center;gap:8px}
+    .card-desc{font-size:.9rem;color:var(--text-muted);margin-bottom:22px}
+    .section-label{font-size:.95rem;color:var(--text);margin-bottom:10px;display:block}
+    .section-label .required{color:var(--accent);margin-left:2px}
+    .field{margin-bottom:22px}
+    .field:last-child{margin-bottom:0}
+    input[type="text"],textarea{width:100%;font-family:var(--font);font-size:1rem;padding:14px 16px;border:1.5px solid var(--border);border-radius:var(--radius-sm);background:#fafbff;color:var(--text);transition:border-color .2s,box-shadow .2s,background .2s;outline:none}
+    input:focus,textarea:focus{border-color:var(--primary);background:var(--surface);box-shadow:0 0 0 4px rgba(91,108,255,0.12)}
+    input::placeholder,textarea::placeholder{color:#aab0c0}
+    textarea{resize:vertical;min-height:88px}
+    .verify-grid{display:flex;flex-direction:column;gap:12px;margin-bottom:20px}
+    .verify-btn{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;font-family:var(--font);font-size:1rem;padding:16px 20px;border:none;border-radius:var(--radius-sm);cursor:pointer;transition:transform .2s,box-shadow .2s,opacity .2s}
+    .verify-btn:hover:not(:disabled){transform:translateY(-1px);box-shadow:var(--shadow-md)}
+    .verify-btn:disabled{opacity:.65;cursor:default}
+    .verify-btn.edu{background:#fee500;color:#3c1e1e;box-shadow:0 4px 14px rgba(254,229,0,0.35)}
+    .verify-btn.screening{background:linear-gradient(135deg,#5b6cff,#7b5cff);color:#fff;box-shadow:0 4px 14px rgba(91,108,255,0.25)}
+    .verify-status{display:flex;flex-wrap:wrap;gap:10px;min-height:44px}
+    .status-badge{display:inline-flex;align-items:center;gap:8px;padding:10px 16px;border-radius:var(--radius-pill);font-size:.92rem;opacity:0;transform:translateY(8px);transition:opacity .35s ease,transform .35s ease}
+    .status-badge.show{opacity:1;transform:translateY(0)}
+    .status-badge.blue{background:var(--primary-soft);color:var(--primary);border:1px solid rgba(91,108,255,0.25)}
+    .status-badge.green{background:var(--mint-soft);color:#2aab92;border:1px solid rgba(93,217,193,0.35)}
+    .industry-chips{display:flex;flex-wrap:wrap;gap:10px;margin-bottom:18px}
+    .chip{position:relative;cursor:pointer}
+    .chip input{position:absolute;opacity:0;width:0;height:0}
+    .chip .chip-face{display:inline-flex;align-items:center;gap:6px;padding:10px 18px;border:1.5px solid var(--border);border-radius:var(--radius-pill);background:var(--surface);font-size:.92rem;transition:all .25s ease;user-select:none}
+    .chip input:checked+.chip-face{border-color:transparent;color:#fff;box-shadow:0 4px 14px rgba(0,0,0,0.12);transform:scale(1.04)}
+    .chip[data-industry="acting"] input:checked+.chip-face{background:linear-gradient(135deg,#ff6b9d,#9b59ff)}
+    .chip[data-industry="taekwondo"] input:checked+.chip-face{background:linear-gradient(135deg,#6b8cff,#8b6bff)}
+    .chip[data-industry="ballet"] input:checked+.chip-face{background:linear-gradient(135deg,#ff8ec4,#c4b5fd)}
+    .chip[data-industry="music"] input:checked+.chip-face{background:linear-gradient(135deg,#ffb088,#ff7eb3)}
+    .chip[data-industry="art"] input:checked+.chip-face{background:linear-gradient(135deg,#5dd9c1,#6b8cff)}
+    .chip[data-industry="general"] input:checked+.chip-face{background:linear-gradient(135deg,#8892b0,#5b6cff)}
+    
+    .special-panel{background:linear-gradient(180deg,#fafbff 0%,#f6f8ff 100%);border:1.5px solid rgba(91,108,255,0.25);border-radius:var(--radius-sm);padding:14px;min-height:100px;background-color:var(--primary-soft);transition:opacity .25s ease,transform .25s ease}
+    .special-panel.is-fading{opacity:0;transform:translateY(6px);pointer-events:none}
+    
+    /* 가로 무조건 2개씩 배치하는 절대적인 Grid 설정 */
+    .special-grid{display:grid;grid-template-columns:repeat(2, 1fr) !important;gap:8px}
+    .check-item{position:relative;cursor:pointer}
+    .check-item input{position:absolute;opacity:0;width:0;height:0}
+    .check-item .check-face{display:flex;align-items:flex-start;gap:8px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:var(--radius-sm);transition:all .2s;height:100%;box-shadow:0 2px 5px rgba(0,0,0,0.02)}
+    .check-item .check-box{width:18px;height:18px;border:2px solid #c8cfe0;border-radius:5px;flex-shrink:0;display:grid;place-items:center;margin-top:1px;transition:all .2s;font-size:.65rem;color:transparent}
+    .check-item input:checked+.check-face{border-color:var(--primary);background:#fff;box-shadow:0 4px 10px rgba(91,108,255,0.06)}
+    .check-item input:checked+.check-face .check-box{background:var(--primary);border-color:var(--primary);color:#fff}
+    
+    /* 세로 길이 컴팩트하게 축소 */
+    .check-item .check-text strong{display:block;font-size:.85rem;font-weight:400;margin-bottom:1px;color:var(--text);letter-spacing:-0.01em}
+    .check-item .check-text span{display:block;font-size:.73rem;color:var(--text-muted);line-height:1.25}
+    
+    .pay-type-group{display:grid;grid-template-columns:repeat(3,1fr);gap:10px;margin-bottom:14px}
+    @media (max-width:520px){
+      .pay-type-group{grid-template-columns:1fr}
+      .special-grid{gap:6px}
+      .check-item .check-face{padding:8px 10px}
+    }
+    .pay-type-btn{position:relative;cursor:pointer}
+    .pay-type-btn input{position:absolute;opacity:0;width:0;height:0}
+    .pay-type-btn .btn-face{display:flex;flex-direction:column;align-items:center;gap:4px;padding:16px 12px;border:2px solid var(--border);border-radius:var(--radius-sm);background:#fafbff;text-align:center;transition:all .22s ease}
+    .pay-type-btn .btn-face .icon{font-size:1.4rem;line-height:1}
+    .pay-type-btn .btn-face .label{font-size:1rem}
+    .pay-type-btn .btn-face .hint{font-size:.78rem;color:var(--text-muted)}
+    .pay-type-btn input:checked+.btn-face{border-color:var(--primary);background:var(--primary-soft);box-shadow:0 4px 16px rgba(91,108,255,0.15)}
+    .pay-amount-fields{display:flex;flex-direction:column;gap:14px}
+    .pay-amount-row{display:grid;grid-template-columns:1fr auto;gap:10px;align-items:center}
+    .pay-unit{padding:14px 18px;background:var(--primary-soft);color:var(--primary);border-radius:var(--radius-sm);font-size:.95rem;white-space:nowrap;min-width:72px;text-align:center}
+    .pay-empty-hint{font-size:.88rem;color:var(--text-muted);padding:12px 16px;background:#fafbff;border:1.5px dashed var(--border);border-radius:var(--radius-sm);text-align:center}
+    .submit-wrap{margin-top:8px;padding-bottom:8px}
+    .submit-btn{width:100%;font-family:var(--font);font-size:1.25rem;padding:20px 28px;border:none;border-radius:var(--radius);cursor:pointer;color:#fff;background:linear-gradient(135deg,#5b6cff 0%,#7b5cff 45%,#ff7eb3 100%);background-size:200% 200%;box-shadow:var(--shadow-lg);transition:transform .2s,box-shadow .2s,background-position .4s;letter-spacing:.02em}
+    .submit-btn:hover{transform:translateY(-2px);box-shadow:0 20px 56px rgba(91,108,255,0.22);background-position:100% 0}
+    .submit-hint{text-align:center;font-size:.85rem;color:var(--text-muted);margin-top:14px}
+    .toast{position:fixed;bottom:28px;left:50%;transform:translateX(-50%) translateY(80px);background:var(--text);color:#fff;padding:14px 24px;border-radius:var(--radius-pill);font-size:.95rem;box-shadow:var(--shadow-lg);opacity:0;transition:all .35s cubic-bezier(.34,1.56,.64,1);z-index:100;pointer-events:none}
+    .toast.show{opacity:1;transform:translateX(-50%) translateY(0)}
+  </style>
+</head>
+<body>
+  <div class="page">
+    <header class="header">
+      <div class="brand">
+        <div class="brand-icon" aria-hidden="true"></div>
+        <div class="brand-text">
+          <h1><span>CLAVI</span> 클라비</h1>
+          <p>예체능 · 일반 강사 매칭 플랫폼</p>
+        </div>
+      </div>
+      <div class="header-badge"><span class="dot"></span>강사님 전용 · 프로필 등록</div>
+    </header>
+
+    <form id="applyForm" novalidate>
+      <div class="form-stack">
+
+        <section class="card">
+          <h2 class="card-title">🛡 강사 신뢰도 인증</h2>
+          <p class="card-desc">원장님께 신뢰받는 매칭을 위해 아래 인증을 완료해 주세요.</p>
+          <div class="verify-grid">
+            <button type="button" class="verify-btn edu" id="btnEduVerify">
+              <span>💬</span> 카카오 학력/학위 실시간 인증하기
+            </button>
+            <button type="button" class="verify-btn screening" id="btnScreening">
+              <span>🔒</span> 성범죄 및 아동학대 이력 조회 동의하기
+            </button>
+          </div>
+          <div class="verify-status" id="verifyStatus"></div>
+        </section>
+
+        <section class="card">
+          <h2 class="card-title">🎯 전문 분야 / 업종 선택</h2>
+          <p class="card-desc">주력 분야를 선택하면 세부 전공 특기 항목이 표시됩니다.</p>
+          <label class="section-label">업종 선택<span class="required">*</span></label>
+          <div class="industry-chips" id="industryChips">
+            <label class="chip" data-industry="acting"><input type="radio" name="industry" value="acting" checked /><span class="chip-face">🎭 연기 / 뮤지컬</span></label>
+            <label class="chip" data-industry="taekwondo"><input type="radio" name="industry" value="taekwondo" /><span class="chip-face">🥋 체육 / 태권도</span></label>
+            <label class="chip" data-industry="ballet"><input type="radio" name="industry" value="ballet" /><span class="chip-face">🩰 무용 / 발레</span></label>
+            <label class="chip" data-industry="music"><input type="radio" name="industry" value="music" /><span class="chip-face">🎵 음악 / 악기</span></label>
+            <label class="chip" data-industry="art"><input type="radio" name="industry" value="art" /><span class="chip-face">🎨 미술 / 창의</span></label>
+            <label class="chip" data-industry="general"><input type="radio" name="industry" value="general" /><span class="chip-face">📚 일반 / 학습</span></label>
+          </div>
+          <label class="section-label">핵심 전공 및 강사 우대 역량 (복수 선택 가능)</label>
+          <div class="special-panel" id="specialPanel"></div>
+        </section>
+
+        <section class="card">
+          <h2 class="card-title">👤 기본 정보</h2>
+          <p class="card-desc">원장님이 강사님을 빠르게 파악할 수 있도록 작성해 주세요.</p>
+          <div class="field">
+            <label class="section-label" for="name">강사 이름<span class="required">*</span></label>
+            <input type="text" id="name" name="name" placeholder="예) 김민지" required />
+          </div>
+          <div class="field">
+            <label class="section-label" for="intro">한 줄 소개<span class="required">*</span></label>
+            <textarea id="intro" name="intro" placeholder="예) 10년차 연극영화과 입시 전문 지도자" required></textarea>
+          </div>
+          <div class="field">
+            <label class="section-label" for="subjects">담당 가능 과목<span class="required">*</span></label>
+            <input type="text" id="subjects" name="subjects" placeholder="예) 매체 연기, 독백 디렉팅, 뮤지컬 보컬" required />
+          </div>
+          <div class="field">
+            <label class="section-label">희망 급여 (복수 선택 가능)<span class="required">*</span></label>
+            <div class="pay-type-group" id="payTypeGroup" role="group" aria-label="희망 급여 형태">
+              <label class="pay-type-btn">
+                <input type="checkbox" name="payType" value="hourly" checked />
+                <div class="btn-face"><span class="icon">⏱</span><span class="label">시급</span><span class="hint">시간당</span></div>
+              </label>
+              <label class="pay-type-btn">
+                <input type="checkbox" name="payType" value="monthly" />
+                <div class="btn-face"><span class="icon">📅</span><span class="label">월급</span><span class="hint">월 고정</span></div>
+              </label>
+              <label class="pay-type-btn">
+                <input type="checkbox" name="payType" value="ratio" />
+                <div class="btn-face"><span class="icon">📊</span><span class="label">비율제</span><span class="hint">수강료 %</span></div>
+              </label>
+            </div>
+            <div class="pay-amount-fields" id="payAmountFields"></div>
+          </div>
+        </section>
+
+        <div class="submit-wrap">
+          <button type="submit" class="submit-btn">✨ 프로필 등록하고 매칭 시작하기</button>
+          <p class="submit-hint">등록 완료 후 CLAVI가 조건에 맞는 학원 공고를 추천해 드립니다</p>
+        </div>
+
+      </div>
+    </form>
+  </div>
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    // 문구 길이 최소화 및 핵심 키워드 압축
+    const SPECIAL_SKILLS = {
+      acting: [
+        { id: "media_acting", label: "매체 연기 / 오디션", desc: "카메라 연기 및 독백 연출" },
+        { id: "entrance_exam", label: "연영과 입시 지도", desc: "주요대 입시 및 당일대사 코칭" },
+        { id: "musical_vocal", label: "뮤지컬 보컬 지도", desc: "뮤지컬 발성 및 넘버 레슨" },
+        { id: "musical_dance", label: "뮤지컬 안무 / 움직임", desc: "재즈댄스 및 안무 창작 가능" },
+        { id: "kids_acting", label: "아역 / 유소년 지도", desc: "키즈 오디션 케어 및 기초 발성" },
+        { id: "script_making", label: "입시 작품 창작", desc: "학생 맞춤형 자유연기 개발" },
+        { id: "camera_feedback", label: "모니터링 피드백", desc: "영상 촬영 분석 및 피드백" },
+        { id: "weekend_care", label: "주말 입시 현장 케어", desc: "모의평가 진행 및 현장 밀착" },
+        { id: "substitute_acting", label: "출강 / 긴급 대체 가능", desc: "학원 결원 시 즉시 대타 출강" }
+      ],
+      taekwondo: [
+        { id: "vehicle", label: "1종대형/셔틀 운행", desc: "픽업 및 학원 이동 가능" },
+        { id: "competition", label: "주말 대회 동행", desc: "시합 현장 지도 경험" },
+        { id: "license", label: "단증/자격증 보유", desc: "태권도 4단 이상 자격 보유" },
+        { id: "infant", label: "유아부 지도 가능", desc: "4~7세 유아반 수업 경험" },
+        { id: "substitute", label: "대체·대타 가능", desc: "결원 시 즉시 대체 가능" }
+      ],
+      ballet: [
+        { id: "infant", label: "유아 발레 전문", desc: "3~6세 유아반 지도 경험" },
+        { id: "entrance", label: "전공 입시 가능", desc: "예고·예대 입시 지도" },
+        { id: "substitute", label: "긴급 대타 대기", desc: "당일 결원 대체 수업 가능" },
+        { id: "pointe", label: "포인트 지도", desc: "중급 이상 토슈즈 수업" },
+        { id: "competition", label: "발표회 · 대회 동행", desc: "무대 및 리허설 케어" }
+      ],
+      music: [
+        { id: "competition", label: "콩쿠르 · 연주회 동행", desc: "대회 및 발표회 지도" },
+        { id: "infant", label: "유아 · 초등 지도", desc: "어린이 음악 교육 경험" },
+        { id: "substitute", label: "대체·대타 가능", desc: "결원 시 대체 레슨 가능" },
+        { id: "theory", label: "화성학 · 시창 지도", desc: "이론 과목 병행 가능" },
+        { id: "flexible", label: "시간 조율 가능", desc: "레슨 시간 유연 대응" }
+      ],
+      art: [
+        { id: "infant", label: "유아 · 창의미술", desc: "미취학·초등 창의 수업" },
+        { id: "portfolio", label: "포트폴리오 · 입시", desc: "입시 및 포트폴리오 코칭" },
+        { id: "competition", label: "전시 · 대회 동행", desc: "대회 및 전시 참여 지도" },
+        { id: "substitute", label: "대체·대타 가능", desc: "결원 시 대체 수업 가능" },
+        { id: "flexible", label: "시간 조율 가능", desc: "특강 및 워크숍 대응" }
+      ],
+      general: [
+        { id: "infant", label: "유아 · 초등 지도", desc: "저학년 맞춤 지도 경험" },
+        { id: "substitute", label: "대체·대타 가능", desc: "결원 시 대체 수업 가능" },
+        { id: "consult", label: "학부모 상담 가능", desc: "정기 상담 진행 경험" },
+        { id: "homework", label: "숙제 · 테스트 관리", desc: "과제 검사 및 피드백" },
+        { id: "flexible", label: "시간 조율 가능", desc: "보충 일정 유연 대응" }
+      ]
+    };
+
+    const PAY_UNITS = {
+      hourly: { unit: "원/시간", placeholder: "예) 25,000 (미입력시 협의)", label: "시급" },
+      monthly: { unit: "원/월", placeholder: "예) 2,500,000 (미입력시 협의)", label: "월급" },
+      ratio: { unit: "%", placeholder: "예) 40 (미입력시 협의)", label: "비율제" }
+    };
+
+    const specialPanel = document.getElementById("specialPanel");
+    const industryChips = document.getElementById("industryChips");
+    const payAmountFields = document.getElementById("payAmountFields");
+    const payTypeGroup = document.getElementById("payTypeGroup");
+    const verifyStatus = document.getElementById("verifyStatus");
+    const toast = document.getElementById("toast");
+    const form = document.getElementById("applyForm");
+
+    let currentIndustry = "acting";
+    let isAnimating = false;
+    let eduVerified = false;
+    let screeningDone = false;
+
+    function formatNumberWithCommas(value) {
+      const num = value.replace(/[^\d]/g, "");
+      return num ? Number(num).toLocaleString() : "";
+    }
+
+    /* 🌟 CRITICAL FIX: 함수 내부에 class="special-grid" 확실하게 삽입 완료! */
+    function buildSpecialHTML(industry) {
+      const items = SPECIAL_SKILLS[industry] || [];
+      return `<div class="special-grid">${items.map(item => `
+        <label class="check-item">
+          <input type="checkbox" name="skill" value="${item.id}" />
+          <div class="check-face">
+            <span class="check-box">✓</span>
+            <div class="check-text"><strong>${item.label}</strong><span>${item.desc}</span></div>
+          </div>
+        </label>`).join("")}</div>`;
+    }
+
+    function renderSpecialSkills(industry, animate) {
+      if (industry === currentIndustry && specialPanel.innerHTML && !animate) return;
+      if (isAnimating) return;
+      if (!animate) {
+        specialPanel.innerHTML = buildSpecialHTML(industry);
+        currentIndustry = industry;
+        return;
+      }
+      isAnimating = true;
+      specialPanel.classList.add("is-fading");
+      setTimeout(() => {
+        specialPanel.innerHTML = buildSpecialHTML(industry);
+        currentIndustry = industry;
+        requestAnimationFrame(() => {
+          specialPanel.classList.remove("is-fading");
+          isAnimating = false;
+        });
+      }, 250);
+    }
+
+    function renderPayAmountFields() {
+      const selected = [...document.querySelectorAll('input[name="payType"]:checked')].map(c => c.value);
+      const saved = {};
+      payAmountFields.querySelectorAll("input[data-pay-type]").forEach(input => {
+        saved[input.dataset.payType] = input.value;
+      });
+
+      if (selected.length === 0) {
+        payAmountFields.innerHTML = '<p class="pay-empty-hint">희망 급여 형태를 하나 이상 선택해 주세요.</p>';
+        return;
+      }
+
+      payAmountFields.innerHTML = selected.map(type => {
+        const cfg = PAY_UNITS[type];
+        const val = saved[type] || "";
+        return `<div class="field">
+          <label class="section-label">${cfg.label} 희망 금액</label>
+          <div class="pay-amount-row">
+            <input type="text" data-pay-type="${type}" name="payAmount_${type}" placeholder="${cfg.placeholder}" value="${val}" />
+            <span class="pay-unit">${cfg.unit}</span>
+          </div>
+        </div>`;
+      }).join("");
+
+      selected.forEach(type => {
+        const input = document.querySelector(`input[data-pay-type="${type}"]`);
+        if (input) {
+          input.addEventListener("input", function() {
+            let formatted = formatNumberWithCommas(this.value);
+            if (type === "ratio") {
+              const numVal = Number(formatted.replace(/,/g, ""));
+              if (numVal > 100) formatted = "100";
+            }
+            this.value = formatted;
+          });
+        }
+      });
+    }
+
+    industryChips.addEventListener("change", (e) => {
+      if (e.target.name === "industry") renderSpecialSkills(e.target.value, true);
+    });
+
+    payTypeGroup.addEventListener("change", (e) => {
+      if (e.target.name === "payType") renderPayAmountFields();
+    });
+
+    function showToast(msg) {
+      toast.textContent = msg;
+      toast.classList.add("show");
+      setTimeout(() => toast.classList.remove("show"), 3200);
+    }
+
+    function renderVerifyBadges() {
+      verifyStatus.innerHTML = "";
+      if (eduVerified) {
+        const el = document.createElement("span");
+        el.className = "status-badge blue show";
+        el.textContent = "학력 인증이 완료되었습니다 🔵";
+        verifyStatus.appendChild(el);
+      }
+      if (screeningDone) {
+        const el = document.createElement("span");
+        el.className = "status-badge green show";
+        el.textContent = "스크리닝 완료 🟢";
+        verifyStatus.appendChild(el);
+      }
+    }
+
+    document.getElementById("btnEduVerify").addEventListener("click", function () {
+      if (eduVerified) return;
+      this.disabled = true;
+      this.innerHTML = '<span>⏳</span> 인증 진행 중...';
+      setTimeout(() => {
+        eduVerified = true;
+        this.innerHTML = '<span>✅</span> 학력 인증 완료';
+        renderVerifyBadges();
+        showToast("학력 인증이 완료되었습니다 🔵");
+      }, 1200);
+    });
+
+    document.getElementById("btnScreening").addEventListener("click", function () {
+      if (screeningDone) return;
+      this.disabled = true;
+      this.innerHTML = '<span>⏳</span> 조회 진행 중...';
+      setTimeout(() => {
+        screeningDone = true;
+        this.innerHTML = '<span>✅</span> 스크리닝 동의 완료';
+        renderVerifyBadges();
+        showToast("스크리닝 완료 🟢");
+      }, 1200);
+    });
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = document.getElementById("name").value.trim();
+      const intro = document.getElementById("intro").value.trim();
+      const subjects = document.getElementById("subjects").value.trim();
+      const payTypes = [...document.querySelectorAll('input[name="payType"]:checked')];
+      const industry = document.querySelector('input[name="industry"]:checked');
+      const skills = [...document.querySelectorAll('input[name="skill"]:checked')];
+
+      if (!eduVerified) { showToast("학력 인증을 먼저 완료해 주세요"); return; }
+      if (!screeningDone) { showToast("스크리닝 동의를 먼저 완료해 주세요"); return; }
+      if (!name) { showToast("강사 이름을 입력해 주세요"); return; }
+      if (!intro) { showToast("한 줄 소개를 입력해 주세요"); return; }
+      if (!subjects) { showToast("담당 가능 과목을 입력해 주세요"); return; }
+      if (payTypes.length === 0) { showToast("희망 급여 형태를 하나 이상 선택해 주세요"); return; }
+
+      const payData = payTypes.map(pt => {
+        const input = document.querySelector(`input[data-pay-type="${pt.value}"]`);
+        return { type: PAY_UNITS[pt.value].label, amount: input?.value || "협의" };
+      });
+
+      console.log("📋 CLAVI 강사 프로필 등록", {
+        name, intro, subjects,
+        industry: industry.value,
+        skills: skills.map(s => s.value),
+        payTypes: payData,
+        eduVerified, screeningDone,
+      });
+      showToast("🎉 프로필 등록 완료! 매칭을 시작합니다");
+    });
+
+    renderSpecialSkills("acting", false);
+    renderPayAmountFields();
+  </script>
+</body>
+</html>
