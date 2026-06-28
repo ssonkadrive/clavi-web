@@ -2223,8 +2223,7 @@ async function handleSocialLogin(provider) {
     const { error } = await _supabase.auth.signInWithOAuth({
       provider: 'kakao',
       options: {
-        redirectTo: window.location.href.split('?')[0],
-        scopes: 'profile'
+        redirectTo: window.location.href.split('?')[0]
       }
     });
     if (error) showToast('카카오 로그인 오류: ' + error.message);
@@ -2241,8 +2240,7 @@ async function handleSocialRegister(provider) {
     const { error } = await _supabase.auth.signInWithOAuth({
       provider: 'kakao',
       options: {
-        redirectTo: window.location.href.split('?')[0],
-        scopes: 'profile'
+        redirectTo: window.location.href.split('?')[0]
       }
     });
     if (error) showToast('카카오 가입 오류: ' + error.message);
