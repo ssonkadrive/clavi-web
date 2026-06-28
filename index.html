@@ -1264,6 +1264,51 @@
 <!-- ══════════════════════════════════════════════
   [3] REGISTER PAGE
 ══════════════════════════════════════════════════ -->
+<!-- ══════════════════════════════════════════════
+  [소셜 신규가입] 프로필 설정 페이지
+══════════════════════════════════════════════════ -->
+<section id="profileSetupPage" class="page-section">
+  <div class="page-narrow">
+    <div style="text-align:center;margin-bottom:32px;">
+      <div style="font-size:2.4rem;margin-bottom:10px;">👋</div>
+      <h2 style="font-size:1.3rem;margin-bottom:6px;">CLAVI에 오신 것을 환영합니다!</h2>
+      <p style="font-size:.9rem;color:var(--text-muted);">시작하기 전에 기본 정보를 입력해 주세요.</p>
+    </div>
+
+    <div class="card">
+      <!-- 학원 회원용 -->
+      <div id="setupAcademyFields">
+        <h3 class="card-title">🏫 학원 정보</h3>
+        <div class="form-group" style="margin-top:16px;">
+          <label class="form-label">학원명 *</label>
+          <input id="setupAcademyName" class="form-input" type="text" placeholder="예: 클라비 예술학원" maxlength="40" />
+        </div>
+        <div class="form-group" style="margin-top:14px;">
+          <label class="form-label">지역</label>
+          <input id="setupAcademyRegion" class="form-input" type="text" placeholder="예: 서울 강남구" maxlength="30" />
+        </div>
+      </div>
+
+      <!-- 강사 회원용 -->
+      <div id="setupInstructorFields" style="display:none;">
+        <h3 class="card-title">🎓 강사 정보</h3>
+        <div class="form-group" style="margin-top:16px;">
+          <label class="form-label">이름 *</label>
+          <input id="setupInstructorName" class="form-input" type="text" placeholder="예: 홍길동" maxlength="20" />
+        </div>
+        <div class="form-group" style="margin-top:14px;">
+          <label class="form-label">전문 분야</label>
+          <input id="setupInstructorIndustry" class="form-input" type="text" placeholder="예: 발레, 현대무용" maxlength="40" />
+        </div>
+      </div>
+
+      <button class="primary-btn" style="margin-top:24px;width:100%;" onclick="saveProfileSetup()">
+        저장하고 시작하기 →
+      </button>
+    </div>
+  </div>
+</section>
+
 <section id="registerPage" class="page-section">
   <div class="page-narrow">
     <span class="back-link" onclick="showPage('landingPage')">← 처음으로</span>
@@ -2206,10 +2251,22 @@ const _supabase = supabase.createClient(
 (async () => {
   const { data: { session } } = await _supabase.auth.getSession();
   if (session?.user) {
-    const role = session.user.user_metadata?.clavi_role || loadSession()?.role || 'instructor';
-    saveSession(role, session.access_token, session.user.email);
+    const pending = localStorage.getItem('CLAVI_PENDING_ROLE');
+    const role = pending || loadSession()?.role || 'instructor';
+    if (pending) localStorage.removeItem('CLAVI_PENDING_ROLE');
+    const u = session.user;
+    const displayName = u.user_metadata?.full_name || u.user_metadata?.name
+                     || u.user_metadata?.nickname || u.email || u.id;
+    saveSession(role, session.access_token, displayName);
     currentUserRole = role;
-    enterApp();
+    // 신규 유저 여부 확인 (users 테이블에 row 없으면 신규)
+    const { data: existing } = await _supabase
+      .from('users').select('id').eq('id', u.id).maybeSingle();
+    if (!existing) {
+      showProfileSetup(role);
+    } else {
+      enterApp();
+    }
   }
 })();
 
@@ -2248,20 +2305,61 @@ async function handleSocialRegister(provider) {
 _supabase.auth.onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_IN' && session?.user) {
     const pending = localStorage.getItem('CLAVI_PENDING_ROLE');
-    const role = pending || 'instructor';
-    localStorage.removeItem('CLAVI_PENDING_ROLE');
+    const role = pending || loadSession()?.role || 'instructor';
+    if (pending) localStorage.removeItem('CLAVI_PENDING_ROLE');
     const u = session.user;
-    const displayName = u.user_metadata?.full_name
-                     || u.user_metadata?.name
-                     || u.user_metadata?.nickname
-                     || u.email
-                     || u.id;
+    const displayName = u.user_metadata?.full_name || u.user_metadata?.name
+                     || u.user_metadata?.nickname || u.email || u.id;
     saveSession(role, session.access_token, displayName);
     currentUserRole = role;
-    showToast('카카오 로그인 성공! 환영합니다 🎉');
-    setTimeout(() => enterApp(), 600);
+    // 신규 유저 여부 확인
+    const { data: existing } = await _supabase
+      .from('users').select('id').eq('id', u.id).maybeSingle();
+    if (!existing) {
+      showToast('환영합니다! 기본 정보를 입력해 주세요 🎉');
+      showProfileSetup(role);
+    } else {
+      showToast('로그인 성공! 환영합니다 🎉');
+      setTimeout(() => enterApp(), 600);
+    }
   }
 });
+
+function showProfileSetup(role) {
+  document.getElementById('setupAcademyFields').style.display  = role === 'academy'     ? 'block' : 'none';
+  document.getElementById('setupInstructorFields').style.display = role === 'instructor' ? 'block' : 'none';
+  showPage('profileSetupPage');
+}
+
+async function saveProfileSetup() {
+  const { data: { session } } = await _supabase.auth.getSession();
+  if (!session?.user) { showToast('세션이 만료됐습니다. 다시 로그인해 주세요.'); return; }
+  const uid  = session.user.id;
+  const role = currentUserRole;
+
+  // users 테이블에 기본 row 삽입
+  const { error: uErr } = await _supabase.from('users').upsert({
+    id: uid,
+    email: session.user.email || null,
+    role
+  });
+  if (uErr) { showToast('저장 오류: ' + uErr.message); return; }
+
+  if (role === 'academy') {
+    const name = document.getElementById('setupAcademyName').value.trim();
+    if (!name) { showToast('학원명을 입력해 주세요.'); return; }
+    const region = document.getElementById('setupAcademyRegion').value.trim();
+    await _supabase.from('academies').insert({ user_id: uid, name, region });
+  } else {
+    const name = document.getElementById('setupInstructorName').value.trim();
+    if (!name) { showToast('이름을 입력해 주세요.'); return; }
+    const industry = document.getElementById('setupInstructorIndustry').value.trim();
+    await _supabase.from('instructors').insert({ user_id: uid, name, industry });
+  }
+
+  showToast('저장 완료! CLAVI를 시작합니다 🚀');
+  setTimeout(() => enterApp(), 700);
+}
 
 function devLogin(role) {
   currentUserRole = role;
