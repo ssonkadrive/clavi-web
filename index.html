@@ -2222,10 +2222,7 @@ async function handleSocialLogin(provider) {
     localStorage.setItem('CLAVI_PENDING_ROLE', role);
     const { error } = await _supabase.auth.signInWithOAuth({
       provider: 'kakao',
-      options: {
-        redirectTo: window.location.href.split('?')[0],
-        queryParams: { scope: 'profile' }
-      }
+      options: { redirectTo: window.location.href.split('?')[0] }
     });
     if (error) showToast('카카오 로그인 오류: ' + error.message);
   } else {
@@ -2240,10 +2237,7 @@ async function handleSocialRegister(provider) {
     localStorage.setItem('CLAVI_PENDING_ROLE', role);
     const { error } = await _supabase.auth.signInWithOAuth({
       provider: 'kakao',
-      options: {
-        redirectTo: window.location.href.split('?')[0],
-        queryParams: { scope: 'profile' }
-      }
+      options: { redirectTo: window.location.href.split('?')[0] }
     });
     if (error) showToast('카카오 가입 오류: ' + error.message);
   } else {
