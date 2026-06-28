@@ -2635,9 +2635,9 @@ ${conditions}
 
 async function generateContract(data, role) {
   try {
-    const response = await fetch('https://api.anthropic.com/v1/messages', {
+    const response = await fetch('https://nbngaaskwekhtzbmcyjo.supabase.co/functions/v1/claude-proxy', {
       method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
+      headers: { 'Content-Type': 'application/json', 'Authorization': 'Bearer sb_publishable_hTeqOZsZA9VQ31fvJvxJvg_a0x1mV7B' },
       body: JSON.stringify({
         model: 'claude-sonnet-4-6',
         max_tokens: 3000,
@@ -3066,8 +3066,8 @@ async function generateResume() {
   document.getElementById('resumeLoading').style.display = 'flex';
   document.getElementById('resumeContent').style.display = 'none';
   try {
-    const res = await fetch('https://api.anthropic.com/v1/messages', {
-      method:'POST', headers:{'Content-Type':'application/json'},
+    const res = await fetch('https://nbngaaskwekhtzbmcyjo.supabase.co/functions/v1/claude-proxy', {
+      method:'POST', headers:{'Content-Type':'application/json','Authorization':'Bearer sb_publishable_hTeqOZsZA9VQ31fvJvxJvg_a0x1mV7B'},
       body: JSON.stringify({ model:'claude-sonnet-4-6', max_tokens:2000, messages:[{role:'user',content:buildResumePrompt()}] })
     });
     const data = await res.json();
