@@ -2222,7 +2222,10 @@ async function handleSocialLogin(provider) {
     localStorage.setItem('CLAVI_PENDING_ROLE', role);
     const { error } = await _supabase.auth.signInWithOAuth({
       provider: 'kakao',
-      options: { redirectTo: window.location.href.split('?')[0] }
+      options: {
+        redirectTo: window.location.href.split('?')[0],
+        scopes: 'profile'
+      }
     });
     if (error) showToast('카카오 로그인 오류: ' + error.message);
   } else {
@@ -2237,7 +2240,10 @@ async function handleSocialRegister(provider) {
     localStorage.setItem('CLAVI_PENDING_ROLE', role);
     const { error } = await _supabase.auth.signInWithOAuth({
       provider: 'kakao',
-      options: { redirectTo: window.location.href.split('?')[0] }
+      options: {
+        redirectTo: window.location.href.split('?')[0],
+        scopes: 'profile'
+      }
     });
     if (error) showToast('카카오 가입 오류: ' + error.message);
   } else {
@@ -2252,7 +2258,12 @@ _supabase.auth.onAuthStateChange(async (event, session) => {
     const pending = localStorage.getItem('CLAVI_PENDING_ROLE');
     const role = pending || 'instructor';
     localStorage.removeItem('CLAVI_PENDING_ROLE');
-    saveSession(role, session.access_token, session.user.email);
+    // 이메일 없이 카카오 고유 ID로 식별
+    const kakaoId = session.user.user_metadata?.provider_id
+                 || session.user.user_metadata?.sub
+                 || session.user.id;
+    const displayId = `kakao:${kakaoId}`;
+    saveSession(role, session.access_token, displayId);
     currentUserRole = role;
     showToast('카카오 로그인 성공! 환영합니다 🎉');
     setTimeout(() => enterApp(), 600);
