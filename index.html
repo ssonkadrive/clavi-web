@@ -2280,10 +2280,9 @@ async function handleSocialLogin(provider) {
   }
   const role = document.querySelector('input[name="loginRole"]:checked')?.value || 'instructor';
   localStorage.setItem('CLAVI_PENDING_ROLE', role);
-  const { error } = await _supabase.auth.signInWithOAuth({
-    provider,
-    options: { redirectTo: window.location.href.split('?')[0] }
-  });
+  const opts = { redirectTo: window.location.href.split('?')[0] };
+  if (provider === 'kakao') opts.scopes = 'profile_nickname';
+  const { error } = await _supabase.auth.signInWithOAuth({ provider, options: opts });
   if (error) showToast(`${provider === 'kakao' ? '카카오' : '구글'} 로그인 오류: ` + error.message);
 }
 
@@ -2294,10 +2293,9 @@ async function handleSocialRegister(provider) {
   }
   const role = document.querySelector('input[name="registerRole"]:checked')?.value || 'instructor';
   localStorage.setItem('CLAVI_PENDING_ROLE', role);
-  const { error } = await _supabase.auth.signInWithOAuth({
-    provider,
-    options: { redirectTo: window.location.href.split('?')[0] }
-  });
+  const opts = { redirectTo: window.location.href.split('?')[0] };
+  if (provider === 'kakao') opts.scopes = 'profile_nickname';
+  const { error } = await _supabase.auth.signInWithOAuth({ provider, options: opts });
   if (error) showToast(`${provider === 'kakao' ? '카카오' : '구글'} 가입 오류: ` + error.message);
 }
 
