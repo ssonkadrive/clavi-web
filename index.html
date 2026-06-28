@@ -953,6 +953,7 @@
       .lp-steps { flex-direction:column;align-items:center; }
       .lp-arrow { transform:rotate(90deg); }
     }</style>
+<script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2/dist/umd/supabase.min.js"></script>
 </head>
 <body>
 
@@ -2194,12 +2195,69 @@ function formatNumberWithCommas(value) {
 }
 
 /* ════════════════════════════════════════════════
-  소셜 로그인/가입 핸들러 (UI 시뮬레이션)
+  Supabase 초기화
 ════════════════════════════════════════════════ */
-function socialLogin(provider) {
-  const providerName = {kakao:'카카오',naver:'네이버',google:'구글'}[provider];
-  showToast(`${providerName} 로그인은 정식 출시 후 지원됩니다 😊`);
+const _supabase = supabase.createClient(
+  'https://nbngaaskwekhtzbmcyjo.supabase.co',
+  'sb_publishable_hTeqOZsZA9VQ31fvJvxJvg_a0x1mV7B'
+);
+
+/* OAuth 콜백 처리 — 페이지 로드 시 세션 복원 */
+(async () => {
+  const { data: { session } } = await _supabase.auth.getSession();
+  if (session?.user) {
+    const role = session.user.user_metadata?.clavi_role || loadSession()?.role || 'instructor';
+    saveSession(role, session.access_token, session.user.email);
+    currentUserRole = role;
+    enterApp();
+  }
+})();
+
+/* ════════════════════════════════════════════════
+  소셜 로그인/가입 핸들러
+════════════════════════════════════════════════ */
+async function handleSocialLogin(provider) {
+  if (provider === 'kakao') {
+    const role = document.querySelector('input[name="loginRole"]:checked')?.value || 'instructor';
+    localStorage.setItem('CLAVI_PENDING_ROLE', role);
+    const { error } = await _supabase.auth.signInWithOAuth({
+      provider: 'kakao',
+      options: { redirectTo: window.location.href.split('?')[0] }
+    });
+    if (error) showToast('카카오 로그인 오류: ' + error.message);
+  } else {
+    const name = provider === 'naver' ? '네이버' : '구글';
+    showToast(`${name} 로그인은 정식 출시 후 지원됩니다 😊`);
+  }
 }
+
+async function handleSocialRegister(provider) {
+  if (provider === 'kakao') {
+    const role = document.querySelector('input[name="registerRole"]:checked')?.value || 'instructor';
+    localStorage.setItem('CLAVI_PENDING_ROLE', role);
+    const { error } = await _supabase.auth.signInWithOAuth({
+      provider: 'kakao',
+      options: { redirectTo: window.location.href.split('?')[0] }
+    });
+    if (error) showToast('카카오 가입 오류: ' + error.message);
+  } else {
+    const name = provider === 'naver' ? '네이버' : '구글';
+    showToast(`${name} 가입은 정식 출시 후 지원됩니다 😊`);
+  }
+}
+
+/* OAuth 리턴 후 role 복원 */
+_supabase.auth.onAuthStateChange(async (event, session) => {
+  if (event === 'SIGNED_IN' && session?.user) {
+    const pending = localStorage.getItem('CLAVI_PENDING_ROLE');
+    const role = pending || 'instructor';
+    localStorage.removeItem('CLAVI_PENDING_ROLE');
+    saveSession(role, session.access_token, session.user.email);
+    currentUserRole = role;
+    showToast('카카오 로그인 성공! 환영합니다 🎉');
+    setTimeout(() => enterApp(), 600);
+  }
+});
 
 function devLogin(role) {
   currentUserRole = role;
@@ -2207,9 +2265,6 @@ function devLogin(role) {
   showToast((role === 'instructor' ? '강사' : '원장님') + ' 임시 로그인 완료 ✅');
   setTimeout(() => enterApp(), 600);
 }
-
-function handleSocialLogin(provider) { socialLogin(provider); }
-function handleSocialRegister(provider) { socialLogin(provider); }
 
 /* ════════════════════════════════════════════════
   로그인 폼
