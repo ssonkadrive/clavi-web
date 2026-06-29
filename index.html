@@ -1939,38 +1939,34 @@
 
       <section class="card">
         <h2 class="card-title">📅 수업 요일 &amp; 시간</h2>
-        <p class="card-desc" style="margin-bottom:12px;">강사가 출강할 요일과 수업 시간을 설정해 주세요.</p>
+        <p class="card-desc" style="margin-bottom:14px;">요일과 수업 시간을 설정하고 추가하세요. 여러 개 등록 가능합니다.</p>
 
-        <div class="ts-label">요일 <span style="font-size:.75rem;color:var(--text-muted);">(복수 선택 · 협의 선택 시 요일 무관)</span></div>
-        <div class="match-chips" style="margin-bottom:16px;">
-          <label class="match-chip"><input type="checkbox" name="aWeekday" value="월"/><span>월</span></label>
-          <label class="match-chip"><input type="checkbox" name="aWeekday" value="화"/><span>화</span></label>
-          <label class="match-chip"><input type="checkbox" name="aWeekday" value="수"/><span>수</span></label>
-          <label class="match-chip"><input type="checkbox" name="aWeekday" value="목"/><span>목</span></label>
-          <label class="match-chip"><input type="checkbox" name="aWeekday" value="금"/><span>금</span></label>
-          <label class="match-chip"><input type="checkbox" name="aWeekday" value="토"/><span>토</span></label>
-          <label class="match-chip"><input type="checkbox" name="aWeekday" value="일"/><span>일</span></label>
-          <label class="match-chip"><input type="checkbox" name="aWeekday" value="협의" onchange="onAWeekdayNego(this)"/><span>협의</span></label>
-        </div>
-
-        <div class="ts-label">수업 시간 <span style="font-size:.75rem;color:var(--text-muted);">(강사 가능 시간이 이 범위를 포함해야 매칭)</span></div>
-        <div class="ts-quick-row">
-          <button type="button" class="ts-quick" onclick="setATime(9,12)">🌅 오전 (09~12)</button>
-          <button type="button" class="ts-quick" onclick="setATime(13,18)">☀️ 오후 (13~18)</button>
-          <button type="button" class="ts-quick" onclick="setATime(18,22)">🌙 저녁 (18~22)</button>
-        </div>
-        <div class="ts-row">
-          <select id="aTimeStart" class="region-select" style="flex:1;" onchange="validateATime()">
+        <div class="ts-row" style="flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+          <select id="aDayPick" class="region-select" style="flex:0 0 90px;">
+            <option value="">요일</option>
+            <option>월</option><option>화</option><option>수</option>
+            <option>목</option><option>금</option><option>토</option><option>일</option>
+          </select>
+          <select id="aTimeStartPick" class="region-select" style="flex:1;min-width:100px;">
             <option value="">시작 시간</option>
             ${timeOptions()}
           </select>
           <span class="ts-tilde">~</span>
-          <select id="aTimeEnd" class="region-select" style="flex:1;" onchange="validateATime()">
+          <select id="aTimeEndPick" class="region-select" style="flex:1;min-width:100px;">
             <option value="">종료 시간</option>
             ${timeOptions()}
           </select>
+          <button type="button" class="region-add-btn" onclick="addASchedule()">+ 추가</button>
         </div>
-        <div id="aTimeErr" class="ts-err"></div>
+        <div id="aScheduleErr" class="ts-err" style="margin-bottom:8px;"></div>
+        <div id="aScheduleTags" style="display:flex;flex-wrap:wrap;gap:7px;min-height:10px;margin-bottom:6px;"></div>
+
+        <div style="margin-top:4px;">
+          <label class="match-chip" style="display:inline-flex;">
+            <input type="checkbox" name="aWeekday" value="협의" onchange="onAWeekdayNego(this)"/>
+            <span>요일/시간 협의 가능</span>
+          </label>
+        </div>
 
         <label class="ts-fulltime-label" style="margin-top:14px;">
           <input type="checkbox" id="aFulltime" name="aFulltime" value="1"/>
@@ -3336,26 +3332,36 @@ function timeOptions() {
   return html;
 }
 
-/* ── 학원 시간 ── */
-function setATime(s, e) {
-  document.getElementById('aTimeStart').value = `${String(s).padStart(2,'0')}:00`;
-  document.getElementById('aTimeEnd').value   = `${String(e).padStart(2,'0')}:00`;
-  document.querySelectorAll('.ts-quick').forEach(b => {
-    if (b.getAttribute('onclick') === `setATime(${s},${e})`) b.classList.add('active');
-    else if (b.closest('section') === document.getElementById('aTimeStart')?.closest('section')) b.classList.remove('active');
-  });
-  validateATime();
+/* ── 학원 요일+시간 태그 ── */
+function addASchedule() {
+  const day   = document.getElementById('aDayPick').value;
+  const start = document.getElementById('aTimeStartPick').value;
+  const end   = document.getElementById('aTimeEndPick').value;
+  const err   = document.getElementById('aScheduleErr');
+  if (!day)   { err.textContent = '요일을 선택해 주세요.'; return; }
+  if (!start) { err.textContent = '시작 시간을 선택해 주세요.'; return; }
+  if (!end)   { err.textContent = '종료 시간을 선택해 주세요.'; return; }
+  if (start >= end) { err.textContent = '종료 시간은 시작 시간보다 늦어야 합니다.'; return; }
+  err.textContent = '';
+  const val = `${day} ${start}~${end}`;
+  const tagsEl = document.getElementById('aScheduleTags');
+  const existing = [...tagsEl.querySelectorAll('[data-val]')].map(t => t.dataset.val);
+  if (existing.includes(val)) { err.textContent = '이미 추가된 항목입니다.'; return; }
+  const tag = document.createElement('span');
+  tag.dataset.val = val;
+  tag.className = 'region-tag';
+  tag.innerHTML = `📅 ${val} <button type="button" class="region-tag-x" onclick="this.parentNode.remove()">×</button>`;
+  tagsEl.appendChild(tag);
+  document.getElementById('aDayPick').value = '';
+  document.getElementById('aTimeStartPick').value = '';
+  document.getElementById('aTimeEndPick').value = '';
 }
-function validateATime() {
-  const s = document.getElementById('aTimeStart').value;
-  const e = document.getElementById('aTimeEnd').value;
-  const err = document.getElementById('aTimeErr');
-  if (s && e && s >= e) { err.textContent = '종료 시간은 시작 시간보다 늦어야 합니다.'; }
-  else { err.textContent = ''; }
+function getASchedules() {
+  return [...document.querySelectorAll('#aScheduleTags [data-val]')].map(t => t.dataset.val);
 }
 function onAWeekdayNego(cb) {
   if (cb.checked) {
-    document.querySelectorAll('input[name="aWeekday"]').forEach(c => { if (c.value !== '협의') c.checked = false; });
+    document.getElementById('aScheduleTags').innerHTML = '';
   }
 }
 
@@ -3552,19 +3558,18 @@ async function saveAcademyConditions() {
   const pay_min      = parseInt(document.getElementById('aPayMin').value) || 0;
   const pay_max      = parseInt(document.getElementById('aPayMax').value) || 0;
   const intro        = document.getElementById('aIntro').value.trim();
-  const time_start   = document.getElementById('aTimeStart').value || null;
-  const time_end     = document.getElementById('aTimeEnd').value || null;
+  const schedules    = getASchedules();
+  const weekday_nego = document.querySelector('input[name="aWeekday"][value="협의"]')?.checked || false;
   const fulltime_only = document.getElementById('aFulltime').checked;
-  const weekday_nego = weekdays.includes('협의');
 
   if (!subjects.length) { showToast('분야를 하나 이상 선택해 주세요.'); return; }
   if (!regions.length)  { showToast('지역을 하나 이상 선택해 주세요.'); return; }
-  if (time_start && time_end && time_start >= time_end) { showToast('종료 시간은 시작 시간보다 늦어야 합니다.'); return; }
+  if (!weekday_nego && !schedules.length) { showToast('수업 요일/시간을 하나 이상 추가하거나 협의를 선택해 주세요.'); return; }
 
   const { error } = await _supabase.from('academy_conditions').upsert({
     user_id: session.user.id,
-    subjects, regions, weekdays, employ_types, pay_min, pay_max, intro,
-    time_start, time_end, fulltime_only, weekday_nego,
+    subjects, regions, employ_types, pay_min, pay_max, intro,
+    schedules, weekday_nego, fulltime_only,
     updated_at: new Date().toISOString()
   }, { onConflict: 'user_id' });
 
