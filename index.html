@@ -2513,14 +2513,18 @@ const _supabase = supabase.createClient(
 
 /* agreed_at 저장 헬퍼 — email 절대 건드리지 않음 */
 async function saveAgreedAt(uid, role) {
-  // update 먼저 시도 (트리거로 row가 이미 있을 경우)
-  const { data: upd } = await _supabase
-    .from('users').update({ agreed_at: new Date().toISOString(), role })
+  const now = new Date().toISOString();
+  // update 먼저 시도
+  const { data: upd, error: updErr } = await _supabase
+    .from('users').update({ agreed_at: now, role })
     .eq('id', uid).select('id');
-  if (upd && upd.length > 0) return; // 성공
-  // row가 없으면 email 없이 insert
-  await _supabase.from('users')
-    .insert({ id: uid, agreed_at: new Date().toISOString(), role });
+  console.log('[saveAgreedAt] update result:', upd, updErr);
+  if (upd && upd.length > 0) return;
+  // row 없으면 insert
+  const { error: insErr } = await _supabase
+    .from('users').insert({ id: uid, agreed_at: now, role });
+  console.log('[saveAgreedAt] insert result:', insErr);
+  if (insErr) showToast('약관저장 오류: ' + insErr.message);
 }
 
 /* OAuth 콜백 처리 — onAuthStateChange에 위임, 여기선 아무것도 안 함 */
