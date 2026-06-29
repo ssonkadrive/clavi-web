@@ -935,6 +935,27 @@
       box-shadow:0 2px 8px rgba(91,108,255,.3);
     }
     /* 신버전 button 칩 */
+    .setup-cat-btn {
+      padding:8px 16px;border-radius:var(--radius-pill);
+      border:1.5px solid var(--border);background:var(--surface);
+      font-size:.85rem;color:var(--text);font-family:var(--font);
+      cursor:pointer;transition:all .15s;user-select:none;
+    }
+    .setup-cat-btn:hover { border-color:var(--primary);color:var(--primary); }
+    .setup-cat-btn.active {
+      background:var(--primary);border-color:var(--primary);color:#fff;
+      box-shadow:0 2px 8px rgba(91,108,255,.35);
+    }
+    .setup-sub-btn {
+      padding:6px 13px;border-radius:var(--radius-pill);
+      border:1.5px solid var(--border);background:var(--surface);
+      font-size:.82rem;color:var(--text);font-family:var(--font);
+      cursor:pointer;transition:all .15s;
+    }
+    .setup-sub-btn.active {
+      background:var(--primary-soft,#eef0ff);border-color:var(--primary);
+      color:var(--primary);font-weight:600;
+    }
     .match-chip-btn {
       position:relative;display:inline-flex;align-items:center;gap:5px;
       padding:8px 14px;border-radius:var(--radius-pill);
@@ -1533,9 +1554,24 @@
           <label class="form-label">이름 *</label>
           <input id="setupInstructorName" class="form-input" type="text" placeholder="예: 홍길동" maxlength="20" />
         </div>
-        <div class="form-group" style="margin-top:14px;">
-          <label class="form-label">전문 분야</label>
-          <input id="setupInstructorIndustry" class="form-input" type="text" placeholder="예: 발레, 현대무용" maxlength="40" />
+        <div class="form-group" style="margin-top:18px;">
+          <label class="form-label">어떤 걸 가르칠 수 있나요? <span style="color:var(--accent)">*</span></label>
+          <p style="font-size:.8rem;color:var(--text-muted);margin:4px 0 10px;">대분류를 선택하면 세부 과목이 나타납니다. 여러 개 선택 가능해요.</p>
+          <!-- 대분류 칩 -->
+          <div id="setupCatChips" style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:12px;">
+            <button type="button" class="setup-cat-btn" data-cat="music"   onclick="toggleSetupCat('music')"  >🎵 음악</button>
+            <button type="button" class="setup-cat-btn" data-cat="art"     onclick="toggleSetupCat('art')"    >🎨 미술</button>
+            <button type="button" class="setup-cat-btn" data-cat="sports"  onclick="toggleSetupCat('sports')" >⚽ 체육</button>
+            <button type="button" class="setup-cat-btn" data-cat="dance"   onclick="toggleSetupCat('dance')"  >🩰 무용/발레</button>
+            <button type="button" class="setup-cat-btn" data-cat="acting"  onclick="toggleSetupCat('acting')" >🎭 연기/뮤지컬</button>
+            <button type="button" class="setup-cat-btn" data-cat="general" onclick="toggleSetupCat('general')">📚 일반/학습</button>
+          </div>
+          <!-- 소분류 영역 -->
+          <div id="setupSubjectArea" style="display:none;background:var(--bg-card,#f8f8fb);border-radius:12px;padding:12px 14px;">
+            <div id="setupSubjectList" style="display:flex;flex-wrap:wrap;gap:8px;"></div>
+          </div>
+          <!-- 선택된 항목 요약 -->
+          <div id="setupSelectedSummary" style="margin-top:10px;font-size:.82rem;color:var(--text-muted);min-height:18px;"></div>
         </div>
       </div>
 
@@ -2586,6 +2622,70 @@ function showProfileSetup(role) {
   showPage('profileSetupPage');
 }
 
+/* ══ 프로필 설정 - 과목 선택 ══ */
+const _setupCatSubjects = {
+  music:   ['피아노','건반(키보드)','보컬/성악','기타/베이스','바이올린','첼로','비올라','플루트','클라리넷','트럼펫','드럼/타악기','우쿨렐레','하프','오보에','색소폰','음악이론/작곡'],
+  art:     ['회화/순수미술','조소/소조','수채화/파스텔','디지털 아트','아동/취미미술','공예/도예','사진/영상','입시미술'],
+  sports:  ['태권도','유도','검도','복싱/킥복싱','합기도','수영','체조/기계체조','골프','요가/필라테스','크로스핏/PT','댄스스포츠','육상','볼링','클라이밍','에어로빅','기타 체육'],
+  dance:   ['발레','현대무용','한국무용','재즈댄스','힙합댄스','K-POP 댄스','방송댄스','뮤지컬 안무'],
+  acting:  ['뮤지컬 연기','연기(드라마/영화)','보이스/발성','즉흥연기','뮤지컬 노래','무용(뮤지컬)'],
+  general: ['영어','수학','국어','과학','한국사/사회','논술','코딩/SW','중국어','일본어','기타 교과'],
+};
+const _setupCatLabels = { music:'🎵 음악', art:'🎨 미술', sports:'⚽ 체육', dance:'🩰 무용/발레', acting:'🎭 연기/뮤지컬', general:'📚 일반/학습' };
+let _setupActiveCat = null;
+const _setupSelected = new Set();
+
+function toggleSetupCat(cat) {
+  const btn = document.querySelector(`.setup-cat-btn[data-cat="${cat}"]`);
+  const area = document.getElementById('setupSubjectArea');
+  const list = document.getElementById('setupSubjectList');
+
+  if (_setupActiveCat === cat) {
+    _setupActiveCat = null;
+    btn.classList.remove('active');
+    area.style.display = 'none';
+    return;
+  }
+  document.querySelectorAll('.setup-cat-btn').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  _setupActiveCat = cat;
+
+  const subs = _setupCatSubjects[cat] || [];
+  list.innerHTML = subs.map(s => {
+    const key = cat + ':' + s;
+    const on = _setupSelected.has(key);
+    return `<button type="button" class="setup-sub-btn${on?' active':''}" onclick="toggleSetupSub('${cat}','${s}')">${s}</button>`;
+  }).join('');
+  area.style.display = 'block';
+}
+
+function toggleSetupSub(cat, name) {
+  const key = cat + ':' + name;
+  if (_setupSelected.has(key)) _setupSelected.delete(key);
+  else _setupSelected.add(key);
+
+  // 버튼 UI 업데이트
+  document.querySelectorAll('#setupSubjectList .setup-sub-btn').forEach(b => {
+    if (b.textContent === name) b.classList.toggle('active', _setupSelected.has(key));
+  });
+  _updateSetupSummary();
+}
+
+function _updateSetupSummary() {
+  const el = document.getElementById('setupSelectedSummary');
+  if (!el) return;
+  if (_setupSelected.size === 0) { el.textContent = ''; return; }
+  const grouped = {};
+  _setupSelected.forEach(k => {
+    const [cat, name] = k.split(':');
+    if (!grouped[cat]) grouped[cat] = [];
+    grouped[cat].push(name);
+  });
+  el.innerHTML = Object.entries(grouped).map(([cat, names]) =>
+    `<span style="margin-right:8px;"><strong>${_setupCatLabels[cat]}</strong>: ${names.join(', ')}</span>`
+  ).join('');
+}
+
 async function saveProfileSetup() {
   const { data: { session } } = await _supabase.auth.getSession();
   if (!session?.user) { showToast('세션이 만료됐습니다. 다시 로그인해 주세요.'); return; }
@@ -2608,7 +2708,8 @@ async function saveProfileSetup() {
   } else {
     const name = document.getElementById('setupInstructorName').value.trim();
     if (!name) { showToast('이름을 입력해 주세요.'); return; }
-    const industry = document.getElementById('setupInstructorIndustry').value.trim();
+    if (_setupSelected.size === 0) { showToast('가르칠 수 있는 과목을 하나 이상 선택해 주세요.'); return; }
+    const industry = Array.from(_setupSelected).map(k => k.split(':')[1]).join(', ');
     await _supabase.from('instructors').insert({ user_id: uid, name, industry });
   }
 
