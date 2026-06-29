@@ -3267,17 +3267,70 @@ function renderRegionSelector(containerId, maxCount) {
   if (!wrap) return;
   wrap.dataset.max = maxCount;
   wrap.innerHTML = `
-    <div style="display:flex;gap:8px;margin-bottom:10px;flex-wrap:wrap;">
-      <select id="${containerId}_sido" class="form-input" style="flex:1;min-width:120px;" onchange="onSidoChange('${containerId}')">
-        <option value="">시/도 선택</option>
+    <style>
+      .region-select-wrap { display:flex; gap:8px; margin-bottom:10px; }
+      .region-select {
+        flex:1; min-width:0;
+        appearance:none; -webkit-appearance:none;
+        background: #fff url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%235b6cff' stroke-width='1.8' fill='none' stroke-linecap='round'/%3E%3C/svg%3E") no-repeat right 12px center;
+        border: 1.5px solid var(--border);
+        border-radius: var(--radius-sm);
+        padding: 10px 36px 10px 14px;
+        font-family: var(--font);
+        font-size: .88rem;
+        color: var(--text);
+        cursor: pointer;
+        transition: border-color .18s, box-shadow .18s;
+        outline: none;
+      }
+      .region-select:focus { border-color: var(--primary); box-shadow: 0 0 0 3px rgba(91,108,255,.12); }
+      .region-select:disabled { background-color: #f8f9fc; color: #b0b8d0; cursor: not-allowed; }
+      .region-add-btn {
+        flex-shrink:0;
+        padding: 10px 18px;
+        background: var(--primary);
+        color: #fff;
+        border: none;
+        border-radius: var(--radius-sm);
+        font-family: var(--font);
+        font-size: .88rem;
+        font-weight: 700;
+        cursor: pointer;
+        transition: opacity .15s, transform .1s;
+        white-space: nowrap;
+      }
+      .region-add-btn:hover { opacity:.88; }
+      .region-add-btn:active { transform:scale(.97); }
+      .region-tag {
+        display:inline-flex; align-items:center; gap:5px;
+        padding: 5px 12px;
+        background: var(--primary-soft);
+        color: var(--primary);
+        border-radius: var(--radius-pill);
+        font-size: .82rem;
+        font-weight: 700;
+        font-family: var(--font);
+        animation: tagPop .18s ease;
+      }
+      @keyframes tagPop { from { transform:scale(.8); opacity:0; } to { transform:scale(1); opacity:1; } }
+      .region-tag-x {
+        background: none; border: none; cursor: pointer;
+        color: var(--primary); font-size: 1rem; line-height:1;
+        padding: 0; opacity:.6; transition:opacity .15s;
+      }
+      .region-tag-x:hover { opacity:1; }
+    </style>
+    <div class="region-select-wrap">
+      <select id="${containerId}_sido" class="region-select" onchange="onSidoChange('${containerId}')">
+        <option value="">📍 시/도 선택</option>
         ${Object.keys(KOREA_REGIONS).map(s=>`<option value="${s}">${s}</option>`).join('')}
       </select>
-      <select id="${containerId}_sigungu" class="form-input" style="flex:1;min-width:120px;" disabled>
+      <select id="${containerId}_sigungu" class="region-select" disabled>
         <option value="">구/군 선택</option>
       </select>
-      <button type="button" class="primary-btn" style="padding:0 16px;white-space:nowrap;" onclick="addRegion('${containerId}')">추가</button>
+      <button type="button" class="region-add-btn" onclick="addRegion('${containerId}')">+ 추가</button>
     </div>
-    <div id="${containerId}_tags" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+    <div id="${containerId}_tags" style="display:flex;flex-wrap:wrap;gap:7px;min-height:10px;"></div>
   `;
 }
 
@@ -3307,8 +3360,8 @@ function addRegion(containerId) {
   if (existing.length >= max) { showToast(`최대 ${max}개까지 선택 가능합니다.`); return; }
   const tag = document.createElement('span');
   tag.dataset.val = val;
-  tag.style.cssText = 'display:inline-flex;align-items:center;gap:4px;padding:4px 10px;background:var(--primary-soft,#eef0ff);color:var(--primary);border-radius:20px;font-size:.82rem;font-weight:600;';
-  tag.innerHTML = `${val} <button type="button" style="background:none;border:none;cursor:pointer;color:var(--primary);font-size:.9rem;line-height:1;padding:0;" onclick="this.parentNode.remove()">×</button>`;
+  tag.className = 'region-tag';
+  tag.innerHTML = `${val} <button type="button" class="region-tag-x" onclick="this.parentNode.remove()">×</button>`;
   tagsEl.appendChild(tag);
 }
 
