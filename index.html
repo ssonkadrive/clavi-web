@@ -2401,13 +2401,16 @@ function renderSubSkills(prefix, industry, cb) {
 }
 
 function confirmSubSkills() {
-  const { prefix, industry } = _subSkillCtx;
+  const { prefix, industry, cb } = _subSkillCtx;
+
   // 기존 히든 인풋 제거
   document.querySelectorAll(`input[name="${prefix}Skill"][data-industry="${industry}"]`).forEach(e => e.remove());
 
-  // 선택된 값 히든 인풋으로 저장
+  // 선택된 항목 수집
+  const selected = [...document.querySelectorAll('#subSkillModalBody input:checked')];
   const panel = document.getElementById(prefix + 'SubSkillPanel');
-  document.querySelectorAll('#subSkillModalBody input:checked').forEach(el => {
+
+  selected.forEach(el => {
     const hidden = document.createElement('input');
     hidden.type = 'hidden';
     hidden.name = prefix + 'Skill';
@@ -2416,9 +2419,26 @@ function confirmSubSkills() {
     panel.appendChild(hidden);
   });
 
+  // 대분류 칩 아래 선택 태그 표시
+  const chipLabel = cb.closest('label');
+  const existingTags = chipLabel.querySelector('.subskill-tags');
+  if (existingTags) existingTags.remove();
+
+  if (selected.length) {
+    const tagWrap = document.createElement('div');
+    tagWrap.className = 'subskill-tags';
+    tagWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;';
+    selected.forEach(el => {
+      const tag = document.createElement('span');
+      tag.style.cssText = 'font-size:.72rem;background:var(--primary-soft);color:var(--primary);padding:3px 8px;border-radius:99px;white-space:nowrap;';
+      tag.textContent = el.closest('label').querySelector('span').textContent;
+      tagWrap.appendChild(tag);
+    });
+    chipLabel.appendChild(tagWrap);
+  }
+
   closeSubSkillModal(null, true);
-  const count = document.querySelectorAll(`input[name="${prefix}Skill"][data-industry="${industry}"]`).length;
-  if (count) showToast(`${count}개 세부 조건 선택됨 ✅`);
+  if (selected.length) showToast(`${selected.length}개 세부 조건 선택됨 ✅`);
 }
 
 function closeSubSkillModal(e, force) {
