@@ -334,6 +334,81 @@
     .submit-btn:hover { transform:translateY(-2px); box-shadow:0 20px 56px rgba(91,108,255,0.22); background-position:100% 0; }
     .submit-hint { text-align:center; font-size:.85rem; color:var(--text-muted); margin-top:14px; }
 
+    /* ── 약관 모달 ──────────────────────────────── */
+    .terms-overlay {
+      display:none; position:fixed; inset:0; z-index:9999;
+      background:rgba(10,14,30,0.55); backdrop-filter:blur(4px);
+      align-items:center; justify-content:center; padding:16px;
+    }
+    .terms-overlay.active { display:flex; }
+    .terms-box {
+      background:var(--surface); border-radius:var(--radius);
+      width:100%; max-width:520px; max-height:90vh;
+      display:flex; flex-direction:column; box-shadow:var(--shadow-lg);
+      animation:termsIn .28s cubic-bezier(.34,1.56,.64,1);
+    }
+    @keyframes termsIn { from{opacity:0;transform:scale(.94) translateY(14px)} to{opacity:1;transform:none} }
+    .terms-header { padding:24px 24px 0; }
+    .terms-header h2 { font-size:1.1rem; margin-bottom:4px; }
+    .terms-header p  { font-size:.82rem; color:var(--text-muted); }
+    .terms-progress-wrap { padding:12px 24px 0; }
+    .terms-progress-bg { height:4px; background:var(--border); border-radius:4px; overflow:hidden; }
+    .terms-progress-fill { height:100%; width:0%; background:var(--primary); border-radius:4px; transition:width .15s; }
+    .terms-scroll {
+      flex:1; overflow-y:auto; padding:16px 24px; margin:8px 8px 0;
+      border:1px solid var(--border); border-radius:var(--radius-sm);
+      font-size:.88rem; line-height:1.7; color:var(--text);
+    }
+    .terms-scroll::-webkit-scrollbar { width:5px; }
+    .terms-scroll::-webkit-scrollbar-thumb { background:var(--primary); border-radius:3px; }
+    .terms-article h3 { font-size:.9rem; font-weight:700; margin:18px 0 6px; color:var(--text); }
+    .terms-article p  { margin-bottom:7px; }
+    .terms-article strong { color:var(--text); }
+    .terms-scroll-hint {
+      text-align:center; font-size:.8rem; color:var(--text-muted);
+      padding:10px 0 2px; animation:bounce2 .8s infinite alternate;
+    }
+    @keyframes bounce2 { from{transform:translateY(0)} to{transform:translateY(4px)} }
+    .terms-scroll-hint.hidden { display:none; }
+    .terms-role-section { padding:16px 24px 0; }
+    .terms-role-section p { font-size:.88rem; color:var(--text-muted); margin-bottom:10px; }
+    .terms-role-btns { display:grid; grid-template-columns:1fr 1fr; gap:10px; margin-bottom:12px; }
+    .terms-role-btn {
+      display:flex; align-items:center; gap:8px; padding:12px 14px;
+      border:2px solid var(--border); border-radius:var(--radius-sm);
+      background:var(--surface); cursor:pointer; font-family:var(--font); font-size:.9rem;
+      transition:border-color .2s, background .2s;
+    }
+    .terms-role-btn input { accent-color:var(--primary); }
+    .terms-role-btn.selected { border-color:var(--primary); background:var(--primary-soft); }
+    .terms-meta-input {
+      width:100%; font-family:var(--font); font-size:.95rem; padding:12px 14px;
+      border:1.5px solid var(--border); border-radius:var(--radius-sm);
+      background:#fafbff; color:var(--text); outline:none; margin-bottom:4px;
+      transition:border-color .2s, box-shadow .2s;
+    }
+    .terms-meta-input:focus { border-color:var(--primary); box-shadow:0 0 0 4px rgba(91,108,255,0.12); }
+    .terms-meta-wrap { display:none; animation:fadeIn .2s; }
+    .terms-meta-wrap.show { display:block; }
+    @keyframes fadeIn { from{opacity:0;transform:translateY(-6px)} to{opacity:1;transform:none} }
+    .terms-footer { padding:16px 24px 20px; display:flex; gap:10px; }
+    .terms-btn-reject {
+      flex:0 0 auto; padding:14px 20px; border-radius:var(--radius-sm);
+      border:1.5px solid var(--border); background:transparent;
+      color:var(--text-muted); font-family:var(--font); font-size:.9rem; cursor:pointer;
+    }
+    .terms-btn-accept {
+      flex:1; padding:14px; border-radius:var(--radius-sm); border:none;
+      background:linear-gradient(135deg,var(--primary) 0%,#8b5cf6 100%);
+      color:#fff; font-family:var(--font); font-size:1rem; font-weight:700;
+      cursor:pointer; transition:opacity .2s, box-shadow .2s;
+      box-shadow:0 4px 18px rgba(91,108,255,0.3);
+    }
+    .terms-btn-accept:disabled {
+      background:#d1d5e8; color:#9ca3af; box-shadow:none; cursor:not-allowed;
+    }
+    .terms-hint { font-size:.78rem; color:var(--text-muted); padding:0 24px 8px; text-align:center; }
+
     /* ── 토스트 ──────────────────────────────────── */
     .toast {
       position:fixed; bottom:28px; left:50%; transform:translateX(-50%) translateY(80px);
@@ -2418,10 +2493,21 @@ const _supabase = supabase.createClient(
     const displayName = u.user_metadata?.name || u.user_metadata?.email || u.email || u.id;
     saveSession(role, data.session.access_token, displayName);
     currentUserRole = role;
-    const { data: existing } = await _supabase.from('users').select('id').eq('id', u.id).maybeSingle();
+    const { data: existing } = await _supabase.from('users').select('id,agreed_at').eq('id', u.id).maybeSingle();
     if (!existing) {
-      showToast('환영합니다! 기본 정보를 입력해 주세요 🎉');
-      showProfileSetup(role);
+      showToast('환영합니다! 약관에 동의해 주세요 🎉');
+      showTermsModal(async (chosenRole, metaVal) => {
+        currentUserRole = chosenRole;
+        saveSession(chosenRole, data.session.access_token, displayName);
+        await _supabase.from('users').upsert({ id: u.id, agreed_at: new Date().toISOString(), role: chosenRole });
+        showProfileSetup(chosenRole);
+      });
+    } else if (!existing.agreed_at) {
+      showTermsModal(async (chosenRole, metaVal) => {
+        await _supabase.from('users').update({ agreed_at: new Date().toISOString() }).eq('id', u.id);
+        showToast('로그인 성공! 환영합니다 🎉');
+        setTimeout(() => enterApp(), 600);
+      });
     } else {
       showToast('로그인 성공! 환영합니다 🎉');
       setTimeout(() => enterApp(), 600);
@@ -2441,9 +2527,19 @@ const _supabase = supabase.createClient(
     saveSession(role, session.access_token, displayName);
     currentUserRole = role;
     const { data: existing } = await _supabase
-      .from('users').select('id').eq('id', u.id).maybeSingle();
+      .from('users').select('id,agreed_at').eq('id', u.id).maybeSingle();
     if (!existing) {
-      showProfileSetup(role);
+      showTermsModal(async (chosenRole, metaVal) => {
+        currentUserRole = chosenRole;
+        saveSession(chosenRole, session.access_token, displayName);
+        await _supabase.from('users').upsert({ id: u.id, agreed_at: new Date().toISOString(), role: chosenRole });
+        showProfileSetup(chosenRole);
+      });
+    } else if (!existing.agreed_at) {
+      showTermsModal(async (chosenRole, metaVal) => {
+        await _supabase.from('users').update({ agreed_at: new Date().toISOString() }).eq('id', u.id);
+        enterApp();
+      });
     } else {
       enterApp();
     }
@@ -2494,12 +2590,22 @@ _supabase.auth.onAuthStateChange(async (event, session) => {
                      || u.user_metadata?.nickname || u.email || u.id;
     saveSession(role, session.access_token, displayName);
     currentUserRole = role;
-    // 신규 유저 여부 확인
     const { data: existing } = await _supabase
-      .from('users').select('id').eq('id', u.id).maybeSingle();
+      .from('users').select('id,agreed_at').eq('id', u.id).maybeSingle();
     if (!existing) {
-      showToast('환영합니다! 기본 정보를 입력해 주세요 🎉');
-      showProfileSetup(role);
+      showToast('환영합니다! 약관에 동의해 주세요 🎉');
+      showTermsModal(async (chosenRole, metaVal) => {
+        currentUserRole = chosenRole;
+        saveSession(chosenRole, session.access_token, displayName);
+        await _supabase.from('users').upsert({ id: u.id, agreed_at: new Date().toISOString(), role: chosenRole });
+        showProfileSetup(chosenRole);
+      });
+    } else if (!existing.agreed_at) {
+      showTermsModal(async (chosenRole, metaVal) => {
+        await _supabase.from('users').update({ agreed_at: new Date().toISOString() }).eq('id', u.id);
+        showToast('로그인 성공! 환영합니다 🎉');
+        setTimeout(() => enterApp(), 600);
+      });
     } else {
       showToast('로그인 성공! 환영합니다 🎉');
       setTimeout(() => enterApp(), 600);
@@ -4796,6 +4902,172 @@ showPage = function(id) {
   _origShowPage(id);
   if (id === 'landingPage') setTimeout(runCountUp, 80);
 };
+</script>
+
+<!-- ══ 약관 동의 모달 ══ -->
+<div class="terms-overlay" id="termsOverlay">
+  <div class="terms-box">
+    <div class="terms-header">
+      <h2>⚖️ Clavi 서비스 이용약관 및 개인정보 처리방침</h2>
+      <p>약관을 끝까지 읽어주세요. 하단까지 스크롤해야 동의 버튼이 활성화됩니다.</p>
+    </div>
+    <div class="terms-progress-wrap">
+      <div class="terms-progress-bg"><div class="terms-progress-fill" id="termsProgressFill"></div></div>
+    </div>
+    <div class="terms-scroll-hint" id="termsScrollHint">↓ 아래로 스크롤하여 약관을 읽어주세요</div>
+    <div class="terms-scroll" id="termsScroll" onscroll="onTermsScroll()">
+      <div class="terms-article">
+        <h3>━━ [필수] Clavi 서비스 이용약관 ━━</h3>
+        <h3>제1조 (목적 및 중개 플랫폼으로서의 지위)</h3>
+        <p>1. 본 약관은 ㈜Clavi(이하 "회사")가 제공하는 학원 운영 지원, 강사 매칭, 참여형 설문 및 통계 분석 서비스(이하 "서비스")를 이용함에 있어 회사와 회원 간의 권리, 의무 및 책임 사항을 규정함을 목적으로 합니다.</p>
+        <p>2. <strong>회사는 학원장 회원과 강사 회원 간의 자율적인 매칭과 소통을 지원하는 단순 정보중개 플랫폼이며, 회원 간 체결되는 고용, 용역, 알바 등 일체의 계약 당사자가 아닙니다.</strong> 최종 채용 결정 및 계약 내용은 회원 간 자율적으로 결정하며, 회사는 고의 또는 중과실이 없는 한 일체의 노무·세무·민·형사상 책임을 지지 않습니다.</p>
+        <h3>제2조 (회원가입 및 단체 회원의 대표권)</h3>
+        <p>1. 서비스 이용계약은 회원이 되고자 하는 자가 본 약관의 내용에 동의하고 회원가입 신청을 하면 회사가 이를 승인함으로써 성립합니다. 본 약관은 소셜 로그인(네이버, 카카오, 구글 등) 및 일반 이메일 가입을 포함한 모든 가입 방식에 동일하게 적용됩니다.</p>
+        <p>2. <strong>법인 또는 단체(학원 등)의 이름으로 회원가입을 신청하는 경우, 신청자는 해당 법인을 대표하거나 정당한 위임을 받은 권한이 있음을 보증해야 합니다.</strong> 권한이 없는 자가 허위로 가입하여 문제가 발생한 경우 해당 신청자가 모든 법적 책임을 전적으로 부담합니다.</p>
+        <h3>제3조 (부정 가입 및 계정 공유 금지)</h3>
+        <p>1. 회원은 1인(또는 1개 법인)당 1개의 계정만 개설 및 보유할 수 있으며, 타인의 명의를 도용한 부정 가입은 발견 즉시 사전 통보 없이 삭제됩니다.</p>
+        <p>2. <strong>계정은 회원 본인만 사용할 수 있으며, 어떠한 경우에도 타인에게 양도, 대여, 매매하거나 타인과 계정을 공유할 수 없습니다.</strong> 위반 시 서비스 이용이 영구 제한될 수 있습니다.</p>
+        <h3>제4조 (직무역량 기반 매칭 알고리즘 및 포인트 시스템)</h3>
+        <p>1. 학원장 회원은 한정된 포인트를 활용하여 직무 관련 역량 항목에 배분하는 방식으로 채용 조건을 설정할 수 있습니다.</p>
+        <p>2. <strong>성별·연령·출신지역 등 법령상 차별금지 사유를 설정하여 발생한 모든 법적 책임은 해당 학원장 회원에게 있습니다.</strong></p>
+        <p>3. 서비스 내 AI 및 내부 알고리즘 기반 매칭 추천은 <strong>단순 참고용 정보 제공에 불과하며, 채용 성공 여부를 보장하지 않습니다.</strong></p>
+        <h3>제5조 (노쇼 방지를 위한 예약 보증금 제도)</h3>
+        <p>1. 회사는 신뢰성 있는 면접 및 매칭을 보장하기 위해 '예약 보증금(No-Show Deposit)' 제도를 운영할 수 있습니다.</p>
+        <p>2. 매칭 및 면접 약속 확정 시, 양 당사자는 일정 금액(2~3만 원 상당)의 예약 보증금을 예치하여야 합니다.</p>
+        <p>3. 정상 완료 또는 취소 가능 시간 내 취소 시 전액 반환됩니다.</p>
+        <p>4. <strong>무단 불참(노쇼) 또는 취소 가능 시간 경과 후 취소 시 보증금은 반환되지 않습니다.</strong></p>
+        <h3>제6조 (회원 정보의 진실성 의무 및 제재)</h3>
+        <p>1. 강사 회원은 본인의 역량, 경력, 자격 등에 관하여 진실하고 정확한 정보만을 입력하여야 합니다.</p>
+        <p>2. <strong>허위 정보로 인한 손해의 모든 민·형사상 책임은 해당 강사 회원에게 귀속됩니다.</strong></p>
+        <p>3. 허위 정보 입력, 무단 노쇼, 악의적 허위 신고 적발 시 노출 제한·계정 정지·재가입 제한 조치가 취해질 수 있습니다.</p>
+        <p>4. 제재 처분에 이의가 있는 회원은 처분 통지 후 <strong>7일 이내</strong>에 증빙 자료를 첨부하여 이의신청할 수 있습니다.</p>
+        <h3>제7조 (회원 데이터의 소유권 및 활용)</h3>
+        <p>1. 회원이 서비스 내 생성한 모든 데이터의 통계적·2차적 저작권 및 소유권은 회사에 귀속됩니다.</p>
+        <p>2. <strong>회사는 익명화·통계화된 데이터를 AI 모델 학습, 제휴 협력 목적으로 활용할 수 있으며, 회원은 이에 이의를 제기할 수 없습니다.</strong></p>
+        <h3>제8조 (서비스의 중단 및 면책)</h3>
+        <p>1. 불가항력적 사유로 서비스를 제공할 수 없는 경우 회사의 책임이 면제됩니다.</p>
+        <p>2. AI 추천 리포트를 신뢰한 경영적 결정으로 입은 손해에 대해 회사는 책임을 지지 않습니다.</p>
+        <h3>제9조 (전자적 동의 기록 및 로그의 보관)</h3>
+        <p><strong>회사는 약관 동의 시각, 회원가입 시점 등 주요 활동 로그를 전자적으로 기록·보관하며, 법적 분쟁 시 공식 증거 자료로 활용됩니다.</strong></p>
+        <h3>제10조 (준거법 및 관할법원)</h3>
+        <p>대한민국 법률을 준거법으로 적용하며, 회사 본사 소재지를 관할하는 법원을 합의 관할 법원으로 합니다.</p>
+
+        <h3>━━ [필수] 개인정보 처리방침 ━━</h3>
+        <p>㈜Clavi는 개인정보보호법에 따라 회원의 개인정보를 보호하기 위하여 다음과 같이 개인정보 처리방침을 수립·공개합니다.</p>
+        <h3>1. 개인정보의 수집 및 이용 목적</h3>
+        <p>- <strong>회원 가입 및 관리:</strong> 본인확인, 부정이용 방지, 제재 조치 및 이의신청 처리.</p>
+        <p>- <strong>서비스 제공 및 AI 분석:</strong> 매칭 서비스 제공, 보증금 결제 및 정산, AI 기반 분석 리포트 생성, 비식별 통계 자료 생성 및 제휴사 활용.</p>
+        <h3>2. 수집하는 개인정보 항목</h3>
+        <p>- <strong>필수:</strong> 이름, 휴대전화번호, 이메일 주소, 가입 인증 정보(소셜 플랫폼 고유 식별 ID 또는 이메일 계정 정보)</p>
+        <p>- <strong>역할별 필수:</strong> [학원장] 학원명, 학원 주소 / [강사] 담당 과목, 경력 사항</p>
+        <p>- <strong>자동 수집:</strong> 서비스 이용 기록, 접속 로그, 쿠키, IP 정보, 약관 동의 타임스탬프, 보증금 결제 기록, 매칭 설정 데이터.</p>
+        <h3>3. 개인정보 보유 및 이용기간</h3>
+        <p>- 회원 탈퇴 시까지 보유함을 원칙으로 합니다.</p>
+        <p>- <strong>단, 법적 분쟁 대비 및 우회 재가입 방지를 위하여 탈퇴 후 최대 3년간 개인정보(소셜 식별값 암호화 해시 포함)를 분리 보관 후 파기합니다.</strong></p>
+        <h3>4. 개인정보의 제3자 제공 및 위탁</h3>
+        <p>- 원칙적으로 외부에 제공하지 않습니다. 단, 회원이 직접 신청하는 제휴 서비스 연계 시 별도 동의를 획득한 후 제공합니다.</p>
+        <p>- 비식별 통계자료는 별도 동의 없이 제휴사에 제공될 수 있습니다.</p>
+      </div>
+    </div>
+
+    <!-- 역할 선택 -->
+    <div class="terms-role-section">
+      <p>회원 유형을 선택해 주세요 <span style="color:var(--accent)">*</span></p>
+      <div class="terms-role-btns">
+        <label class="terms-role-btn" id="termsBtnAcademy">
+          <input type="radio" name="termsRole" value="academy" onchange="onTermsRoleChange(this)"> 🏫 학원장 회원
+        </label>
+        <label class="terms-role-btn" id="termsBtnInstructor">
+          <input type="radio" name="termsRole" value="instructor" onchange="onTermsRoleChange(this)"> 🎓 강사 회원
+        </label>
+      </div>
+      <div class="terms-meta-wrap" id="termsMetaWrap">
+        <input class="terms-meta-input" id="termsMetaInput" type="text" placeholder="">
+      </div>
+    </div>
+
+    <p class="terms-hint" id="termsHint">약관을 끝까지 읽고 회원 유형을 선택해야 동의 버튼이 활성화됩니다.</p>
+    <div class="terms-footer">
+      <button class="terms-btn-reject" onclick="rejectTerms()">거절</button>
+      <button class="terms-btn-accept" id="termsBtnAccept" disabled onclick="acceptTerms()">수락 및 가입완료</button>
+    </div>
+  </div>
+</div>
+
+<script>
+/* ══ 약관 모달 ══ */
+let _termsScrolled = false;
+let _termsRole = '';
+let _termsPendingCallback = null;
+
+function showTermsModal(callback) {
+  _termsScrolled = false;
+  _termsRole = '';
+  _termsPendingCallback = callback;
+  document.getElementById('termsProgressFill').style.width = '0%';
+  document.getElementById('termsScrollHint').classList.remove('hidden');
+  document.getElementById('termsBtnAccept').disabled = true;
+  document.getElementById('termsHint').textContent = '약관을 끝까지 읽고 회원 유형을 선택해야 동의 버튼이 활성화됩니다.';
+  document.querySelectorAll('.terms-role-btn').forEach(b => b.classList.remove('selected'));
+  document.querySelectorAll('input[name="termsRole"]').forEach(r => r.checked = false);
+  document.getElementById('termsMetaWrap').classList.remove('show');
+  document.getElementById('termsMetaInput').value = '';
+  document.getElementById('termsScroll').scrollTop = 0;
+  document.getElementById('termsOverlay').classList.add('active');
+}
+
+function onTermsScroll() {
+  const el = document.getElementById('termsScroll');
+  const ratio = el.scrollTop / (el.scrollHeight - el.clientHeight);
+  const pct = Math.min(100, Math.round(ratio * 100));
+  document.getElementById('termsProgressFill').style.width = pct + '%';
+  if (pct >= 98 && !_termsScrolled) {
+    _termsScrolled = true;
+    document.getElementById('termsScrollHint').classList.add('hidden');
+  }
+  checkTermsReady();
+}
+
+function onTermsRoleChange(el) {
+  _termsRole = el.value;
+  document.querySelectorAll('.terms-role-btn').forEach(b => b.classList.remove('selected'));
+  el.closest('.terms-role-btn').classList.add('selected');
+  const wrap = document.getElementById('termsMetaWrap');
+  const input = document.getElementById('termsMetaInput');
+  if (_termsRole === 'academy') {
+    input.placeholder = '학원명을 입력해 주세요';
+    wrap.classList.add('show');
+  } else {
+    input.placeholder = '담당 과목을 입력해 주세요 (예: 피아노, 발레)';
+    wrap.classList.add('show');
+  }
+  input.addEventListener('input', checkTermsReady);
+  checkTermsReady();
+}
+
+function checkTermsReady() {
+  const metaVal = document.getElementById('termsMetaInput').value.trim();
+  const ready = _termsScrolled && _termsRole && metaVal.length > 0;
+  document.getElementById('termsBtnAccept').disabled = !ready;
+  if (ready) {
+    document.getElementById('termsHint').textContent = '✅ 모든 조건이 충족됐습니다!';
+  }
+}
+
+function rejectTerms() {
+  document.getElementById('termsOverlay').classList.remove('active');
+  showToast('약관에 동의하지 않으면 서비스를 이용할 수 없습니다.');
+  setTimeout(() => { _supabase.auth.signOut(); showPage('landingPage'); }, 1200);
+}
+
+async function acceptTerms() {
+  const metaVal = document.getElementById('termsMetaInput').value.trim();
+  document.getElementById('termsOverlay').classList.remove('active');
+  if (_termsPendingCallback) {
+    await _termsPendingCallback(_termsRole, metaVal);
+    _termsPendingCallback = null;
+  }
+}
 </script>
 </body>
 </html>
