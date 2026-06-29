@@ -2479,55 +2479,8 @@ const _supabase = supabase.createClient(
 (async () => {
   const params = new URLSearchParams(window.location.search);
 
-  // 네이버 Edge Function 콜백
-  if (params.get('naver_token')) {
-    const token = params.get('naver_token');
-    const role  = params.get('role') || 'instructor';
-    console.log('[CLAVI] naver_token 감지, verifyOtp 시작');
-    window.history.replaceState({}, '', '/');
-    let data, error;
-    try {
-      ({ data, error } = await _supabase.auth.verifyOtp({ token_hash: token, type: 'magiclink' }));
-      console.log('[CLAVI] verifyOtp 결과 - error:', error?.message, 'session:', !!data?.session);
-    } catch(e) {
-      console.log('[CLAVI] verifyOtp 예외:', e?.message);
-      showToast('네이버 로그인 오류: ' + e?.message);
-      return;
-    }
-    if (error || !data?.session) {
-      console.log('[CLAVI] verifyOtp 실패:', error?.message);
-      showToast('네이버 로그인 오류: ' + (error?.message || '다시 시도해주세요'));
-      return;
-    }
-    const u = data.session.user;
-    const displayName = u.user_metadata?.name || u.user_metadata?.email || u.email || u.id;
-    saveSession(role, data.session.access_token, displayName);
-    currentUserRole = role;
-    const { data: existing, error: existErr } = await _supabase.from('users').select('id,agreed_at').eq('id', u.id).maybeSingle();
-    console.log('[CLAVI-NAVER] existing:', existing, 'error:', existErr);
-    if (!existing) {
-      console.log('[CLAVI-NAVER] 신규유저 → showTermsModal');
-      showToast('환영합니다! 약관에 동의해 주세요 🎉');
-      showTermsModal(async (chosenRole, metaVal) => {
-        currentUserRole = chosenRole;
-        saveSession(chosenRole, data.session.access_token, displayName);
-        await _supabase.from('users').upsert({ id: u.id, agreed_at: new Date().toISOString(), role: chosenRole });
-        showProfileSetup(chosenRole);
-      });
-    } else if (!existing.agreed_at) {
-      console.log('[CLAVI-NAVER] agreed_at 없음 → showTermsModal');
-      showTermsModal(async (chosenRole, metaVal) => {
-        await _supabase.from('users').update({ agreed_at: new Date().toISOString() }).eq('id', u.id);
-        showToast('로그인 성공! 환영합니다 🎉');
-        setTimeout(() => enterApp(), 600);
-      });
-    } else {
-      console.log('[CLAVI-NAVER] agreed_at 있음 → enterApp');
-      showToast('로그인 성공! 환영합니다 🎉');
-      setTimeout(() => enterApp(), 600);
-    }
-    return;
-  }
+  // 네이버: CLAVI_PENDING_ROLE은 로그인 클릭 시 이미 localStorage에 저장됨
+  // Supabase action_link가 세션 해시를 자동 처리 → onAuthStateChange SIGNED_IN 발동
 
   // 일반 OAuth 콜백
   const { data: { session } } = await _supabase.auth.getSession();

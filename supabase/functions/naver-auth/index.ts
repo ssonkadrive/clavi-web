@@ -93,17 +93,17 @@ serve(async (req) => {
       userId = created.user.id;
     }
 
-    // 매직링크로 세션 발급
+    // 매직링크 발급 → action_link로 바로 리다이렉트 (verifyOtp 불필요)
     const { data: linkData, error: linkErr } = await admin.auth.admin.generateLink({
       type: 'magiclink',
       email,
+      options: { redirectTo: APP_URL },
     });
-    if (linkErr || !linkData?.properties?.hashed_token) {
+    if (linkErr || !linkData?.properties?.action_link) {
       return Response.redirect(`${APP_URL}?error=naver_session_fail`, 302);
     }
 
-    const redirectUrl = `${APP_URL}?naver_token=${linkData.properties.hashed_token}&role=${role}`;
-    return Response.redirect(redirectUrl, 302);
+    return Response.redirect(linkData.properties.action_link, 302);
   }
 
   return new Response('Not found', { status: 404 });
