@@ -845,8 +845,9 @@
     .apply-btn:hover { transform:translateY(-1px); }
     .job-empty { text-align:center;padding:60px 20px;color:var(--text-muted);font-size:.95rem; }
 
-    /* ── 매칭 체크박스 chips ─────────────────────── */
+    /* ── 대분류 칩 버튼 ─────────────────────────── */
     .match-chips { display:flex;flex-wrap:wrap;gap:8px;margin-top:10px; }
+    /* 구버전 checkbox 칩 호환 */
     .match-chip { cursor:pointer; }
     .match-chip input[type="checkbox"] { display:none; }
     .match-chip span {
@@ -858,6 +859,30 @@
       background:var(--primary);border-color:var(--primary);color:#fff;
       box-shadow:0 2px 8px rgba(91,108,255,.3);
     }
+    /* 신버전 button 칩 */
+    .match-chip-btn {
+      position:relative;display:inline-flex;align-items:center;gap:5px;
+      padding:8px 14px;border-radius:var(--radius-pill);
+      border:1.5px solid var(--border);background:var(--surface);
+      font-size:.85rem;color:var(--text);font-family:var(--font);
+      cursor:pointer;transition:all .15s;user-select:none;
+    }
+    .match-chip-btn:hover { border-color:var(--primary);color:var(--primary); }
+    .match-chip-btn.active {
+      background:var(--primary);border-color:var(--primary);color:#fff;
+      box-shadow:0 2px 8px rgba(91,108,255,.35);
+    }
+    .match-chip-btn.has-items {
+      border-color:var(--primary);color:var(--primary);font-weight:600;
+    }
+    .match-chip-btn.active.has-items { color:#fff; }
+    .chip-badge {
+      display:none;align-items:center;justify-content:center;
+      min-width:18px;height:18px;padding:0 4px;
+      border-radius:99px;background:#fff;color:var(--primary);
+      font-size:.65rem;font-weight:800;line-height:1;
+    }
+    .match-chip-btn.active .chip-badge { background:rgba(255,255,255,.25);color:#fff; }
     .subskill-section { margin-top:16px;padding-top:16px;border-top:1px solid var(--border); }
     .subskill-title { font-size:.85rem;font-weight:700;color:var(--primary);margin-bottom:10px; }
     .subskill-cat { font-size:.78rem;color:var(--text-muted);margin:10px 0 6px;font-weight:700; }
@@ -1764,10 +1789,11 @@
         <h2 class="card-title">🎯 원하는 강사 분야</h2>
         <p class="card-desc">대분류 선택 후 세부 조건을 고르세요.</p>
         <div class="match-chips" id="aSubjectChips">
-          <label class="match-chip"><input type="checkbox" name="aSubject" value="음악"   onchange="onSubjectChipChange('a','music',this)"/><span>🎵 음악</span></label>
-          <label class="match-chip"><input type="checkbox" name="aSubject" value="미술"   onchange="onSubjectChipChange('a','art',this)"/><span>🎨 미술</span></label>
-          <label class="match-chip"><input type="checkbox" name="aSubject" value="체육"   onchange="onSubjectChipChange('a','sports',this)"/><span>⚽ 체육</span></label>
-          <label class="match-chip"><input type="checkbox" name="aSubject" value="기타"   onchange="onSubjectChipChange('a','etc',this)"/><span>🤝 기타</span></label>
+          <button class="match-chip-btn" id="a_chip_acting"  onclick="openSkillModalFor('a','acting')">🎭 연기/뮤지컬<span class="chip-badge" id="a_badge_acting"></span></button>
+          <button class="match-chip-btn" id="a_chip_music"   onclick="openSkillModalFor('a','music')">🎵 음악<span class="chip-badge" id="a_badge_music"></span></button>
+          <button class="match-chip-btn" id="a_chip_art"     onclick="openSkillModalFor('a','art')">🎨 미술<span class="chip-badge" id="a_badge_art"></span></button>
+          <button class="match-chip-btn" id="a_chip_sports"  onclick="openSkillModalFor('a','sports')">⚽ 체육<span class="chip-badge" id="a_badge_sports"></span></button>
+          <button class="match-chip-btn" id="a_chip_etc"     onclick="openSkillModalFor('a','etc')">🤝 기타<span class="chip-badge" id="a_badge_etc"></span></button>
         </div>
         <div id="aSubSkillPanel"></div>
         <button onclick="openSkillModalStep1('a')" style="margin-top:10px;padding:9px 18px;border:1.5px dashed var(--primary);border-radius:99px;background:transparent;color:var(--primary);font-family:var(--font);font-size:.85rem;cursor:pointer;">＋ 공통조건 · 세부역량 추가</button>
@@ -1948,10 +1974,11 @@
         <h2 class="card-title">🎯 나의 전문 분야</h2>
         <p class="card-desc">대분류 선택 후 세부 조건을 고르세요.</p>
         <div class="match-chips" id="iSubjectChips">
-          <label class="match-chip"><input type="checkbox" name="iSubject" value="음악"   onchange="onSubjectChipChange('i','music',this)"/><span>🎵 음악</span></label>
-          <label class="match-chip"><input type="checkbox" name="iSubject" value="미술"   onchange="onSubjectChipChange('i','art',this)"/><span>🎨 미술</span></label>
-          <label class="match-chip"><input type="checkbox" name="iSubject" value="체육"   onchange="onSubjectChipChange('i','sports',this)"/><span>⚽ 체육</span></label>
-          <label class="match-chip"><input type="checkbox" name="iSubject" value="기타"   onchange="onSubjectChipChange('i','etc',this)"/><span>🤝 기타</span></label>
+          <button class="match-chip-btn" id="i_chip_acting"  onclick="openSkillModalFor('i','acting')">🎭 연기/뮤지컬<span class="chip-badge" id="i_badge_acting"></span></button>
+          <button class="match-chip-btn" id="i_chip_music"   onclick="openSkillModalFor('i','music')">🎵 음악<span class="chip-badge" id="i_badge_music"></span></button>
+          <button class="match-chip-btn" id="i_chip_art"     onclick="openSkillModalFor('i','art')">🎨 미술<span class="chip-badge" id="i_badge_art"></span></button>
+          <button class="match-chip-btn" id="i_chip_sports"  onclick="openSkillModalFor('i','sports')">⚽ 체육<span class="chip-badge" id="i_badge_sports"></span></button>
+          <button class="match-chip-btn" id="i_chip_etc"     onclick="openSkillModalFor('i','etc')">🤝 기타<span class="chip-badge" id="i_badge_etc"></span></button>
         </div>
         <div id="iSubSkillPanel"></div>
         <button onclick="openSkillModalStep1('i')" style="margin-top:10px;padding:9px 18px;border:1.5px dashed var(--primary);border-radius:99px;background:transparent;color:var(--primary);font-family:var(--font);font-size:.85rem;cursor:pointer;">＋ 공통조건 · 세부역량 추가</button>
@@ -2515,20 +2542,42 @@ const _팝업상태 = {
   대분류키: '',
 };
 
-/* ══ 대분류 칩 onChange ══ */
-function onSubjectChipChange(prefix, 대분류키, cb) {
-  const 저장소 = _역량저장소(prefix);
-  if (!cb.checked) {
-    Object.keys(저장소.세부역량).forEach(k => {
-      if (저장소.세부역량[k]?.대분류키 === 대분류키) delete 저장소.세부역량[k];
-    });
-    refreshSubSkillDisplay(prefix);
-    return;
-  }
-  _팝업상태.prefix  = prefix;
+/* ══ 대분류 칩 클릭 → 모달 열기 ══ */
+function openSkillModalFor(prefix, 대분류키) {
+  // 이전 칩 active 해제, 현재 칩 active 표시
+  document.querySelectorAll(`[id^="${prefix}_chip_"]`).forEach(btn => btn.classList.remove('active'));
+  const btn = document.getElementById(`${prefix}_chip_${대분류키}`);
+  if (btn) btn.classList.add('active');
+
+  _팝업상태.prefix   = prefix;
   _팝업상태.대분류키 = 대분류키;
-  _팝업상태.단계    = 2;
+  _팝업상태.단계     = 2;
   _팝업열기();
+}
+
+/* ══ 칩 뱃지 숫자 갱신 ══ */
+function _칩배지갱신(prefix) {
+  const 저장소 = _역량저장소(prefix);
+  Object.keys(카테고리데이터).forEach(catKey => {
+    const badge = document.getElementById(`${prefix}_badge_${catKey}`);
+    const chip  = document.getElementById(`${prefix}_chip_${catKey}`);
+    if (!badge) return;
+    const cnt = Object.values(저장소.세부역량).filter(s => s?.대분류키 === catKey).length;
+    if (cnt) {
+      badge.textContent = cnt;
+      badge.style.display = 'inline-flex';
+      chip?.classList.add('has-items');
+    } else {
+      badge.textContent = '';
+      badge.style.display = 'none';
+      chip?.classList.remove('has-items');
+    }
+  });
+}
+
+/* 하위 호환 — 구버전 HTML이 남아있을 경우 대비 */
+function onSubjectChipChange(prefix, 대분류키, cb) {
+  if (cb?.checked) openSkillModalFor(prefix, 대분류키);
 }
 
 /* ══ 모달 열기 ══ */
@@ -2766,9 +2815,13 @@ function skillStepBack() {
 
 /* ══ 선택 완료 ══ */
 function confirmSkills() {
+  const prefix = _팝업상태.prefix;
   closeSubSkillModal(null, true);
-  refreshSubSkillDisplay(_팝업상태.prefix);
-  const 저장소 = _역량저장소(_팝업상태.prefix);
+  // 칩 active 해제 (선택 완료 후 하이라이트 꺼짐), has-items는 뱃지로 유지
+  document.querySelectorAll(`[id^="${prefix}_chip_"]`).forEach(btn => btn.classList.remove('active'));
+  refreshSubSkillDisplay(prefix);
+  _칩배지갱신(prefix);
+  const 저장소 = _역량저장소(prefix);
   const total  = Object.keys(저장소.세부역량).length + Object.keys(저장소.공통조건).length;
   if (total) showToast(`총 ${total}개 조건 선택됨 ✅`);
 }
@@ -2777,6 +2830,7 @@ function confirmSkills() {
 function 페이지태그제거(key, 종류, skillKey, spanEl) {
   const prefix = key.split(':')[0];
   const 저장소  = _역량저장소(prefix);
+  // 삭제 후 뱃지 갱신은 함수 끝에서 처리
   if (종류 === '공통') {
     delete 저장소.공통조건[key];
   } else if (종류 === '스킬' && skillKey) {
@@ -2794,6 +2848,7 @@ function 페이지태그제거(key, 종류, skillKey, spanEl) {
     const disp = document.getElementById(prefix + 'SubSkillDisplay');
     if (disp) disp.style.display = 'none';
   }
+  _칩배지갱신(prefix);
 }
 
 /* ══ 페이지 내 태그 갱신 ══ */
@@ -3300,10 +3355,42 @@ const 카테고리데이터 = {
       {id:'cp_public',      name:'공무원 면접'},
     ]},
   ]},
-  /* ── 하위 호환 (레거시 매칭용) ── */
-  acting: { name:'🎭 연기/뮤지컬', _legacy:true, items:[
-    { id:'act_musical', name:'뮤지컬', skills:[]},
-    { id:'act_media',   name:'매체연기', skills:[]},
+  /* ── 연기/뮤지컬 ── */
+  acting: { name:'🎭 연기/뮤지컬', items:[
+    { id:'act_media',     name:'매체 연기',           group:'연기', skills:[
+      {id:'act_film',       name:'영화/드라마 연기'},
+      {id:'act_camera',     name:'카메라 연기 기초'},
+      {id:'act_monologue',  name:'독백/모놀로그'},
+      {id:'act_audition',   name:'오디션 코칭'},
+    ]},
+    { id:'act_exam',      name:'입시 연기',           group:'연기', skills:[
+      {id:'act_univ',       name:'연극영화과 입시 전문'},
+      {id:'act_script',     name:'당일대사/즉흥 연기'},
+      {id:'act_movement',   name:'신체표현/움직임'},
+    ]},
+    { id:'act_musical_v', name:'뮤지컬 보컬',         group:'뮤지컬', skills:[
+      {id:'mu_belting',     name:'벨팅 발성'},
+      {id:'mu_classical',   name:'클래식 성악 기반'},
+      {id:'mu_number',      name:'뮤지컬 넘버 해석'},
+      {id:'mu_m_audition',  name:'뮤지컬 오디션 준비'},
+    ]},
+    { id:'act_musical_d', name:'뮤지컬 댄스/재즈댄스',group:'뮤지컬', skills:[
+      {id:'md_jazz',        name:'재즈댄스'},
+      {id:'md_tap',         name:'탭댄스'},
+      {id:'md_choreograph', name:'안무 창작 가능'},
+      {id:'md_lyrical',     name:'리리컬/컨템포러리'},
+    ]},
+    { id:'act_body',      name:'신체훈련/움직임',     group:'연기', skills:[
+      {id:'body_mime',      name:'마임/판토마임'},
+      {id:'body_stage',     name:'무대 동선 훈련'},
+      {id:'body_physical',  name:'신체 표현 지도'},
+    ]},
+    { id:'act_kids',      name:'아동 연기 / 뮤지컬 사범', group:'전문지도', skills:[
+      {id:'kids_acting',    name:'아동 연기 지도'},
+      {id:'kids_musical',   name:'뮤지컬 학원 사범'},
+      {id:'kids_story',     name:'스토리텔링 지도'},
+      {id:'kids_improv',    name:'즉흥극 지도'},
+    ]},
   ]},
   ballet: { name:'🩰 무용/발레', _legacy:true, items:[
     { id:'blt_ballet',  name:'발레', skills:[]},
@@ -3316,7 +3403,7 @@ const 카테고리데이터 = {
 
 /* ── 레거시 항목 홈화면에서 숨기기 ──
    (acting/ballet/general 은 기존 DB 데이터와 호환만 유지) */
-const _비표시대분류 = new Set(['acting','ballet','general']);
+const _비표시대분류 = new Set(['ballet','general']);
 
 
 /* ════════════════════════════════════════════════
