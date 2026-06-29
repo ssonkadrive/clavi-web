@@ -2506,6 +2506,9 @@ function formatNumberWithCommas(value) {
 /* ════════════════════════════════════════════════
   Supabase 초기화
 ════════════════════════════════════════════════ */
+const SUPER_ADMIN_ID = 'cd5c8e65-4c38-423d-80db-6029bf940c5b';
+let _adminUid = null;
+
 const _supabase = supabase.createClient(
   'https://nbngaaskwekhtzbmcyjo.supabase.co',
   'sb_publishable_hTeqOZsZA9VQ31fvJvxJvg_a0x1mV7B'
@@ -5217,9 +5220,6 @@ async function acceptTerms() {
 </style>
 
 <script>
-const SUPER_ADMIN_ID = 'cd5c8e65-4c38-423d-80db-6029bf940c5b';
-let _adminUid = null;
-
 function switchAdminTab(tab) {
   document.querySelectorAll('.admin-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.admin-tab-panel').forEach(p => p.style.display = 'none');
