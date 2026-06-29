@@ -4960,9 +4960,6 @@ showPage = function(id) {
           <input type="radio" name="termsRole" value="instructor" onchange="onTermsRoleChange(this)"> 🎓 강사 회원
         </label>
       </div>
-      <div class="terms-meta-wrap" id="termsMetaWrap">
-        <input class="terms-meta-input" id="termsMetaInput" type="text" placeholder="">
-      </div>
     </div>
 
     <p class="terms-hint" id="termsHint">약관을 끝까지 읽고 회원 유형을 선택해야 동의 버튼이 활성화됩니다.</p>
@@ -4989,8 +4986,7 @@ function showTermsModal(callback) {
   document.getElementById('termsHint').textContent = '약관을 끝까지 읽고 회원 유형을 선택해야 동의 버튼이 활성화됩니다.';
   document.querySelectorAll('.terms-role-btn').forEach(b => b.classList.remove('selected'));
   document.querySelectorAll('input[name="termsRole"]').forEach(r => r.checked = false);
-  document.getElementById('termsMetaWrap').classList.remove('show');
-  document.getElementById('termsMetaInput').value = '';
+
   document.getElementById('termsScroll').scrollTop = 0;
   document.getElementById('termsOverlay').classList.add('active');
   document.body.style.overflow = 'hidden';
@@ -5012,22 +5008,11 @@ function onTermsRoleChange(el) {
   _termsRole = el.value;
   document.querySelectorAll('.terms-role-btn').forEach(b => b.classList.remove('selected'));
   el.closest('.terms-role-btn').classList.add('selected');
-  const wrap = document.getElementById('termsMetaWrap');
-  const input = document.getElementById('termsMetaInput');
-  if (_termsRole === 'academy') {
-    input.placeholder = '학원명을 입력해 주세요';
-    wrap.classList.add('show');
-  } else {
-    input.placeholder = '담당 과목을 입력해 주세요 (예: 피아노, 발레)';
-    wrap.classList.add('show');
-  }
-  input.addEventListener('input', checkTermsReady);
   checkTermsReady();
 }
 
 function checkTermsReady() {
-  const metaVal = document.getElementById('termsMetaInput').value.trim();
-  const ready = _termsScrolled && _termsRole && metaVal.length > 0;
+  const ready = _termsScrolled && _termsRole;
   document.getElementById('termsBtnAccept').disabled = !ready;
   if (ready) {
     document.getElementById('termsHint').textContent = '✅ 모든 조건이 충족됐습니다!';
@@ -5042,11 +5027,10 @@ function rejectTerms() {
 }
 
 async function acceptTerms() {
-  const metaVal = document.getElementById('termsMetaInput').value.trim();
   document.getElementById('termsOverlay').classList.remove('active');
   document.body.style.overflow = '';
   if (_termsPendingCallback) {
-    await _termsPendingCallback(_termsRole, metaVal);
+    await _termsPendingCallback(_termsRole);
     _termsPendingCallback = null;
   }
 }
