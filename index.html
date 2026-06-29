@@ -862,6 +862,55 @@
     .subskill-title { font-size:.85rem;font-weight:700;color:var(--primary);margin-bottom:10px; }
     .subskill-cat { font-size:.78rem;color:var(--text-muted);margin:10px 0 6px;font-weight:700; }
 
+    /* ── 3단계 스킬 선택 모달 ── */
+    .sk-step1-grid { display:grid;grid-template-columns:1fr 1fr;gap:10px;padding-bottom:4px; }
+    .sk-cat-btn {
+      display:flex;flex-direction:column;align-items:center;justify-content:center;
+      gap:6px;padding:18px 8px;border:2px solid var(--border);border-radius:14px;
+      background:var(--bg);cursor:pointer;font-family:var(--font);
+      font-size:.78rem;color:var(--text);transition:all .15s;text-align:center;
+    }
+    .sk-cat-btn:hover { border-color:var(--primary);background:var(--primary-soft); }
+    .sk-cat-btn .sk-emoji { font-size:1.8rem;line-height:1; }
+    .sk-cat-btn .sk-cnt {
+      font-size:.65rem;color:var(--primary);background:var(--primary-soft);
+      border-radius:99px;padding:1px 7px;font-weight:700;display:none;
+    }
+    .sk-cat-btn.has-selection { border-color:var(--primary);background:var(--primary-soft); }
+    .sk-cat-btn.has-selection .sk-cnt { display:inline; }
+
+    .sk-sub-list { display:flex;flex-direction:column;gap:8px;padding-bottom:4px; }
+    .sk-sub-btn {
+      display:flex;align-items:center;justify-content:space-between;
+      padding:13px 16px;border:1.5px solid var(--border);border-radius:12px;
+      background:var(--bg);cursor:pointer;font-family:var(--font);
+      font-size:.88rem;color:var(--text);transition:all .15s;
+    }
+    .sk-sub-btn:hover { border-color:var(--primary);background:var(--primary-soft); }
+    .sk-sub-btn .sk-sub-cnt {
+      font-size:.7rem;color:var(--primary);background:var(--primary-soft);
+      border-radius:99px;padding:2px 8px;font-weight:700;display:none;
+    }
+    .sk-sub-btn.has-selection { border-color:var(--primary); }
+    .sk-sub-btn.has-selection .sk-sub-cnt { display:inline; }
+
+    .sk-item-list { display:flex;flex-direction:column;gap:8px;padding-bottom:4px; }
+    .sk-item-label {
+      display:flex;align-items:center;gap:12px;padding:12px 14px;
+      border:1.5px solid var(--border);border-radius:12px;cursor:pointer;
+      transition:all .15s;
+    }
+    .sk-item-label:hover { border-color:var(--primary-soft); }
+    .sk-item-label input[type=checkbox] { display:none; }
+    .sk-item-label .sk-check {
+      width:20px;height:20px;border-radius:6px;border:2px solid var(--border);
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+      font-size:.8rem;color:#fff;transition:all .15s;
+    }
+    .sk-item-label input:checked ~ .sk-check { background:var(--primary);border-color:var(--primary); }
+    .sk-item-label input:checked ~ .sk-check::after { content:'✓'; }
+    .sk-item-label.checked { border-color:var(--primary);background:var(--primary-soft); }
+
     /* ── landingPage v2 ───────────────────────────── */
     .lp-wrap { display:flex;flex-direction:column;gap:0;overflow-x:hidden; }
 
@@ -1657,12 +1706,12 @@
         <h2 class="card-title">🎯 원하는 강사 분야</h2>
         <p class="card-desc">대분류 선택 후 세부 조건을 고르세요.</p>
         <div class="match-chips" id="aSubjectChips">
-          <label class="match-chip"><input type="checkbox" name="aSubject" value="연기/뮤지컬" data-industry="acting"   onchange="renderSubSkills('a','acting',this)"/><span>🎭 연기/뮤지컬</span></label>
-          <label class="match-chip"><input type="checkbox" name="aSubject" value="체육/태권도" data-industry="taekwondo" onchange="renderSubSkills('a','taekwondo',this)"/><span>🥋 체육/태권도</span></label>
-          <label class="match-chip"><input type="checkbox" name="aSubject" value="무용/발레"   data-industry="ballet"    onchange="renderSubSkills('a','ballet',this)"/><span>🩰 무용/발레</span></label>
-          <label class="match-chip"><input type="checkbox" name="aSubject" value="음악/악기"   data-industry="music"     onchange="renderSubSkills('a','music',this)"/><span>🎵 음악/악기</span></label>
-          <label class="match-chip"><input type="checkbox" name="aSubject" value="미술/창의"   data-industry="art"       onchange="renderSubSkills('a','art',this)"/><span>🎨 미술/창의</span></label>
-          <label class="match-chip"><input type="checkbox" name="aSubject" value="일반/학습"   data-industry="general"   onchange="renderSubSkills('a','general',this)"/><span>📚 일반/학습</span></label>
+          <label class="match-chip"><input type="checkbox" name="aSubject" value="연기/뮤지컬" data-industry="acting"   onchange="onSubjectChipChange('a','acting',this)"/><span>🎭 연기/뮤지컬</span></label>
+          <label class="match-chip"><input type="checkbox" name="aSubject" value="체육/태권도" data-industry="taekwondo" onchange="onSubjectChipChange('a','taekwondo',this)"/><span>🥋 체육/태권도</span></label>
+          <label class="match-chip"><input type="checkbox" name="aSubject" value="무용/발레"   data-industry="ballet"    onchange="onSubjectChipChange('a','ballet',this)"/><span>🩰 무용/발레</span></label>
+          <label class="match-chip"><input type="checkbox" name="aSubject" value="음악/악기"   data-industry="music"     onchange="onSubjectChipChange('a','music',this)"/><span>🎵 음악/악기</span></label>
+          <label class="match-chip"><input type="checkbox" name="aSubject" value="미술/창의"   data-industry="art"       onchange="onSubjectChipChange('a','art',this)"/><span>🎨 미술/창의</span></label>
+          <label class="match-chip"><input type="checkbox" name="aSubject" value="일반/학습"   data-industry="general"   onchange="onSubjectChipChange('a','general',this)"/><span>📚 일반/학습</span></label>
         </div>
         <div id="aSubSkillPanel"></div>
         <div id="aSubSkillDisplay" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
@@ -1842,12 +1891,12 @@
         <h2 class="card-title">🎯 나의 전문 분야</h2>
         <p class="card-desc">대분류 선택 후 세부 조건을 고르세요.</p>
         <div class="match-chips" id="iSubjectChips">
-          <label class="match-chip"><input type="checkbox" name="iSubject" value="연기/뮤지컬" data-industry="acting"   onchange="renderSubSkills('i','acting',this)"/><span>🎭 연기/뮤지컬</span></label>
-          <label class="match-chip"><input type="checkbox" name="iSubject" value="체육/태권도" data-industry="taekwondo" onchange="renderSubSkills('i','taekwondo',this)"/><span>🥋 체육/태권도</span></label>
-          <label class="match-chip"><input type="checkbox" name="iSubject" value="무용/발레"   data-industry="ballet"    onchange="renderSubSkills('i','ballet',this)"/><span>🩰 무용/발레</span></label>
-          <label class="match-chip"><input type="checkbox" name="iSubject" value="음악/악기"   data-industry="music"     onchange="renderSubSkills('i','music',this)"/><span>🎵 음악/악기</span></label>
-          <label class="match-chip"><input type="checkbox" name="iSubject" value="미술/창의"   data-industry="art"       onchange="renderSubSkills('i','art',this)"/><span>🎨 미술/창의</span></label>
-          <label class="match-chip"><input type="checkbox" name="iSubject" value="일반/학습"   data-industry="general"   onchange="renderSubSkills('i','general',this)"/><span>📚 일반/학습</span></label>
+          <label class="match-chip"><input type="checkbox" name="iSubject" value="연기/뮤지컬" data-industry="acting"   onchange="onSubjectChipChange('i','acting',this)"/><span>🎭 연기/뮤지컬</span></label>
+          <label class="match-chip"><input type="checkbox" name="iSubject" value="체육/태권도" data-industry="taekwondo" onchange="onSubjectChipChange('i','taekwondo',this)"/><span>🥋 체육/태권도</span></label>
+          <label class="match-chip"><input type="checkbox" name="iSubject" value="무용/발레"   data-industry="ballet"    onchange="onSubjectChipChange('i','ballet',this)"/><span>🩰 무용/발레</span></label>
+          <label class="match-chip"><input type="checkbox" name="iSubject" value="음악/악기"   data-industry="music"     onchange="onSubjectChipChange('i','music',this)"/><span>🎵 음악/악기</span></label>
+          <label class="match-chip"><input type="checkbox" name="iSubject" value="미술/창의"   data-industry="art"       onchange="onSubjectChipChange('i','art',this)"/><span>🎨 미술/창의</span></label>
+          <label class="match-chip"><input type="checkbox" name="iSubject" value="일반/학습"   data-industry="general"   onchange="onSubjectChipChange('i','general',this)"/><span>📚 일반/학습</span></label>
         </div>
         <div id="iSubSkillPanel"></div>
         <div id="iSubSkillDisplay" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
@@ -1928,13 +1977,22 @@
   서브스킬 팝업 모달
 ══════════════════════════════════════════════════ -->
 <div id="subSkillModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:3000;align-items:center;justify-content:center;padding:20px;" onclick="closeSubSkillModal(event)">
-  <div id="subSkillModal" style="background:var(--surface);border-radius:20px;width:100%;max-width:460px;max-height:78vh;overflow-y:auto;padding:24px 20px 28px;box-shadow:0 20px 60px rgba(0,0,0,.25);">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-      <h3 id="subSkillModalTitle" style="font-size:1rem;color:var(--text);"></h3>
+  <div id="subSkillModal" style="background:var(--surface);border-radius:20px;width:100%;max-width:460px;max-height:82vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25);">
+    <!-- 헤더 -->
+    <div style="display:flex;align-items:center;gap:8px;padding:18px 20px 0;">
+      <button id="skillBackBtn" onclick="skillStepBack()" style="display:none;background:none;border:none;font-size:1.2rem;cursor:pointer;color:var(--text-muted);padding:0 4px;">←</button>
+      <div style="flex:1;">
+        <div id="skillBreadcrumb" style="font-size:.72rem;color:var(--text-muted);margin-bottom:2px;"></div>
+        <h3 id="subSkillModalTitle" style="font-size:1rem;color:var(--text);margin:0;"></h3>
+      </div>
       <button onclick="closeSubSkillModal(null,true)" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text-muted);">✕</button>
     </div>
-    <div id="subSkillModalBody"></div>
-    <button onclick="confirmSubSkills()" style="margin-top:20px;width:100%;padding:14px;border:none;border-radius:var(--radius-pill);background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;font-family:var(--font);font-size:1rem;cursor:pointer;">선택 완료</button>
+    <!-- 바디 -->
+    <div id="subSkillModalBody" style="overflow-y:auto;padding:14px 20px 0;flex:1;"></div>
+    <!-- 푸터 -->
+    <div style="padding:16px 20px 20px;">
+      <button id="skillConfirmBtn" onclick="confirmSkills()" style="width:100%;padding:14px;border:none;border-radius:var(--radius-pill);background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;font-family:var(--font);font-size:1rem;cursor:pointer;">선택 완료</button>
+    </div>
   </div>
 </div>
 
@@ -2360,106 +2418,200 @@ async function saveProfileSetup() {
   setTimeout(() => enterApp(), 700);
 }
 
-/* ── 서브스킬 팝업 ── */
-let _subSkillCtx = { prefix: '', industry: '', cb: null };
+/* ══════════════════════════════════════════════
+   3단계 계층형 스킬 선택 시스템
+══════════════════════════════════════════════ */
 
-function renderSubSkills(prefix, industry, cb) {
+/* ── 상태 ── */
+const _sk = {
+  prefix: '',   // 'a' | 'i'
+  step: 1,      // 1=대분류 2=중분류 3=소분류
+  catKey: '',
+  subKey: '',
+  // selected: { [itemId]: { catKey, subKey, catName, subName, label } }
+  selected: {}
+};
+
+/* ── 대분류 체크박스 onChange ── */
+function onSubjectChipChange(prefix, catKey, cb) {
   if (!cb.checked) {
-    // 체크 해제 시 해당 분야 선택값 초기화
-    document.querySelectorAll(`input[name="${prefix}Skill"][data-industry="${industry}"]`)
-      .forEach(el => el.remove());
+    // 체크 해제 → 해당 대분류 선택 전부 삭제
+    Object.keys(_sk.selected).forEach(id => {
+      if (_sk.selected[id] && _sk.selected[id].catKey === catKey && _sk.selected[id].prefix === prefix) {
+        delete _sk.selected[id];
+      }
+    });
+    refreshSubSkillDisplay(prefix);
     return;
   }
-  const items = SPECIAL_SKILLS[industry] || [];
-  if (!items.length) return;
+  // 체크 → 모달 열기 (step 2: 중분류 선택)
+  _sk.prefix = prefix;
+  _sk.catKey  = catKey;
+  _sk.step    = 2;
+  _openSkillModal();
+}
 
-  _subSkillCtx = { prefix, industry, cb };
-  const label = cb.closest('label').querySelector('span').textContent;
-  document.getElementById('subSkillModalTitle').textContent = label + ' 세부 조건';
-
-  const hasCat = items[0].cat !== undefined;
-  let html = '';
-  if (hasCat) {
-    const cats = [...new Set(items.map(i => i.cat))];
-    cats.forEach(cat => {
-      html += `<p class="subskill-cat">${cat}</p><div class="match-chips" style="margin-bottom:4px;">`;
-      items.filter(i => i.cat === cat).forEach(item => {
-        html += `<label class="match-chip"><input type="checkbox" name="_subSkillTmp" value="${item.id}" data-industry="${industry}"/><span>${item.label}</span></label>`;
-      });
-      html += `</div>`;
-    });
-  } else {
-    html += `<div class="match-chips">`;
-    items.forEach(item => {
-      html += `<label class="match-chip"><input type="checkbox" name="_subSkillTmp" value="${item.id}" data-industry="${industry}"/><span>${item.label}</span></label>`;
-    });
-    html += `</div>`;
-  }
-  document.getElementById('subSkillModalBody').innerHTML = html;
-
-  // 기존 선택값 복원
-  const saved = [...document.querySelectorAll(`input[name="${prefix}Skill"][data-industry="${industry}"]`)].map(e => e.value);
-  document.querySelectorAll('#subSkillModalBody input[type="checkbox"]').forEach(el => {
-    if (saved.includes(el.value)) el.checked = true;
-  });
-
-  const overlay = document.getElementById('subSkillModalOverlay');
-  overlay.style.display = 'flex';
+/* ── 모달 열기 ── */
+function _openSkillModal() {
+  document.getElementById('subSkillModalOverlay').style.display = 'flex';
   document.body.style.overflow = 'hidden';
+  _renderCurrentStep();
 }
 
-function confirmSubSkills() {
-  const { prefix, industry, cb } = _subSkillCtx;
+/* ── 단계별 렌더링 ── */
+function _renderCurrentStep() {
+  const cat = CATEGORIES[_sk.catKey];
+  const backBtn   = document.getElementById('skillBackBtn');
+  const breadEl   = document.getElementById('skillBreadcrumb');
+  const titleEl   = document.getElementById('subSkillModalTitle');
+  const body      = document.getElementById('subSkillModalBody');
+  const confirmBtn = document.getElementById('skillConfirmBtn');
 
-  // 기존 히든 인풋 제거
-  document.querySelectorAll(`input[name="${prefix}Skill"][data-industry="${industry}"]`).forEach(e => e.remove());
+  if (_sk.step === 1) {
+    backBtn.style.display = 'none';
+    breadEl.textContent = '';
+    titleEl.textContent = '분야를 선택하세요';
+    confirmBtn.style.display = 'block';
+    body.innerHTML = _buildStep1();
+  } else if (_sk.step === 2) {
+    backBtn.style.display = 'inline';
+    breadEl.textContent = cat.name;
+    titleEl.textContent = '중분류를 선택하세요';
+    confirmBtn.style.display = 'block';
+    body.innerHTML = _buildStep2();
+  } else if (_sk.step === 3) {
+    const sub = cat.subs[_sk.subKey];
+    backBtn.style.display = 'inline';
+    breadEl.textContent = cat.name + ' › ' + sub.name;
+    titleEl.textContent = '세부 조건을 선택하세요';
+    confirmBtn.style.display = 'block';
+    body.innerHTML = _buildStep3();
+  }
+}
 
-  // 선택된 항목 수집
-  const selected = [...document.querySelectorAll('#subSkillModalBody input:checked')];
-  const panel = document.getElementById(prefix + 'SubSkillPanel');
-
-  selected.forEach(el => {
-    const hidden = document.createElement('input');
-    hidden.type = 'hidden';
-    hidden.name = prefix + 'Skill';
-    hidden.value = el.value;
-    hidden.dataset.industry = industry;
-    panel.appendChild(hidden);
+/* Step1: 대분류 버튼 그리드 */
+function _buildStep1() {
+  const entries = Object.entries(CATEGORIES);
+  const p = _sk.prefix;
+  let html = '<div class="sk-step1-grid">';
+  entries.forEach(([key, cat]) => {
+    const cnt = Object.values(_sk.selected).filter(s => s && s.catKey === key && s.prefix === p).length;
+    const hasCls = cnt > 0 ? ' has-selection' : '';
+    const [emoji, ...nameParts] = cat.name.split(' ');
+    html += `<button class="sk-cat-btn${hasCls}" onclick="_sk.catKey='${key}';_sk.step=2;_renderCurrentStep()">
+      <span class="sk-emoji">${emoji}</span>
+      <span>${nameParts.join(' ')}</span>
+      <span class="sk-cnt">${cnt}개 선택</span>
+    </button>`;
   });
-
-  closeSubSkillModal(null, true);
-
-  // 전체 선택된 세부 조건 재렌더 (모든 분야 합산)
-  refreshSubSkillDisplay(prefix);
-  if (selected.length) showToast(`${selected.length}개 세부 조건 선택됨 ✅`);
+  html += '</div>';
+  return html;
 }
 
+/* Step2: 중분류 목록 */
+function _buildStep2() {
+  const subs = CATEGORIES[_sk.catKey].subs;
+  const p = _sk.prefix;
+  let html = '<div class="sk-sub-list">';
+  Object.entries(subs).forEach(([subKey, sub]) => {
+    const cnt = Object.values(_sk.selected).filter(s => s && s.catKey === _sk.catKey && s.subKey === subKey && s.prefix === p).length;
+    const hasCls = cnt > 0 ? ' has-selection' : '';
+    html += `<button class="sk-sub-btn${hasCls}" onclick="_sk.subKey='${subKey}';_sk.step=3;_renderCurrentStep()">
+      <span>${sub.name}</span>
+      <span class="sk-sub-cnt">${cnt}개</span>
+    </button>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+/* Step3: 소분류 체크박스 */
+function _buildStep3() {
+  const items = CATEGORIES[_sk.catKey].subs[_sk.subKey].items;
+  const p = _sk.prefix;
+  let html = '<div class="sk-item-list">';
+  items.forEach(item => {
+    const checked = !!_sk.selected[p + ':' + item.id];
+    const chkCls  = checked ? ' checked' : '';
+    html += `<label class="sk-item-label${chkCls}" onclick="_toggleSkillItem('${item.id}','${item.label}',this)">
+      <input type="checkbox"${checked ? ' checked' : ''}/>
+      <span class="sk-check"></span>
+      <span style="font-size:.88rem;">${item.label}</span>
+    </label>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+/* ── 소분류 토글 ── */
+function _toggleSkillItem(id, label, labelEl) {
+  const p   = _sk.prefix;
+  const key = p + ':' + id;
+  const cat = CATEGORIES[_sk.catKey];
+  const sub = cat.subs[_sk.subKey];
+
+  if (_sk.selected[key]) {
+    delete _sk.selected[key];
+    labelEl.classList.remove('checked');
+    labelEl.querySelector('input').checked = false;
+  } else {
+    _sk.selected[key] = {
+      prefix: p, catKey: _sk.catKey, subKey: _sk.subKey,
+      catName: cat.name, subName: sub.name, label
+    };
+    labelEl.classList.add('checked');
+    labelEl.querySelector('input').checked = true;
+  }
+}
+
+/* ── 뒤로 가기 ── */
+function skillStepBack() {
+  if (_sk.step === 3) { _sk.step = 2; _renderCurrentStep(); }
+  else if (_sk.step === 2) { _sk.step = 1; _renderCurrentStep(); }
+  else { closeSubSkillModal(null, true); }
+}
+
+/* ── 선택 완료 ── */
+function confirmSkills() {
+  closeSubSkillModal(null, true);
+  refreshSubSkillDisplay(_sk.prefix);
+  const cnt = Object.values(_sk.selected).filter(s => s && s.prefix === _sk.prefix).length;
+  if (cnt) showToast(`${cnt}개 세부 조건 선택됨 ✅`);
+}
+
+/* ── 디스플레이 갱신 ── */
 function refreshSubSkillDisplay(prefix) {
-  const allHidden = [...document.querySelectorAll(`input[name="${prefix}Skill"]`)];
   const display = document.getElementById(prefix + 'SubSkillDisplay');
   const tagsEl  = document.getElementById(prefix + 'SubSkillTags');
   if (!display || !tagsEl) return;
 
+  const items = Object.entries(_sk.selected)
+    .filter(([, v]) => v && v.prefix === prefix)
+    .map(([, v]) => v);
+
   tagsEl.innerHTML = '';
-  if (!allHidden.length) { display.style.display = 'none'; return; }
+  if (!items.length) { display.style.display = 'none'; return; }
 
   display.style.display = 'block';
-  allHidden.forEach(h => {
-    const industry = h.dataset.industry;
-    const item = (SPECIAL_SKILLS[industry] || []).find(i => i.id === h.value);
-    const label = item ? item.label : h.value;
+  items.forEach(({ catName, subName, label }) => {
     const span = document.createElement('span');
-    span.style.cssText = 'font-size:.78rem;background:var(--primary-soft);color:var(--primary);padding:4px 10px;border-radius:99px;white-space:nowrap;';
+    span.title = catName + ' › ' + subName;
+    span.style.cssText = 'font-size:.78rem;background:var(--primary-soft);color:var(--primary);padding:4px 10px;border-radius:99px;white-space:nowrap;cursor:default;';
     span.textContent = label;
     tagsEl.appendChild(span);
   });
 }
 
+/* ── 모달 닫기 ── */
 function closeSubSkillModal(e, force) {
   if (!force && e && document.getElementById('subSkillModal').contains(e.target)) return;
   document.getElementById('subSkillModalOverlay').style.display = 'none';
   document.body.style.overflow = '';
 }
+
+/* 하위호환 alias */
+function confirmSubSkills() { confirmSkills(); }
+function renderSubSkills(prefix, industry, cb) { onSubjectChipChange(prefix, industry, cb); }
 
 /* ── 체크박스 값 수집 헬퍼 ── */
 function getChecked(name) {
@@ -2561,7 +2713,199 @@ document.getElementById('registerForm').addEventListener('submit', (e) => {
 });
 
 /* ════════════════════════════════════════════════
-  공용 특기 데이터
+  3단계 계층형 스킬 데이터
+════════════════════════════════════════════════ */
+const CATEGORIES = {
+  acting: {
+    name: '🎭 연기/뮤지컬',
+    subs: {
+      media:    { name: '매체 연기/오디션', items: [
+        { id:'act_media_cam',   label:'카메라 연기 기초' },
+        { id:'act_media_audit', label:'오디션 코칭' },
+        { id:'act_media_mono',  label:'독백·지문 지도' },
+        { id:'act_media_cf',    label:'CF/광고 연기' },
+      ]},
+      musical:  { name: '뮤지컬', items: [
+        { id:'act_mus_vocal',   label:'뮤지컬 보컬' },
+        { id:'act_mus_dance',   label:'뮤지컬 안무/움직임' },
+        { id:'act_mus_acting',  label:'뮤지컬 연기' },
+      ]},
+      entrance: { name: '입시 지도', items: [
+        { id:'act_ent_univ',    label:'연영과 입시 지도' },
+        { id:'act_ent_script',  label:'입시 작품 창작' },
+        { id:'act_ent_field',   label:'주말 입시 현장 케어' },
+      ]},
+      kids:     { name: '아역/유소년', items: [
+        { id:'act_kids_basic',  label:'유소년 기초 연기' },
+        { id:'act_kids_audit',  label:'아역 오디션 케어' },
+      ]},
+      etc:      { name: '기타', items: [
+        { id:'act_etc_monitor', label:'모니터링 피드백' },
+        { id:'act_etc_sub',     label:'출강·긴급 대체 가능' },
+      ]},
+    }
+  },
+  taekwondo: {
+    name: '🥋 체육/태권도',
+    subs: {
+      academic:  { name: '학력/전공', items: [
+        { id:'tkd_degree4',  label:'4년제 태권도학과 전공자' },
+        { id:'tkd_gpa',      label:'대학성적표 공개 가능자' },
+      ]},
+      activity:  { name: '대학활동', items: [
+        { id:'tkd_demo',     label:'대표시범단 출신' },
+        { id:'tkd_fight',    label:'겨루기선수단 출신' },
+        { id:'tkd_poomsae',  label:'품새선수단 출신' },
+      ]},
+      cert:      { name: '자격/단증', items: [
+        { id:'tkd_4dan',     label:'4단 이상' },
+        { id:'tkd_cert',     label:'사범자격증' },
+        { id:'tkd_sports2',  label:'생활체육 2급 이상' },
+      ]},
+      operation: { name: '운영 가능', items: [
+        { id:'tkd_sibeom',   label:'시범단 운영가능' },
+        { id:'tkd_poomsae2', label:'품새단 운영가능' },
+        { id:'tkd_fight2',   label:'겨루기 운영가능' },
+        { id:'tkd_assoc',    label:'협회심사 책임관리' },
+        { id:'tkd_team',     label:'시범단·선수단 운영' },
+      ]},
+      career:    { name: '경력', items: [
+        { id:'tkd_asst',     label:'보조사범' },
+        { id:'tkd_master',   label:'정사범' },
+        { id:'tkd_head',     label:'지도관장' },
+        { id:'tkd_long',     label:'2년 이상 장기계약 의향' },
+        { id:'tkd_takeover', label:'도장인수·책임관장' },
+      ]},
+      vehicle:   { name: '차량', items: [
+        { id:'tkd_car1',     label:'1종보통/스타렉스 운행' },
+        { id:'tkd_bus',      label:'대형면허/버스 운행' },
+        { id:'tkd_car_need', label:'차량지원 필요' },
+        { id:'tkd_gas_need', label:'기름값 지원 희망' },
+        { id:'tkd_car_own',  label:'본인 차량 있음' },
+        { id:'tkd_bus_ok',   label:'대중교통 출퇴근 가능' },
+      ]},
+      language:  { name: '언어', items: [
+        { id:'tkd_eng',      label:'영어 회화 가능' },
+        { id:'tkd_jpn',      label:'일본어 가능' },
+        { id:'tkd_chn',      label:'중국어 가능' },
+        { id:'tkd_lang',     label:'기타 언어' },
+      ]},
+    }
+  },
+  ballet: {
+    name: '🩰 무용/발레',
+    subs: {
+      ballet_cls: { name: '발레', items: [
+        { id:'bal_infant',      label:'유아 발레 전문' },
+        { id:'bal_pointe',      label:'포인트 지도' },
+        { id:'bal_entrance',    label:'전공 입시 가능' },
+        { id:'bal_competition', label:'발표회·대회 동행' },
+        { id:'bal_sub',         label:'긴급 대타 대기' },
+      ]},
+      modern:     { name: '현대무용', items: [
+        { id:'mod_basic',       label:'현대무용 기초' },
+        { id:'mod_entrance',    label:'입시 지도' },
+        { id:'mod_creative',    label:'창작 안무' },
+      ]},
+      kpop:       { name: 'K-POP/방송댄스', items: [
+        { id:'kpop_basic',      label:'K-POP 기초' },
+        { id:'kpop_cover',      label:'커버댄스' },
+        { id:'kpop_kids',       label:'유소년 댄스' },
+      ]},
+      jazz:       { name: '재즈댄스', items: [
+        { id:'jazz_basic',      label:'재즈 기초' },
+        { id:'jazz_advance',    label:'재즈 중급 이상' },
+      ]},
+    }
+  },
+  music: {
+    name: '🎵 음악/악기',
+    subs: {
+      keyboard:   { name: '건반악기', items: [
+        { id:'mus_piano',       label:'피아노' },
+        { id:'mus_organ',       label:'오르간' },
+        { id:'mus_keyboard',    label:'키보드' },
+      ]},
+      string:     { name: '현악기', items: [
+        { id:'mus_violin',      label:'바이올린' },
+        { id:'mus_viola',       label:'비올라' },
+        { id:'mus_cello',       label:'첼로' },
+        { id:'mus_guitar',      label:'기타' },
+        { id:'mus_bass',        label:'베이스 기타' },
+        { id:'mus_harp',        label:'하프' },
+      ]},
+      wind:       { name: '관악기', items: [
+        { id:'mus_flute',       label:'플루트' },
+        { id:'mus_clarinet',    label:'클라리넷' },
+        { id:'mus_saxophone',   label:'색소폰' },
+        { id:'mus_trumpet',     label:'트럼펫' },
+        { id:'mus_trombone',    label:'트롬본' },
+      ]},
+      percussion: { name: '타악기', items: [
+        { id:'mus_drum',        label:'드럼' },
+        { id:'mus_marimba',     label:'마림바' },
+        { id:'mus_percussion',  label:'타악 전반' },
+      ]},
+      vocal:      { name: '보컬/성악', items: [
+        { id:'mus_vocal_pop',     label:'실용 보컬' },
+        { id:'mus_vocal_classic', label:'성악' },
+        { id:'mus_vocal_musical', label:'뮤지컬 보컬' },
+        { id:'mus_vocal_rap',     label:'랩/힙합 보컬' },
+      ]},
+      theory:     { name: '이론/기타', items: [
+        { id:'mus_theory',      label:'화성학·시창' },
+        { id:'mus_competition', label:'콩쿠르·연주회 동행' },
+        { id:'mus_kids',        label:'유아·초등 음악' },
+        { id:'mus_sub',         label:'대체·대타 가능' },
+      ]},
+    }
+  },
+  art: {
+    name: '🎨 미술/창의',
+    subs: {
+      fine:     { name: '순수미술', items: [
+        { id:'art_drawing',    label:'소묘/데생' },
+        { id:'art_painting',   label:'회화 (수채·유화)' },
+        { id:'art_portfolio',  label:'포트폴리오·입시' },
+      ]},
+      creative: { name: '창의미술', items: [
+        { id:'art_infant',     label:'유아 창의미술' },
+        { id:'art_kids',       label:'초등 창의미술' },
+        { id:'art_craft',      label:'공예/만들기' },
+        { id:'art_clay',       label:'클레이·도예' },
+      ]},
+      digital:  { name: '디지털/디자인', items: [
+        { id:'art_digital',    label:'디지털 드로잉' },
+        { id:'art_design',     label:'그래픽 디자인' },
+        { id:'art_webtoon',    label:'웹툰/일러스트' },
+        { id:'art_photo',      label:'사진/영상' },
+      ]},
+      contest:  { name: '대회/전시', items: [
+        { id:'art_competition',label:'전시·대회 동행' },
+        { id:'art_sub',        label:'대체·대타 가능' },
+      ]},
+    }
+  },
+  general: {
+    name: '📚 일반/학습',
+    subs: {
+      elementary:  { name: '초등 지도', items: [
+        { id:'gen_infant',    label:'유아·초등 지도' },
+        { id:'gen_homework',  label:'숙제·테스트 관리' },
+        { id:'gen_english',   label:'영어 과외' },
+        { id:'gen_math',      label:'수학 과외' },
+      ]},
+      management: { name: '학원 운영 보조', items: [
+        { id:'gen_consult',   label:'학부모 상담 가능' },
+        { id:'gen_flexible',  label:'시간 조율 가능' },
+        { id:'gen_sub',       label:'대체·대타 가능' },
+      ]},
+    }
+  },
+};
+
+/* ════════════════════════════════════════════════
+  공용 특기 데이터 (레거시 — buildSpecialHTML에서만 사용)
 ════════════════════════════════════════════════ */
 const SPECIAL_SKILLS = {
   acting: [
