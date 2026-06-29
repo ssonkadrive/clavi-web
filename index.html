@@ -2101,11 +2101,19 @@ function clearSession() {
 ════════════════════════════════════════════════ */
 let currentUserRole = null;
 
-function showPage(id) {
+function showPage(id, pushHistory = true) {
   document.querySelectorAll('.page-section').forEach(s => s.classList.remove('active'));
   document.getElementById(id).classList.add('active');
   window.scrollTo({ top: 0, behavior: 'smooth' });
+  if (pushHistory && history.state?.pageId !== id) {
+    history.pushState({ pageId: id }, '', '#' + id);
+  }
 }
+
+window.addEventListener('popstate', (e) => {
+  const id = e.state?.pageId || 'landingPage';
+  showPage(id, false);
+});
 
 function enterApp() {
   document.getElementById('appHeader').style.display = 'flex';
