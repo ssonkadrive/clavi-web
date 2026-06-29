@@ -913,6 +913,31 @@
       box-shadow:0 2px 6px rgba(91,108,255,.4);
     }
 
+    /* 세부스킬 인라인 패널 */
+    .sk-subskill-panel {
+      margin:4px 0 8px 12px;padding:8px 10px;
+      background:#f7f8ff;border-left:3px solid var(--primary-soft);
+      border-radius:0 8px 8px 0;display:flex;flex-wrap:wrap;gap:6px;
+    }
+    .sk-subskill-item {
+      display:inline-flex;align-items:center;gap:6px;
+      padding:5px 12px;border-radius:99px;border:1.5px solid #ddd;
+      background:#fff;cursor:pointer;font-size:.82rem;
+      transition:all .15s;user-select:none;
+    }
+    .sk-subskill-item:hover { border-color:var(--primary); }
+    .sk-subskill-item.on { border-color:var(--primary);background:var(--primary);color:#fff; }
+    .sk-sub-check {
+      width:16px;height:16px;border-radius:4px;border:1.5px solid #ccc;
+      display:flex;align-items:center;justify-content:center;flex-shrink:0;
+      font-size:.7rem;font-weight:900;color:#fff;background:#eee;transition:all .15s;
+    }
+    .sk-subskill-item.on .sk-sub-check { background:#fff;border-color:#fff;color:var(--primary); }
+
+    /* 팝업 태그 색상 구분 */
+    .sk-tag-chip.sk-tag-cc { background:#2e7d32; }
+    .sk-tag-chip.sk-tag-sub { background:var(--primary-dark, #4a5bff); font-size:.74rem; }
+
     /* 공통조건 칩 */
     .sk-cc-grid { display:flex;flex-wrap:wrap;gap:8px;padding:4px 0 8px; }
     .sk-cc-chip {
@@ -2563,11 +2588,19 @@ function _선택태그HTML() {
   if (!cc목록.length && !sk목록.length) return '';
   let html = '<div class="sk-tag-wrap">';
   cc목록.forEach(item =>
-    html += `<span class="sk-tag-chip" onclick="공통조건제거('${item.id}',this)">${item.label}<span class="sk-tag-x">×</span></span>`
+    html += `<span class="sk-tag-chip sk-tag-cc" onclick="공통조건제거('${item.id}',this)">${item.label}<span class="sk-tag-x">×</span></span>`
   );
-  sk목록.forEach(([key, item]) =>
-    html += `<span class="sk-tag-chip" onclick="세부역량제거('${key}',this)">${item.label}<span class="sk-tag-x">×</span></span>`
-  );
+  sk목록.forEach(([key, item]) => {
+    const subs = item.세부스킬 ? Object.values(item.세부스킬).filter(Boolean) : [];
+    if (subs.length) {
+      subs.forEach(sub => {
+        const subKey = p + ':' + sub.id;
+        html += `<span class="sk-tag-chip sk-tag-sub" onclick="세부스킬제거('${key}','${subKey}',this)">${item.label} › ${sub.label}<span class="sk-tag-x">×</span></span>`;
+      });
+    } else {
+      html += `<span class="sk-tag-chip" onclick="세부역량제거('${key}',this)">${item.label}<span class="sk-tag-x">×</span></span>`;
+    }
+  });
   return html + '</div>';
 }
 
@@ -2618,7 +2651,7 @@ function _중분류HTML() {
   return html + '</div>';
 }
 
-/* ══ 소분류 HTML ══ */
+/* ══ 소분류 HTML (세부스킬 인라인 펼침 포함) ══ */
 function _소분류HTML() {
   const p      = _팝업상태.prefix;
   const 저장소  = _역량저장소(p);
@@ -2627,10 +2660,23 @@ function _소분류HTML() {
   items.forEach(item => {
     const key     = p + ':' + item.id;
     const checked = !!저장소.세부역량[key];
-    html += `<div class="sk-item-label${checked ? ' checked' : ''}" onclick="소분류토글('${item.id}','${item.label}',this)">
+    html += `<div class="sk-item-label${checked ? ' checked' : ''}" onclick="소분류토글('${item.id}','${encodeURIComponent(item.label)}',this)">
       <span class="sk-check">${checked ? '✓' : ''}</span>
       <span style="font-size:.88rem;">${item.label}</span>
     </div>`;
+    if (item.세부스킬?.length) {
+      const selectedSubs = checked ? (저장소.세부역량[key]?.세부스킬 || {}) : {};
+      html += `<div class="sk-subskill-panel" id="ssp_${key}" style="display:${checked ? 'block' : 'none'};">`;
+      item.세부스킬.forEach(sub => {
+        const subKey = p + ':' + sub.id;
+        const subOn  = !!selectedSubs[subKey];
+        html += `<div class="sk-subskill-item${subOn ? ' on' : ''}" onclick="세부스킬토글('${item.id}','${sub.id}','${encodeURIComponent(sub.label)}',this)">
+          <span class="sk-sub-check">${subOn ? '✓' : ''}</span>
+          <span style="font-size:.82rem;">${sub.label}</span>
+        </div>`;
+      });
+      html += '</div>';
+    }
   });
   return html + '</div>';
 }
@@ -2642,26 +2688,61 @@ function 공통조건토글(id, label, el) {
   const 저장소 = _역량저장소(p);
   if (저장소.공통조건[key]) { delete 저장소.공통조건[key]; el.classList.remove('on'); }
   else { 저장소.공통조건[key] = { id, label }; el.classList.add('on'); }
-  const tagWrap = document.querySelector('#subSkillModalBody .sk-tag-wrap');
-  const html = _선택태그HTML();
-  if (tagWrap) tagWrap.outerHTML = html || '';
-  else if (html) document.getElementById('subSkillModalBody').insertAdjacentHTML('afterbegin', html);
+  _태그영역갱신();
 }
 
-function 소분류토글(id, label, el) {
+function 소분류토글(id, encodedLabel, el) {
+  const label  = decodeURIComponent(encodedLabel);
   const p      = _팝업상태.prefix;
   const key    = p + ':' + id;
   const 저장소  = _역량저장소(p);
   const cat    = 카테고리데이터[_팝업상태.대분류키];
   const sub    = cat.subs[_팝업상태.중분류키];
+  const itemDef = sub.items.find(i => i.id === id);
   if (저장소.세부역량[key]) {
     delete 저장소.세부역량[key];
     el.classList.remove('checked');
     el.querySelector('.sk-check').textContent = '';
+    const panel = document.getElementById('ssp_' + key);
+    if (panel) panel.style.display = 'none';
   } else {
-    저장소.세부역량[key] = { id, label, 대분류키: _팝업상태.대분류키, 중분류키: _팝업상태.중분류키, 대분류명: cat.name, 중분류명: sub.name };
+    저장소.세부역량[key] = { id, label, 대분류키: _팝업상태.대분류키, 중분류키: _팝업상태.중분류키, 대분류명: cat.name, 중분류명: sub.name, 세부스킬: {} };
     el.classList.add('checked');
     el.querySelector('.sk-check').textContent = '✓';
+    const panel = document.getElementById('ssp_' + key);
+    if (panel) panel.style.display = 'block';
+  }
+  _태그영역갱신();
+}
+
+function 세부스킬토글(parentId, subId, encodedLabel, el) {
+  const label   = decodeURIComponent(encodedLabel);
+  const p       = _팝업상태.prefix;
+  const key     = p + ':' + parentId;
+  const subKey  = p + ':' + subId;
+  const 저장소   = _역량저장소(p);
+  const entry   = 저장소.세부역량[key];
+  if (!entry) return;
+  if (!entry.세부스킬) entry.세부스킬 = {};
+  if (entry.세부스킬[subKey]) {
+    delete entry.세부스킬[subKey];
+    el.classList.remove('on');
+    el.querySelector('.sk-sub-check').textContent = '';
+  } else {
+    entry.세부스킬[subKey] = { id: subId, label };
+    el.classList.add('on');
+    el.querySelector('.sk-sub-check').textContent = '✓';
+  }
+  _태그영역갱신();
+}
+
+function _태그영역갱신() {
+  const tagWrap = document.querySelector('#subSkillModalBody .sk-tag-wrap');
+  const html    = _선택태그HTML();
+  if (tagWrap)      tagWrap.outerHTML = html || '';
+  else if (html)    document.getElementById('subSkillModalBody').insertAdjacentHTML('afterbegin', html);
+  else if (!html && document.querySelector('#subSkillModalBody .sk-tag-wrap')) {
+    document.querySelector('#subSkillModalBody .sk-tag-wrap').remove();
   }
 }
 
@@ -2672,7 +2753,15 @@ function 공통조건제거(id, tagEl) {
   _단계렌더();
 }
 function 세부역량제거(key, tagEl) {
-  delete _역량저장소(_팝업상태.prefix).세부역량[key];
+  const 저장소 = _역량저장소(_팝업상태.prefix);
+  delete 저장소.세부역량[key];
+  tagEl.closest('.sk-tag-chip').remove();
+  _단계렌더();
+}
+function 세부스킬제거(parentKey, subKey, tagEl) {
+  const 저장소 = _역량저장소(_팝업상태.prefix);
+  const entry  = 저장소.세부역량[parentKey];
+  if (entry?.세부스킬) delete entry.세부스킬[subKey];
   tagEl.closest('.sk-tag-chip').remove();
   _단계렌더();
 }
@@ -2694,11 +2783,19 @@ function confirmSkills() {
 }
 
 /* ══ 페이지 태그 X 삭제 ══ */
-function 페이지태그제거(key, 종류, spanEl) {
+function 페이지태그제거(key, 종류, subKey, spanEl) {
   const prefix = key.split(':')[0];
   const 저장소 = _역량저장소(prefix);
-  if (종류 === '공통') delete 저장소.공통조건[key];
-  else                 delete 저장소.세부역량[key];
+  if (종류 === '공통') {
+    delete 저장소.공통조건[key];
+  } else if (종류 === '세부' && subKey) {
+    const entry = 저장소.세부역량[key];
+    if (entry?.세부스킬) delete entry.세부스킬[subKey];
+    // 세부스킬 모두 지워졌으면 부모도 제거
+    if (entry?.세부스킬 && !Object.keys(entry.세부스킬).length) delete 저장소.세부역량[key];
+  } else {
+    delete 저장소.세부역량[key];
+  }
   spanEl.parentElement.remove();
   const tagsEl = document.getElementById(prefix + 'SubSkillTags');
   if (tagsEl && !tagsEl.children.length) {
@@ -2712,25 +2809,87 @@ function refreshSubSkillDisplay(prefix) {
   const display = document.getElementById(prefix + 'SubSkillDisplay');
   const tagsEl  = document.getElementById(prefix + 'SubSkillTags');
   if (!display || !tagsEl) return;
-  const 저장소  = _역량저장소(prefix);
+  const 저장소   = _역량저장소(prefix);
   const skEntries = Object.entries(저장소.세부역량).filter(([,v]) => v);
   const ccEntries = Object.entries(저장소.공통조건).filter(([,v]) => v);
   tagsEl.innerHTML = '';
   if (!skEntries.length && !ccEntries.length) { display.style.display = 'none'; return; }
   display.style.display = 'block';
+
+  const CC_STYLE = 'display:inline-flex;align-items:center;gap:4px;font-size:.78rem;background:#e8f5e9;color:#2e7d32;padding:4px 10px;border-radius:99px;white-space:nowrap;';
+  const SK_STYLE = 'display:inline-flex;align-items:center;gap:4px;font-size:.78rem;background:var(--primary-soft);color:var(--primary);padding:4px 10px;border-radius:99px;white-space:nowrap;';
+  const X_STYLE  = 'cursor:pointer;font-weight:700;margin-left:2px;line-height:1;opacity:.7;';
+
   ccEntries.forEach(([key, { label }]) => {
     const s = document.createElement('span');
-    s.style.cssText = 'display:inline-flex;align-items:center;gap:4px;font-size:.78rem;background:#e8f5e9;color:#2e7d32;padding:4px 10px;border-radius:99px;white-space:nowrap;';
-    s.innerHTML = `✓ ${label} <span onclick="페이지태그제거('${key}','공통',this)" style="cursor:pointer;font-weight:700;margin-left:2px;line-height:1;">×</span>`;
+    s.style.cssText = CC_STYLE;
+    s.innerHTML = `✓ ${label} <span onclick="페이지태그제거('${key}','공통',null,this)" style="${X_STYLE}">×</span>`;
     tagsEl.appendChild(s);
   });
-  skEntries.forEach(([key, { 대분류명, 중분류명, label }]) => {
-    const s = document.createElement('span');
-    s.title = 대분류명 + ' › ' + 중분류명;
-    s.style.cssText = 'display:inline-flex;align-items:center;gap:4px;font-size:.78rem;background:var(--primary-soft);color:var(--primary);padding:4px 10px;border-radius:99px;white-space:nowrap;';
-    s.innerHTML = `${label} <span onclick="페이지태그제거('${key}','역량',this)" style="cursor:pointer;font-weight:700;margin-left:2px;line-height:1;">×</span>`;
-    tagsEl.appendChild(s);
+
+  skEntries.forEach(([key, item]) => {
+    const subs = item.세부스킬 ? Object.entries(item.세부스킬).filter(([,v]) => v) : [];
+    if (subs.length) {
+      subs.forEach(([subKey, sub]) => {
+        const s = document.createElement('span');
+        s.style.cssText = SK_STYLE;
+        s.title = item.대분류명 + ' › ' + item.중분류명;
+        s.innerHTML = `${item.label} › ${sub.label} <span onclick="페이지태그제거('${key}','세부','${subKey}',this)" style="${X_STYLE}">×</span>`;
+        tagsEl.appendChild(s);
+      });
+    } else {
+      const s = document.createElement('span');
+      s.style.cssText = SK_STYLE;
+      s.title = item.대분류명 + ' › ' + item.중분류명;
+      s.innerHTML = `${item.label} <span onclick="페이지태그제거('${key}','역량',null,this)" style="${X_STYLE}">×</span>`;
+      tagsEl.appendChild(s);
+    }
   });
+}
+
+/* ══ 매칭 점수 산정 ══ */
+function 계산매칭점수(academyPrefix, instructorPrefix) {
+  const 학원  = _역량저장소(academyPrefix);
+  const 강사  = _역량저장소(instructorPrefix);
+  let 요구점수합 = 0, 충족점수합 = 0;
+  const 세부내역 = { 충족: [], 미충족: [] };
+
+  // 공통조건 (가중치 3)
+  Object.entries(학원.공통조건).forEach(([key, item]) => {
+    if (!item) return;
+    const w = 3;
+    요구점수합 += w;
+    if (강사.공통조건[key]) { 충족점수합 += w; 세부내역.충족.push(item.label); }
+    else 세부내역.미충족.push(item.label);
+  });
+
+  // 세부역량: 소분류(10) + 세부스킬(5 each)
+  Object.entries(학원.세부역량).forEach(([key, item]) => {
+    if (!item) return;
+    const 소분류w = item.weight ?? 10;
+    요구점수합 += 소분류w;
+    const 강사항목 = 강사.세부역량[key];
+    if (강사항목) {
+      충족점수합 += 소분류w;
+      세부내역.충족.push(item.label);
+      const 학원세부스킬 = Object.entries(item.세부스킬 || {}).filter(([,v]) => v);
+      학원세부스킬.forEach(([subKey, sub]) => {
+        const sw = 5;
+        요구점수합 += sw;
+        if (강사항목.세부스킬?.[subKey]) { 충족점수합 += sw; 세부내역.충족.push(`${item.label} › ${sub.label}`); }
+        else 세부내역.미충족.push(`${item.label} › ${sub.label}`);
+      });
+    } else {
+      세부내역.미충족.push(item.label);
+      Object.values(item.세부스킬 || {}).filter(Boolean).forEach(sub => {
+        요구점수합 += 5;
+        세부내역.미충족.push(`${item.label} › ${sub.label}`);
+      });
+    }
+  });
+
+  const 매칭률 = 요구점수합 ? Math.round(충족점수합 / 요구점수합 * 100) : 0;
+  return { 점수: 충족점수합, 최대점수: 요구점수합, 매칭률, 세부내역, 알림대상: 매칭률 >= 50 };
 }
 
 /* ══ 외부에서 단계1로 열기 ══ */
@@ -2875,8 +3034,10 @@ const 카테고리데이터 = {
         {id:'mu_audition', label:'오디션 준비'},
       ]},
       보컬:     { name:'보컬',         items:[
-        {id:'vo_breath',   label:'발성 교정'},    {id:'vo_high',   label:'고음 트레이닝'},
-        {id:'vo_rnb',      label:'R&B/팝'},       {id:'vo_wedding',label:'축가 레슨'},
+        { id:'vo_breath',  label:'발성 교정',    weight:10, 세부스킬:[{id:'vb_resonance',label:'공명 발성',weight:5},{id:'vb_breath',label:'호흡 훈련',weight:5}]},
+        { id:'vo_high',    label:'고음 트레이닝',weight:10, 세부스킬:[{id:'vh_mix',label:'믹스보이스',weight:5},{id:'vh_falsetto',label:'팔세토',weight:5}]},
+        { id:'vo_rnb',     label:'R&B/팝',       weight:10, 세부스킬:[{id:'vr_melisma',label:'멜리스마',weight:5},{id:'vr_rhythm',label:'리듬/그루브',weight:5}]},
+        { id:'vo_wedding', label:'축가 레슨',     weight:10},
       ]},
       드럼:     { name:'드럼',         items:[
         {id:'dr_pad',      label:'기본 패드 연습'},{id:'dr_jazz',  label:'재즈 드럼'},
@@ -2894,8 +3055,10 @@ const 카테고리데이터 = {
         {id:'kb_band',     label:'밴드 세션'},
       ]},
       피아노:   { name:'피아노',       items:[
-        {id:'pi_classic',  label:'클래식 피아노'},{id:'pi_jazz',   label:'재즈/팝 반주'},
-        {id:'pi_chord',    label:'코드 반주법'},  {id:'pi_newage', label:'뉴에이지'},
+        { id:'pi_classic', label:'클래식 피아노', weight:10, 세부스킬:[{id:'pc_sheet',label:'악보 읽기',weight:5},{id:'pc_scale',label:'스케일/아르페지오',weight:5},{id:'pc_interpret',label:'곡 해석',weight:5},{id:'pc_exam',label:'입시 레슨',weight:5}]},
+        { id:'pi_jazz',    label:'재즈/팝 반주',  weight:10, 세부스킬:[{id:'pj_chord',label:'재즈 코드',weight:5},{id:'pj_improv',label:'임프로비제이션',weight:5}]},
+        { id:'pi_chord',   label:'코드 반주법',   weight:10, 세부스킬:[{id:'ph_basic',label:'기초 코드',weight:5},{id:'ph_gospel',label:'가스펠 반주',weight:5}]},
+        { id:'pi_newage',  label:'뉴에이지',      weight:10},
       ]},
       현악기:   { name:'현악기',       items:[
         {id:'st_violin',   label:'바이올린'},     {id:'st_viola',  label:'비올라'},
@@ -2958,26 +3121,96 @@ const 카테고리데이터 = {
     name: '⚽ 체육',
     subs: {
       격기: { name:'격기 체육', items:[
-        {id:'ma_taekwondo', label:'태권도'},   {id:'ma_judo',    label:'유도'},
-        {id:'ma_hapkido',   label:'합기도'},   {id:'ma_muay',    label:'무에타이'},
-        {id:'ma_boxing',    label:'복싱'},     {id:'ma_mma',     label:'MMA(종합격투기)'},
-        {id:'ma_kumdo',     label:'검도'},     {id:'ma_jujitsu', label:'주짓수'},
-        {id:'ma_fencing',   label:'펜싱'},
+        { id:'ma_taekwondo', label:'태권도',  weight:10, 세부스킬:[
+          {id:'tk_poomsae',  label:'품새',       weight:5},
+          {id:'tk_sparring', label:'겨루기',     weight:5},
+          {id:'tk_demo',     label:'시범단',     weight:5},
+          {id:'tk_kids',     label:'유아태권도', weight:5},
+          {id:'tk_referee',  label:'심판/지도자',weight:3},
+        ]},
+        { id:'ma_judo',    label:'유도',    weight:10, 세부스킬:[
+          {id:'jd_throw',    label:'메치기', weight:5},
+          {id:'jd_ground',   label:'굳히기', weight:5},
+          {id:'jd_fall',     label:'낙법',   weight:5},
+          {id:'jd_exam',     label:'입시유도',weight:3},
+        ]},
+        { id:'ma_hapkido', label:'합기도',  weight:10, 세부스킬:[
+          {id:'hk_self',     label:'호신술', weight:5},
+          {id:'hk_joint',    label:'관절기', weight:5},
+          {id:'hk_fall',     label:'낙법',   weight:5},
+        ]},
+        { id:'ma_muay',    label:'무에타이',weight:10, 세부스킬:[
+          {id:'mt_kick',     label:'킥 테크닉',  weight:5},
+          {id:'mt_clinch',   label:'클린치',     weight:5},
+          {id:'mt_pad',      label:'미트 트레이닝',weight:5},
+        ]},
+        { id:'ma_boxing',  label:'복싱',    weight:10, 세부스킬:[
+          {id:'bx_step',     label:'기초 스텝',  weight:5},
+          {id:'bx_combo',    label:'콤비네이션', weight:5},
+          {id:'bx_sparring', label:'스파링',     weight:5},
+        ]},
+        { id:'ma_mma',     label:'MMA(종합격투기)', weight:10, 세부스킬:[
+          {id:'mm_stand',    label:'스탠딩 타격', weight:5},
+          {id:'mm_grapple',  label:'그래플링',    weight:5},
+          {id:'mm_fitness',  label:'체력 관리',   weight:3},
+        ]},
+        { id:'ma_kumdo',   label:'검도',    weight:10, 세부스킬:[
+          {id:'km_basic',    label:'기본격',   weight:5},
+          {id:'km_kata',     label:'품새/형',  weight:5},
+          {id:'km_match',    label:'스파링',   weight:5},
+        ]},
+        { id:'ma_jujitsu', label:'주짓수',  weight:10, 세부스킬:[
+          {id:'jj_ground',   label:'그라운드',   weight:5},
+          {id:'jj_standing', label:'서있는 기술',weight:5},
+          {id:'jj_self',     label:'호신',       weight:3},
+        ]},
+        { id:'ma_fencing', label:'펜싱',    weight:10, 세부스킬:[
+          {id:'fc_foil',     label:'플뢰레',  weight:5},
+          {id:'fc_epee',     label:'에페',    weight:5},
+          {id:'fc_sabre',    label:'사브르',  weight:5},
+        ]},
       ]},
       구기: { name:'구기 체육', items:[
-        {id:'bs_soccer',    label:'축구/풋살'},{id:'bs_baseball',label:'야구/소프트볼'},
-        {id:'bs_volleyball',label:'배구'},     {id:'bs_basketball',label:'농구'},
-        {id:'bs_tabletennis',label:'탁구'},   {id:'bs_badminton',label:'배드민턴'},
-        {id:'bs_handball',  label:'핸드볼'},  {id:'bs_rugby',    label:'럭비'},
-        {id:'bs_hockey',    label:'하키'},    {id:'bs_tennis',   label:'테니스'},
-        {id:'bs_squash',    label:'스쿼시'},
+        { id:'bs_soccer',     label:'축구/풋살', weight:10, 세부스킬:[
+          {id:'sc_dribble',   label:'드리블',     weight:5},
+          {id:'sc_pass',      label:'패스/전술',  weight:5},
+          {id:'sc_gk',        label:'골키퍼',     weight:5},
+          {id:'sc_futsal',    label:'풋살 특화',  weight:3},
+        ]},
+        { id:'bs_baseball',   label:'야구/소프트볼', weight:10, 세부스킬:[
+          {id:'bb_pitch',     label:'투구',   weight:5},
+          {id:'bb_hit',       label:'타격',   weight:5},
+          {id:'bb_field',     label:'수비',   weight:5},
+        ]},
+        { id:'bs_volleyball', label:'배구', weight:10, 세부스킬:[
+          {id:'vb_serve',     label:'서브',     weight:5},
+          {id:'vb_spike',     label:'스파이크', weight:5},
+          {id:'vb_block',     label:'블로킹',   weight:5},
+        ]},
+        { id:'bs_basketball', label:'농구', weight:10, 세부스킬:[
+          {id:'bk_shoot',     label:'슈팅',    weight:5},
+          {id:'bk_dribble',   label:'드리블',  weight:5},
+          {id:'bk_tactic',    label:'팀전술',  weight:5},
+        ]},
+        { id:'bs_tabletennis',label:'탁구',      weight:10, 세부스킬:[{id:'tt_basic',label:'기초 기술',weight:5},{id:'tt_spin',label:'스핀 서브',weight:5}]},
+        { id:'bs_badminton',  label:'배드민턴',   weight:10, 세부스킬:[{id:'bd_serve',label:'서브',weight:5},{id:'bd_smash',label:'스매시',weight:5}]},
+        { id:'bs_handball',   label:'핸드볼',    weight:10},
+        { id:'bs_rugby',      label:'럭비',      weight:10},
+        { id:'bs_hockey',     label:'하키',      weight:10},
+        { id:'bs_tennis',     label:'테니스',    weight:10, 세부스킬:[{id:'tn_forehand',label:'포핸드',weight:5},{id:'tn_backhand',label:'백핸드',weight:5},{id:'tn_serve',label:'서브',weight:5}]},
+        { id:'bs_squash',     label:'스쿼시',    weight:10},
       ]},
       기타체육: { name:'기타 체육', items:[
-        {id:'os_swim',      label:'수영'},    {id:'os_gymnastics',label:'체조/기계체조'},
-        {id:'os_track',     label:'육상'},    {id:'os_golf',     label:'골프'},
-        {id:'os_bowling',   label:'볼링'},    {id:'os_climbing', label:'클라이밍'},
-        {id:'os_yoga',      label:'요가/필라테스'},{id:'os_crossfit',label:'크로스핏/PT'},
-        {id:'os_dancesport',label:'댄스스포츠'},{id:'os_aerobics',label:'에어로빅'},
+        { id:'os_swim',       label:'수영', weight:10, 세부스킬:[{id:'sw_free',label:'자유형',weight:5},{id:'sw_back',label:'배영',weight:5},{id:'sw_breast',label:'평영',weight:5},{id:'sw_fly',label:'접영',weight:5}]},
+        { id:'os_gymnastics', label:'체조/기계체조', weight:10, 세부스킬:[{id:'gy_floor',label:'마루운동',weight:5},{id:'gy_vault',label:'뜀틀',weight:5}]},
+        { id:'os_track',      label:'육상',      weight:10, 세부스킬:[{id:'tr_sprint',label:'단거리',weight:5},{id:'tr_long',label:'장거리',weight:5},{id:'tr_jump',label:'도약',weight:5}]},
+        { id:'os_golf',       label:'골프',      weight:10, 세부스킬:[{id:'gf_swing',label:'스윙 교정',weight:5},{id:'gf_putt',label:'퍼팅',weight:5}]},
+        { id:'os_bowling',    label:'볼링',      weight:10},
+        { id:'os_climbing',   label:'클라이밍',  weight:10},
+        { id:'os_yoga',       label:'요가/필라테스', weight:10, 세부스킬:[{id:'yg_basic',label:'기초 요가',weight:5},{id:'yg_pilates',label:'필라테스',weight:5}]},
+        { id:'os_crossfit',   label:'크로스핏/PT', weight:10, 세부스킬:[{id:'cf_wod',label:'WOD 프로그래밍',weight:5},{id:'cf_pt',label:'개인 PT',weight:5}]},
+        { id:'os_dancesport', label:'댄스스포츠', weight:10, 세부스킬:[{id:'ds_latin',label:'라틴댄스',weight:5},{id:'ds_ballroom',label:'볼룸댄스',weight:5}]},
+        { id:'os_aerobics',   label:'에어로빅',  weight:10},
       ]},
     }
   },
