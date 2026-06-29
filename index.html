@@ -2479,11 +2479,14 @@ function drawerGo(menu) {
   if (menu === 'interview')         { showPage('interviewPage'); }
 }
 
-function handleLogout() {
+async function handleLogout() {
   closeDrawer();
   clearSession();
   currentUserRole = null;
+  _authHandled = false;
+  _adminUid = null;
   document.getElementById('appHeader').style.display = 'none';
+  await _supabase.auth.signOut();
   showToast('로그아웃되었습니다');
   setTimeout(() => showPage('landingPage'), 600);
 }
