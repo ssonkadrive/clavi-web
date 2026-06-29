@@ -2511,43 +2511,20 @@ const _supabase = supabase.createClient(
   'sb_publishable_hTeqOZsZA9VQ31fvJvxJvg_a0x1mV7B'
 );
 
-/* OAuth 콜백 처리 — 페이지 로드 시 세션 복원 */
-(async () => {
-  const params = new URLSearchParams(window.location.search);
+/* agreed_at 저장 헬퍼 — email 절대 건드리지 않음 */
+async function saveAgreedAt(uid, role) {
+  // update 먼저 시도 (트리거로 row가 이미 있을 경우)
+  const { data: upd } = await _supabase
+    .from('users').update({ agreed_at: new Date().toISOString(), role })
+    .eq('id', uid).select('id');
+  if (upd && upd.length > 0) return; // 성공
+  // row가 없으면 email 없이 insert
+  await _supabase.from('users')
+    .insert({ id: uid, agreed_at: new Date().toISOString(), role });
+}
 
-  // 네이버: CLAVI_PENDING_ROLE은 로그인 클릭 시 이미 localStorage에 저장됨
-  // Supabase action_link가 세션 해시를 자동 처리 → onAuthStateChange SIGNED_IN 발동
-
-  // 일반 OAuth 콜백
-  const { data: { session } } = await _supabase.auth.getSession();
-  if (session?.user) {
-    const pending = localStorage.getItem('CLAVI_PENDING_ROLE');
-    const role = pending || loadSession()?.role || 'instructor';
-    if (pending) localStorage.removeItem('CLAVI_PENDING_ROLE');
-    const u = session.user;
-    const displayName = u.user_metadata?.full_name || u.user_metadata?.name
-                     || u.user_metadata?.nickname || u.email || u.id;
-    saveSession(role, session.access_token, displayName);
-    currentUserRole = role;
-    const { data: existing } = await _supabase
-      .from('users').select('id,agreed_at').eq('id', u.id).maybeSingle();
-    if (!existing) {
-      showTermsModal(async (chosenRole, metaVal) => {
-        currentUserRole = chosenRole;
-        saveSession(chosenRole, session.access_token, displayName);
-        await _supabase.from('users').upsert({ id: u.id, agreed_at: new Date().toISOString(), role: chosenRole }, { onConflict: 'id' });
-        showProfileSetup(chosenRole);
-      });
-    } else if (!existing.agreed_at) {
-      showTermsModal(async (chosenRole, metaVal) => {
-        await _supabase.from('users').update({ agreed_at: new Date().toISOString() }).eq('id', u.id);
-        enterApp();
-      });
-    } else {
-      enterApp();
-    }
-  }
-})();
+/* OAuth 콜백 처리 — onAuthStateChange에 위임, 여기선 아무것도 안 함 */
+(async () => {})();
 
 /* ════════════════════════════════════════════════
   소셜 로그인/가입 핸들러
@@ -2582,9 +2559,13 @@ async function handleSocialRegister(provider) {
   if (error) showToast(`${label} 가입 오류: ` + error.message);
 }
 
+let _authHandled = false; // 중복 처리 방지
+
 /* OAuth 리턴 후 role 복원 */
 _supabase.auth.onAuthStateChange(async (event, session) => {
   if (event === 'SIGNED_IN' && session?.user) {
+    if (_authHandled) return;
+    _authHandled = true;
     const pending = localStorage.getItem('CLAVI_PENDING_ROLE');
     const role = pending || loadSession()?.role || 'instructor';
     if (pending) localStorage.removeItem('CLAVI_PENDING_ROLE');
@@ -2595,19 +2576,19 @@ _supabase.auth.onAuthStateChange(async (event, session) => {
     currentUserRole = role;
     const { data: existing } = await _supabase
       .from('users').select('id,agreed_at').eq('id', u.id).maybeSingle();
-    if (!existing) {
+    if (!existing || !existing.agreed_at) {
       showToast('환영합니다! 약관에 동의해 주세요 🎉');
-      showTermsModal(async (chosenRole, metaVal) => {
+      const isNew = !existing;
+      showTermsModal(async (chosenRole) => {
         currentUserRole = chosenRole;
         saveSession(chosenRole, session.access_token, displayName);
-        await _supabase.from('users').upsert({ id: u.id, agreed_at: new Date().toISOString(), role: chosenRole }, { onConflict: 'id' });
-        showProfileSetup(chosenRole);
-      });
-    } else if (!existing.agreed_at) {
-      showTermsModal(async (chosenRole, metaVal) => {
-        await _supabase.from('users').update({ agreed_at: new Date().toISOString() }).eq('id', u.id);
-        showToast('로그인 성공! 환영합니다 🎉');
-        setTimeout(() => enterApp(), 600);
+        await saveAgreedAt(u.id, chosenRole);
+        if (isNew) {
+          showProfileSetup(chosenRole);
+        } else {
+          showToast('로그인 성공! 환영합니다 🎉');
+          setTimeout(() => enterApp(), 600);
+        }
       });
     } else {
       showToast('로그인 성공! 환영합니다 🎉');
@@ -4828,13 +4809,15 @@ function initAcademyPhotoGrid() {
   currentUserRole = session.role;
   const { data: { session: supa } } = await _supabase.auth.getSession();
   if (!supa?.user) { enterApp(); return; }
+  if (_authHandled) return; // onAuthStateChange가 이미 처리 중
   const { data: existing } = await _supabase
     .from('users').select('agreed_at').eq('id', supa.user.id).maybeSingle();
   if (!existing || !existing.agreed_at) {
+    _authHandled = true;
     showTermsModal(async (chosenRole) => {
       currentUserRole = chosenRole;
       saveSession(chosenRole, supa.access_token, session.name || '');
-      await _supabase.from('users').upsert({ id: supa.user.id, agreed_at: new Date().toISOString(), role: chosenRole }, { onConflict: 'id' });
+      await saveAgreedAt(supa.user.id, chosenRole);
       enterApp();
     });
   } else {
