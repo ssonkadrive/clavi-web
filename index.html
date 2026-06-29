@@ -845,6 +845,20 @@
     .apply-btn:hover { transform:translateY(-1px); }
     .job-empty { text-align:center;padding:60px 20px;color:var(--text-muted);font-size:.95rem; }
 
+    /* ── 매칭 체크박스 chips ─────────────────────── */
+    .match-chips { display:flex;flex-wrap:wrap;gap:8px;margin-top:10px; }
+    .match-chip { cursor:pointer; }
+    .match-chip input[type="checkbox"] { display:none; }
+    .match-chip span {
+      display:inline-block;padding:8px 14px;border-radius:var(--radius-pill);
+      border:1.5px solid var(--border);background:var(--surface);
+      font-size:.85rem;color:var(--text);transition:all .15s;user-select:none;
+    }
+    .match-chip input:checked + span {
+      background:var(--primary);border-color:var(--primary);color:#fff;
+      box-shadow:0 2px 8px rgba(91,108,255,.3);
+    }
+
     /* ── landingPage v2 ───────────────────────────── */
     .lp-wrap { display:flex;flex-direction:column;gap:0;overflow-x:hidden; }
 
@@ -1634,108 +1648,90 @@
 ══════════════════════════════════════════════════ -->
 <section id="academyPage" class="page-section">
   <div class="app-content">
-    <form id="academyForm" novalidate>
-      <div class="form-stack">
+    <div class="form-stack">
 
-        <section class="card">
-          <h2 class="card-title">🎯 모집 분야 및 우대 조건</h2>
-          <p class="card-desc">구인 업종을 선택하시면 맞춤형 강사 우대 역량 항목이 표시됩니다.</p>
-          <label class="section-label">모집 업종 선택<span class="required">*</span></label>
-          <div class="industry-chips" id="aIndustryChips">
-            <label class="chip" data-industry="acting"><input type="radio" name="aIndustry" value="acting" checked /><span class="chip-face">🎭 연기 / 뮤지컬</span></label>
-            <label class="chip" data-industry="taekwondo"><input type="radio" name="aIndustry" value="taekwondo" /><span class="chip-face">🥋 체육 / 태권도</span></label>
-            <label class="chip" data-industry="ballet"><input type="radio" name="aIndustry" value="ballet" /><span class="chip-face">🩰 무용 / 발레</span></label>
-            <label class="chip" data-industry="music"><input type="radio" name="aIndustry" value="music" /><span class="chip-face">🎵 음악 / 악기</span></label>
-            <label class="chip" data-industry="art"><input type="radio" name="aIndustry" value="art" /><span class="chip-face">🎨 미술 / 창의</span></label>
-            <label class="chip" data-industry="general"><input type="radio" name="aIndustry" value="general" /><span class="chip-face">📚 일반 / 학습</span></label>
-          </div>
-          <label class="section-label">선호 및 우대 강사 조건 (복수 선택 가능)</label>
-          <div class="skill-tag-bar" id="aSkillTagBar"></div>
-          <div class="special-panel" id="aSpecialPanel"></div>
-        </section>
-
-        <section class="card">
-          <h2 class="card-title">📋 공고 내용</h2>
-          <p class="card-desc">강사님들이 모집 요강을 정확히 파악할 수 있게 적어주세요.</p>
-          <div class="field">
-            <label class="section-label" for="aIntro">공고 제목<span class="required">*</span></label>
-            <textarea id="aIntro" name="aIntro" placeholder="예) 주말 입시반 및 매체연기 담당 파트타임 강사님 모집합니다." required></textarea>
-          </div>
-          <div class="field">
-            <label class="section-label" for="aSubjects">담당 모집 과목<span class="required">*</span></label>
-            <input type="text" id="aSubjects" name="aSubjects" placeholder="예) 매체 연기, 독백 디렉팅, 뮤지컬 보컬" required />
-          </div>
-          <div class="field">
-            <label class="section-label">고용형태</label>
-            <div class="employ-type-group">
-              <label class="employ-type-label">
-                <input type="radio" name="aEmployType" value="4대보험" checked /> 4대보험
-                <span class="tooltip-anchor">
-                  <button type="button" class="tooltip-icon">?</button>
-                  <span class="tooltip-box" id="tooltip-a-4ins" style="width:280px;">
-                    <p style="font-size:.83rem;font-weight:700;color:var(--primary);margin-bottom:6px;">📋 4대보험 근로계약</p>
-                    <p style="font-size:.78rem;color:#374151;margin-bottom:8px;">근로기준법 적용 · 사용자-근로자 관계</p>
-                    <div style="background:#f0fdf4;border-radius:8px;padding:8px 10px;margin-bottom:6px;">
-                      <p style="color:#166534;font-weight:700;font-size:.78rem;margin-bottom:3px;">✅ 원장 입장 장점</p>
-                      <p style="font-size:.76rem;color:#166534;margin:0;">· 근로계약 법적 안정성 확보<br/>· 세금 신고 의무 명확 (원천징수)<br/>· 장기 근속 유도 가능</p>
-                    </div>
-                    <div style="background:#fef2f2;border-radius:8px;padding:8px 10px;">
-                      <p style="color:#991b1b;font-weight:700;font-size:.78rem;margin-bottom:3px;">⚠️ 원장 부담 비용</p>
-                      <p style="font-size:.76rem;color:#991b1b;margin:0;">· 국민연금 4.5% / 건강보험 3.545%<br/>· 고용보험 0.9% / 산재보험 업종별<br/>→ 총 사업주 부담 <strong>약 9~10%</strong> 추가</p>
-                    </div>
-                  </span>
-                </span>
-              </label>
-              <label class="employ-type-label">
-                <input type="radio" name="aEmployType" value="3.3%" /> 3.3% 프리랜서
-                <span class="tooltip-anchor">
-                  <button type="button" class="tooltip-icon">?</button>
-                  <span class="tooltip-box" id="tooltip-a-freelance" style="width:280px;">
-                    <p style="font-size:.83rem;font-weight:700;color:#b45309;margin-bottom:6px;">📋 3.3% 사업소득 원천징수</p>
-                    <p style="font-size:.78rem;color:#374151;margin-bottom:8px;">소득세법 제127조 · 용역 제공 계약</p>
-                    <div style="background:#f0fdf4;border-radius:8px;padding:8px 10px;margin-bottom:6px;">
-                      <p style="color:#166534;font-weight:700;font-size:.78rem;margin-bottom:3px;">✅ 원장 입장 장점</p>
-                      <p style="font-size:.76rem;color:#166534;margin:0;">· 4대보험 부담 <strong>전액 없음</strong><br/>· 단기·파트타임 계약에 최적<br/>· 지급 시 3.3%만 원천징수 후 신고</p>
-                    </div>
-                    <div style="background:#fef2f2;border-radius:8px;padding:8px 10px;">
-                      <p style="color:#991b1b;font-weight:700;font-size:.78rem;margin-bottom:3px;">⚠️ 주의사항</p>
-                      <p style="font-size:.76rem;color:#991b1b;margin:0;">· 실질적 근로관계 시 노동법 위반 소지<br/>· 강사가 직접 종합소득세 신고 의무<br/>· 고용보험·퇴직금 미적용</p>
-                    </div>
-                  </span>
-                </span>
-              </label>
-              <label class="employ-type-label">
-                <input type="radio" name="aEmployType" value="협의" /> 협의
-              </label>
-            </div>
-          </div>
-          <div class="field">
-            <label class="section-label">지급 급여 형태 (복수 제안 가능)<span class="required">*</span></label>
-            <div class="pay-type-group" id="aPayTypeGroup" role="group" aria-label="지급 급여 형태">
-              <label class="pay-type-btn">
-                <input type="checkbox" name="aPayType" value="hourly" checked />
-                <div class="btn-face"><span class="icon">⏱</span><span class="label">시급</span><span class="hint">시간당</span></div>
-              </label>
-              <label class="pay-type-btn">
-                <input type="checkbox" name="aPayType" value="monthly" />
-                <div class="btn-face"><span class="icon">📅</span><span class="label">월급</span><span class="hint">월 고정</span></div>
-              </label>
-              <label class="pay-type-btn">
-                <input type="checkbox" name="aPayType" value="ratio" />
-                <div class="btn-face"><span class="icon">📊</span><span class="label">비율제</span><span class="hint">수강료 %</span></div>
-              </label>
-            </div>
-            <div class="pay-amount-fields" id="aPayAmountFields"></div>
-          </div>
-        </section>
-
-        <div class="submit-wrap">
-          <button type="submit" class="submit-btn">✨ 구인 공고 등록하고 강사 찾기</button>
-          <p class="submit-hint">등록 완료 후 CLAVI가 조건에 딱 맞는 맞춤형 매칭 강사 리스트를 추천합니다</p>
+      <section class="card">
+        <h2 class="card-title">🎯 원하는 강사 분야</h2>
+        <p class="card-desc">복수 선택 가능합니다.</p>
+        <div class="match-chips" id="aSubjectChips">
+          <label class="match-chip"><input type="checkbox" name="aSubject" value="연기/뮤지컬"/><span>🎭 연기/뮤지컬</span></label>
+          <label class="match-chip"><input type="checkbox" name="aSubject" value="체육/태권도"/><span>🥋 체육/태권도</span></label>
+          <label class="match-chip"><input type="checkbox" name="aSubject" value="무용/발레"/><span>🩰 무용/발레</span></label>
+          <label class="match-chip"><input type="checkbox" name="aSubject" value="음악/악기"/><span>🎵 음악/악기</span></label>
+          <label class="match-chip"><input type="checkbox" name="aSubject" value="미술/창의"/><span>🎨 미술/창의</span></label>
+          <label class="match-chip"><input type="checkbox" name="aSubject" value="일반/학습"/><span>📚 일반/학습</span></label>
         </div>
+      </section>
 
+      <section class="card">
+        <h2 class="card-title">📍 학원 지역</h2>
+        <p class="card-desc">강사가 출강 가능한 지역을 선택해 주세요.</p>
+        <div class="match-chips" id="aRegionChips">
+          <label class="match-chip"><input type="checkbox" name="aRegion" value="서울 강남"/><span>서울 강남</span></label>
+          <label class="match-chip"><input type="checkbox" name="aRegion" value="서울 강북"/><span>서울 강북</span></label>
+          <label class="match-chip"><input type="checkbox" name="aRegion" value="서울 서부"/><span>서울 서부</span></label>
+          <label class="match-chip"><input type="checkbox" name="aRegion" value="서울 동부"/><span>서울 동부</span></label>
+          <label class="match-chip"><input type="checkbox" name="aRegion" value="경기 북부"/><span>경기 북부</span></label>
+          <label class="match-chip"><input type="checkbox" name="aRegion" value="경기 남부"/><span>경기 남부</span></label>
+          <label class="match-chip"><input type="checkbox" name="aRegion" value="인천"/><span>인천</span></label>
+          <label class="match-chip"><input type="checkbox" name="aRegion" value="부산"/><span>부산</span></label>
+          <label class="match-chip"><input type="checkbox" name="aRegion" value="대구"/><span>대구</span></label>
+          <label class="match-chip"><input type="checkbox" name="aRegion" value="대전"/><span>대전</span></label>
+          <label class="match-chip"><input type="checkbox" name="aRegion" value="광주"/><span>광주</span></label>
+          <label class="match-chip"><input type="checkbox" name="aRegion" value="기타"/><span>기타</span></label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">📅 수업 가능 요일</h2>
+        <div class="match-chips" id="aWeekdayChips">
+          <label class="match-chip"><input type="checkbox" name="aWeekday" value="월"/><span>월</span></label>
+          <label class="match-chip"><input type="checkbox" name="aWeekday" value="화"/><span>화</span></label>
+          <label class="match-chip"><input type="checkbox" name="aWeekday" value="수"/><span>수</span></label>
+          <label class="match-chip"><input type="checkbox" name="aWeekday" value="목"/><span>목</span></label>
+          <label class="match-chip"><input type="checkbox" name="aWeekday" value="금"/><span>금</span></label>
+          <label class="match-chip"><input type="checkbox" name="aWeekday" value="토"/><span>토</span></label>
+          <label class="match-chip"><input type="checkbox" name="aWeekday" value="일"/><span>일</span></label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">💼 고용형태</h2>
+        <div class="match-chips" id="aEmployChips">
+          <label class="match-chip"><input type="checkbox" name="aEmploy" value="4대보험"/><span>4대보험</span></label>
+          <label class="match-chip"><input type="checkbox" name="aEmploy" value="3.3% 프리랜서"/><span>3.3% 프리랜서</span></label>
+          <label class="match-chip"><input type="checkbox" name="aEmploy" value="협의"/><span>협의 가능</span></label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">💰 제시 시급 범위</h2>
+        <p class="card-desc">강사에게 제시할 시급 범위를 입력해 주세요.</p>
+        <div style="display:flex;gap:12px;align-items:center;">
+          <div style="flex:1;">
+            <label class="section-label">최소</label>
+            <input type="number" id="aPayMin" class="form-input" placeholder="예) 20000" min="0" step="1000"/>
+          </div>
+          <span style="padding-top:24px;color:var(--text-muted);">~</span>
+          <div style="flex:1;">
+            <label class="section-label">최대</label>
+            <input type="number" id="aPayMax" class="form-input" placeholder="예) 40000" min="0" step="1000"/>
+          </div>
+          <span style="padding-top:24px;color:var(--text-muted);font-size:.85rem;">원/시간</span>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">📝 학원 소개 (선택)</h2>
+        <textarea id="aIntro" class="form-input" rows="3" placeholder="학원 분위기, 수업 방식 등 강사에게 전하고 싶은 내용을 자유롭게 적어주세요." style="resize:vertical;"></textarea>
+      </section>
+
+      <div class="submit-wrap">
+        <button type="button" class="submit-btn" onclick="saveAcademyConditions()">✨ 조건 저장하고 매칭 시작</button>
+        <p class="submit-hint">저장 후 CLAVI가 조건에 맞는 강사를 자동으로 찾아드립니다</p>
       </div>
-    </form>
+
+    </div>
   </div>
 </section>
 
@@ -1832,112 +1828,82 @@
 ══════════════════════════════════════════════════ -->
 <section id="instructorPage" class="page-section">
   <div class="app-content">
-    <form id="instructorForm" novalidate>
-      <div class="form-stack">
+    <div class="form-stack">
 
-        <section class="card">
-          <h2 class="card-title">🎯 전문 분야 / 업종 선택</h2>
-          <p class="card-desc">주력 분야를 선택하면 세부 전공 특기 항목이 표시됩니다.</p>
-          <label class="section-label">업종 선택<span class="required">*</span></label>
-          <div class="industry-chips" id="iIndustryChips">
-            <label class="chip" data-industry="acting"><input type="radio" name="iIndustry" value="acting" checked /><span class="chip-face">🎭 연기 / 뮤지컬</span></label>
-            <label class="chip" data-industry="taekwondo"><input type="radio" name="iIndustry" value="taekwondo" /><span class="chip-face">🥋 체육 / 태권도</span></label>
-            <label class="chip" data-industry="ballet"><input type="radio" name="iIndustry" value="ballet" /><span class="chip-face">🩰 무용 / 발레</span></label>
-            <label class="chip" data-industry="music"><input type="radio" name="iIndustry" value="music" /><span class="chip-face">🎵 음악 / 악기</span></label>
-            <label class="chip" data-industry="art"><input type="radio" name="iIndustry" value="art" /><span class="chip-face">🎨 미술 / 창의</span></label>
-            <label class="chip" data-industry="general"><input type="radio" name="iIndustry" value="general" /><span class="chip-face">📚 일반 / 학습</span></label>
-          </div>
-          <label class="section-label">핵심 전공 및 강사 우대 역량 (복수 선택 가능)</label>
-          <div class="skill-tag-bar" id="iSkillTagBar"></div>
-          <div class="special-panel" id="iSpecialPanel"></div>
-        </section>
-
-        <section class="card">
-          <h2 class="card-title">💼 고용형태 선택</h2>
-          <p class="card-desc">원하시는 계약 방식을 선택해 주세요.</p>
-          <div class="field">
-            <div class="employ-type-group">
-              <label class="employ-type-label">
-                <input type="radio" name="iEmployType" value="4대보험" checked /> 4대보험
-                <span class="tooltip-anchor">
-                  <button type="button" class="tooltip-icon">?</button>
-                  <span class="tooltip-box" id="tooltip-i-4ins" style="width:280px;">
-                    <p style="font-size:.83rem;font-weight:700;color:var(--primary);margin-bottom:6px;">📋 4대보험 근로계약</p>
-                    <p style="font-size:.78rem;color:#374151;margin-bottom:8px;">근로기준법 적용 · 근로자 보호 최강</p>
-                    <div style="background:#f0fdf4;border-radius:8px;padding:8px 10px;margin-bottom:6px;">
-                      <p style="color:#166534;font-weight:700;font-size:.78rem;margin-bottom:3px;">✅ 강사 입장 장점</p>
-                      <p style="font-size:.76rem;color:#166534;margin:0;">· 국민연금·건강보험 학원이 절반 부담<br/>· 고용보험 적용 → 실업급여 수령 가능<br/>· 퇴직금·연차 법적 보장</p>
-                    </div>
-                    <div style="background:#fef2f2;border-radius:8px;padding:8px 10px;">
-                      <p style="color:#991b1b;font-weight:700;font-size:.78rem;margin-bottom:3px;">⚠️ 참고사항</p>
-                      <p style="font-size:.76rem;color:#991b1b;margin:0;">· 실수령액 기준 약 9% 공제 발생<br/>(근로자 부담분: 연금 4.5% + 건강 3.545%)<br/>· 근로시간·취업규칙 적용 대상</p>
-                    </div>
-                  </span>
-                </span>
-              </label>
-              <label class="employ-type-label">
-                <input type="radio" name="iEmployType" value="3.3%" /> 3.3% 프리랜서
-                <span class="tooltip-anchor">
-                  <button type="button" class="tooltip-icon">?</button>
-                  <span class="tooltip-box" id="tooltip-i-freelance" style="width:280px;">
-                    <p style="font-size:.83rem;font-weight:700;color:#b45309;margin-bottom:6px;">📋 3.3% 사업소득 원천징수</p>
-                    <p style="font-size:.78rem;color:#374151;margin-bottom:8px;">소득세법 제127조 · 프리랜서 계약</p>
-                    <div style="background:#f0fdf4;border-radius:8px;padding:8px 10px;margin-bottom:6px;">
-                      <p style="color:#166534;font-weight:700;font-size:.78rem;margin-bottom:3px;">✅ 강사 입장 장점</p>
-                      <p style="font-size:.76rem;color:#166534;margin:0;">· 다수 학원 동시 계약 자유<br/>· 세금 3.3%만 원천징수 (분리과세 가능)<br/>· 비용 처리 시 환급 받을 수 있음</p>
-                    </div>
-                    <div style="background:#fef2f2;border-radius:8px;padding:8px 10px;">
-                      <p style="color:#991b1b;font-weight:700;font-size:.78rem;margin-bottom:3px;">⚠️ 주의사항</p>
-                      <p style="font-size:.76rem;color:#991b1b;margin:0;">· 4대보험·퇴직금·연차 미적용<br/>· 매년 5월 종합소득세 직접 신고 의무<br/>· 수입 증빙 자체 관리 필요</p>
-                    </div>
-                  </span>
-                </span>
-              </label>
-              <label class="employ-type-label">
-                <input type="radio" name="iEmployType" value="협의" /> 협의
-              </label>
-            </div>
-          </div>
-        </section>
-
-        <section class="card">
-          <h2 class="card-title">📋 담당 과목 및 희망 급여</h2>
-          <p class="card-desc">원장님이 빠르게 파악할 수 있도록 작성해 주세요.</p>
-          <div class="field">
-            <label class="section-label" for="iSubjects">담당 가능 과목<span class="required">*</span></label>
-            <input type="text" id="iSubjects" name="iSubjects" placeholder="예) 매체 연기, 독백 디렉팅, 뮤지컬 보컬" required />
-          </div>
-          <div class="field">
-            <label class="section-label" for="iIntro">한 줄 어필<span class="required">*</span></label>
-            <textarea id="iIntro" name="iIntro" placeholder="예) 10년차 입시 전문, 주말 출강 가능합니다." required></textarea>
-          </div>
-          <div class="field">
-            <label class="section-label">희망 급여 (복수 선택 가능)<span class="required">*</span></label>
-            <div class="pay-type-group" id="iPayTypeGroup" role="group" aria-label="희망 급여 형태">
-              <label class="pay-type-btn">
-                <input type="checkbox" name="iPayType" value="hourly" checked />
-                <div class="btn-face"><span class="icon">⏱</span><span class="label">시급</span><span class="hint">시간당</span></div>
-              </label>
-              <label class="pay-type-btn">
-                <input type="checkbox" name="iPayType" value="monthly" />
-                <div class="btn-face"><span class="icon">📅</span><span class="label">월급</span><span class="hint">월 고정</span></div>
-              </label>
-              <label class="pay-type-btn">
-                <input type="checkbox" name="iPayType" value="ratio" />
-                <div class="btn-face"><span class="icon">📊</span><span class="label">비율제</span><span class="hint">수강료 %</span></div>
-              </label>
-            </div>
-            <div class="pay-amount-fields" id="iPayAmountFields"></div>
-          </div>
-        </section>
-
-        <div class="submit-wrap">
-          <button type="submit" class="submit-btn">✨ 프로필 등록하고 매칭 시작하기</button>
-          <p class="submit-hint">등록 완료 후 CLAVI가 딱 맞는 공고를 추천해 드려요</p>
+      <section class="card">
+        <h2 class="card-title">🎯 나의 전문 분야</h2>
+        <p class="card-desc">복수 선택 가능합니다.</p>
+        <div class="match-chips" id="iSubjectChips">
+          <label class="match-chip"><input type="checkbox" name="iSubject" value="연기/뮤지컬"/><span>🎭 연기/뮤지컬</span></label>
+          <label class="match-chip"><input type="checkbox" name="iSubject" value="체육/태권도"/><span>🥋 체육/태권도</span></label>
+          <label class="match-chip"><input type="checkbox" name="iSubject" value="무용/발레"/><span>🩰 무용/발레</span></label>
+          <label class="match-chip"><input type="checkbox" name="iSubject" value="음악/악기"/><span>🎵 음악/악기</span></label>
+          <label class="match-chip"><input type="checkbox" name="iSubject" value="미술/창의"/><span>🎨 미술/창의</span></label>
+          <label class="match-chip"><input type="checkbox" name="iSubject" value="일반/학습"/><span>📚 일반/학습</span></label>
         </div>
+      </section>
 
+      <section class="card">
+        <h2 class="card-title">📍 출강 가능 지역</h2>
+        <p class="card-desc">복수 선택 가능합니다.</p>
+        <div class="match-chips" id="iRegionChips">
+          <label class="match-chip"><input type="checkbox" name="iRegion" value="서울 강남"/><span>서울 강남</span></label>
+          <label class="match-chip"><input type="checkbox" name="iRegion" value="서울 강북"/><span>서울 강북</span></label>
+          <label class="match-chip"><input type="checkbox" name="iRegion" value="서울 서부"/><span>서울 서부</span></label>
+          <label class="match-chip"><input type="checkbox" name="iRegion" value="서울 동부"/><span>서울 동부</span></label>
+          <label class="match-chip"><input type="checkbox" name="iRegion" value="경기 북부"/><span>경기 북부</span></label>
+          <label class="match-chip"><input type="checkbox" name="iRegion" value="경기 남부"/><span>경기 남부</span></label>
+          <label class="match-chip"><input type="checkbox" name="iRegion" value="인천"/><span>인천</span></label>
+          <label class="match-chip"><input type="checkbox" name="iRegion" value="부산"/><span>부산</span></label>
+          <label class="match-chip"><input type="checkbox" name="iRegion" value="대구"/><span>대구</span></label>
+          <label class="match-chip"><input type="checkbox" name="iRegion" value="대전"/><span>대전</span></label>
+          <label class="match-chip"><input type="checkbox" name="iRegion" value="광주"/><span>광주</span></label>
+          <label class="match-chip"><input type="checkbox" name="iRegion" value="기타"/><span>기타</span></label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">📅 수업 가능 요일</h2>
+        <div class="match-chips" id="iWeekdayChips">
+          <label class="match-chip"><input type="checkbox" name="iWeekday" value="월"/><span>월</span></label>
+          <label class="match-chip"><input type="checkbox" name="iWeekday" value="화"/><span>화</span></label>
+          <label class="match-chip"><input type="checkbox" name="iWeekday" value="수"/><span>수</span></label>
+          <label class="match-chip"><input type="checkbox" name="iWeekday" value="목"/><span>목</span></label>
+          <label class="match-chip"><input type="checkbox" name="iWeekday" value="금"/><span>금</span></label>
+          <label class="match-chip"><input type="checkbox" name="iWeekday" value="토"/><span>토</span></label>
+          <label class="match-chip"><input type="checkbox" name="iWeekday" value="일"/><span>일</span></label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">💼 선호 고용형태</h2>
+        <div class="match-chips" id="iEmployChips">
+          <label class="match-chip"><input type="checkbox" name="iEmploy" value="4대보험"/><span>4대보험</span></label>
+          <label class="match-chip"><input type="checkbox" name="iEmploy" value="3.3% 프리랜서"/><span>3.3% 프리랜서</span></label>
+          <label class="match-chip"><input type="checkbox" name="iEmploy" value="협의"/><span>협의 가능</span></label>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">💰 희망 최소 시급</h2>
+        <p class="card-desc">이 금액 이상 제시하는 학원과 매칭됩니다.</p>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <input type="number" id="iPayMin" class="form-input" placeholder="예) 25000" min="0" step="1000" style="flex:1;"/>
+          <span style="color:var(--text-muted);font-size:.85rem;white-space:nowrap;">원/시간 이상</span>
+        </div>
+      </section>
+
+      <section class="card">
+        <h2 class="card-title">📝 한 줄 소개 (선택)</h2>
+        <textarea id="iIntro" class="form-input" rows="3" placeholder="예) 10년차 입시 전문, 주말 출강 가능합니다. 성실하게 임하겠습니다." style="resize:vertical;"></textarea>
+      </section>
+
+      <div class="submit-wrap">
+        <button type="button" class="submit-btn" onclick="saveInstructorConditions()">✨ 조건 저장하고 매칭 시작</button>
+        <p class="submit-hint">저장 후 CLAVI가 조건에 맞는 학원을 자동으로 찾아드립니다</p>
       </div>
-    </form>
+
+    </div>
   </div>
 </section>
 
@@ -2357,6 +2323,64 @@ async function saveProfileSetup() {
 
   showToast('저장 완료! CLAVI를 시작합니다 🚀');
   setTimeout(() => enterApp(), 700);
+}
+
+/* ── 체크박스 값 수집 헬퍼 ── */
+function getChecked(name) {
+  return [...document.querySelectorAll(`input[name="${name}"]:checked`)].map(el => el.value);
+}
+
+/* ── 학원 조건 저장 ── */
+async function saveAcademyConditions() {
+  const { data: { session } } = await _supabase.auth.getSession();
+  if (!session?.user) { showToast('로그인이 필요합니다.'); return; }
+
+  const subjects     = getChecked('aSubject');
+  const regions      = getChecked('aRegion');
+  const weekdays     = getChecked('aWeekday');
+  const employ_types = getChecked('aEmploy');
+  const pay_min      = parseInt(document.getElementById('aPayMin').value) || 0;
+  const pay_max      = parseInt(document.getElementById('aPayMax').value) || 0;
+  const intro        = document.getElementById('aIntro').value.trim();
+
+  if (!subjects.length) { showToast('분야를 하나 이상 선택해 주세요.'); return; }
+  if (!regions.length)  { showToast('지역을 하나 이상 선택해 주세요.'); return; }
+
+  const { error } = await _supabase.from('academy_conditions').upsert({
+    user_id: session.user.id,
+    subjects, regions, weekdays, employ_types, pay_min, pay_max, intro,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'user_id' });
+
+  if (error) { showToast('저장 오류: ' + error.message); return; }
+  showToast('조건이 저장되었습니다! 매칭을 시작합니다 🎉');
+  setTimeout(() => drawerGo('academy-match'), 800);
+}
+
+/* ── 강사 조건 저장 ── */
+async function saveInstructorConditions() {
+  const { data: { session } } = await _supabase.auth.getSession();
+  if (!session?.user) { showToast('로그인이 필요합니다.'); return; }
+
+  const subjects     = getChecked('iSubject');
+  const regions      = getChecked('iRegion');
+  const weekdays     = getChecked('iWeekday');
+  const employ_types = getChecked('iEmploy');
+  const pay_min      = parseInt(document.getElementById('iPayMin').value) || 0;
+  const intro        = document.getElementById('iIntro').value.trim();
+
+  if (!subjects.length) { showToast('전문 분야를 하나 이상 선택해 주세요.'); return; }
+  if (!regions.length)  { showToast('출강 가능 지역을 하나 이상 선택해 주세요.'); return; }
+
+  const { error } = await _supabase.from('instructor_conditions').upsert({
+    user_id: session.user.id,
+    subjects, regions, weekdays, employ_types, pay_min, intro,
+    updated_at: new Date().toISOString()
+  }, { onConflict: 'user_id' });
+
+  if (error) { showToast('저장 오류: ' + error.message); return; }
+  showToast('조건이 저장되었습니다! 매칭을 시작합니다 🎉');
+  setTimeout(() => drawerGo('instructor-match'), 800);
 }
 
 function devLogin(role) {
