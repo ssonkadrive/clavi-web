@@ -1730,12 +1730,10 @@
         <h2 class="card-title">🎯 원하는 강사 분야</h2>
         <p class="card-desc">대분류 선택 후 세부 조건을 고르세요.</p>
         <div class="match-chips" id="aSubjectChips">
-          <label class="match-chip"><input type="checkbox" name="aSubject" value="연기/뮤지컬" data-industry="acting"   onchange="onSubjectChipChange('a','acting',this)"/><span>🎭 연기/뮤지컬</span></label>
-          <label class="match-chip"><input type="checkbox" name="aSubject" value="체육/태권도" data-industry="taekwondo" onchange="onSubjectChipChange('a','taekwondo',this)"/><span>🥋 체육/태권도</span></label>
-          <label class="match-chip"><input type="checkbox" name="aSubject" value="무용/발레"   data-industry="ballet"    onchange="onSubjectChipChange('a','ballet',this)"/><span>🩰 무용/발레</span></label>
-          <label class="match-chip"><input type="checkbox" name="aSubject" value="음악/악기"   data-industry="music"     onchange="onSubjectChipChange('a','music',this)"/><span>🎵 음악/악기</span></label>
-          <label class="match-chip"><input type="checkbox" name="aSubject" value="미술/창의"   data-industry="art"       onchange="onSubjectChipChange('a','art',this)"/><span>🎨 미술/창의</span></label>
-          <label class="match-chip"><input type="checkbox" name="aSubject" value="일반/학습"   data-industry="general"   onchange="onSubjectChipChange('a','general',this)"/><span>📚 일반/학습</span></label>
+          <label class="match-chip"><input type="checkbox" name="aSubject" value="음악"   onchange="onSubjectChipChange('a','music',this)"/><span>🎵 음악</span></label>
+          <label class="match-chip"><input type="checkbox" name="aSubject" value="미술"   onchange="onSubjectChipChange('a','art',this)"/><span>🎨 미술</span></label>
+          <label class="match-chip"><input type="checkbox" name="aSubject" value="체육"   onchange="onSubjectChipChange('a','sports',this)"/><span>⚽ 체육</span></label>
+          <label class="match-chip"><input type="checkbox" name="aSubject" value="기타"   onchange="onSubjectChipChange('a','etc',this)"/><span>🤝 기타</span></label>
         </div>
         <div id="aSubSkillPanel"></div>
         <button onclick="openSkillModalStep1('a')" style="margin-top:10px;padding:9px 18px;border:1.5px dashed var(--primary);border-radius:99px;background:transparent;color:var(--primary);font-family:var(--font);font-size:.85rem;cursor:pointer;">＋ 공통조건 · 세부역량 추가</button>
@@ -1916,12 +1914,10 @@
         <h2 class="card-title">🎯 나의 전문 분야</h2>
         <p class="card-desc">대분류 선택 후 세부 조건을 고르세요.</p>
         <div class="match-chips" id="iSubjectChips">
-          <label class="match-chip"><input type="checkbox" name="iSubject" value="연기/뮤지컬" data-industry="acting"   onchange="onSubjectChipChange('i','acting',this)"/><span>🎭 연기/뮤지컬</span></label>
-          <label class="match-chip"><input type="checkbox" name="iSubject" value="체육/태권도" data-industry="taekwondo" onchange="onSubjectChipChange('i','taekwondo',this)"/><span>🥋 체육/태권도</span></label>
-          <label class="match-chip"><input type="checkbox" name="iSubject" value="무용/발레"   data-industry="ballet"    onchange="onSubjectChipChange('i','ballet',this)"/><span>🩰 무용/발레</span></label>
-          <label class="match-chip"><input type="checkbox" name="iSubject" value="음악/악기"   data-industry="music"     onchange="onSubjectChipChange('i','music',this)"/><span>🎵 음악/악기</span></label>
-          <label class="match-chip"><input type="checkbox" name="iSubject" value="미술/창의"   data-industry="art"       onchange="onSubjectChipChange('i','art',this)"/><span>🎨 미술/창의</span></label>
-          <label class="match-chip"><input type="checkbox" name="iSubject" value="일반/학습"   data-industry="general"   onchange="onSubjectChipChange('i','general',this)"/><span>📚 일반/학습</span></label>
+          <label class="match-chip"><input type="checkbox" name="iSubject" value="음악"   onchange="onSubjectChipChange('i','music',this)"/><span>🎵 음악</span></label>
+          <label class="match-chip"><input type="checkbox" name="iSubject" value="미술"   onchange="onSubjectChipChange('i','art',this)"/><span>🎨 미술</span></label>
+          <label class="match-chip"><input type="checkbox" name="iSubject" value="체육"   onchange="onSubjectChipChange('i','sports',this)"/><span>⚽ 체육</span></label>
+          <label class="match-chip"><input type="checkbox" name="iSubject" value="기타"   onchange="onSubjectChipChange('i','etc',this)"/><span>🤝 기타</span></label>
         </div>
         <div id="iSubSkillPanel"></div>
         <button onclick="openSkillModalStep1('i')" style="margin-top:10px;padding:9px 18px;border:1.5px dashed var(--primary);border-radius:99px;background:transparent;color:var(--primary);font-family:var(--font);font-size:.85rem;cursor:pointer;">＋ 공통조건 · 세부역량 추가</button>
@@ -2697,28 +2693,42 @@ function confirmSkills() {
   if (total) showToast(`총 ${total}개 조건 선택됨 ✅`);
 }
 
+/* ══ 페이지 태그 X 삭제 ══ */
+function 페이지태그제거(key, 종류, spanEl) {
+  const prefix = key.split(':')[0];
+  const 저장소 = _역량저장소(prefix);
+  if (종류 === '공통') delete 저장소.공통조건[key];
+  else                 delete 저장소.세부역량[key];
+  spanEl.parentElement.remove();
+  const tagsEl = document.getElementById(prefix + 'SubSkillTags');
+  if (tagsEl && !tagsEl.children.length) {
+    const display = document.getElementById(prefix + 'SubSkillDisplay');
+    if (display) display.style.display = 'none';
+  }
+}
+
 /* ══ 페이지 내 태그 갱신 ══ */
 function refreshSubSkillDisplay(prefix) {
   const display = document.getElementById(prefix + 'SubSkillDisplay');
   const tagsEl  = document.getElementById(prefix + 'SubSkillTags');
   if (!display || !tagsEl) return;
   const 저장소  = _역량저장소(prefix);
-  const skItems = Object.values(저장소.세부역량).filter(Boolean);
-  const ccItems = Object.values(저장소.공통조건).filter(Boolean);
+  const skEntries = Object.entries(저장소.세부역량).filter(([,v]) => v);
+  const ccEntries = Object.entries(저장소.공통조건).filter(([,v]) => v);
   tagsEl.innerHTML = '';
-  if (!skItems.length && !ccItems.length) { display.style.display = 'none'; return; }
+  if (!skEntries.length && !ccEntries.length) { display.style.display = 'none'; return; }
   display.style.display = 'block';
-  ccItems.forEach(({ label }) => {
+  ccEntries.forEach(([key, { label }]) => {
     const s = document.createElement('span');
-    s.style.cssText = 'font-size:.78rem;background:#e8f5e9;color:#2e7d32;padding:4px 10px;border-radius:99px;white-space:nowrap;';
-    s.textContent = '✓ ' + label;
+    s.style.cssText = 'display:inline-flex;align-items:center;gap:4px;font-size:.78rem;background:#e8f5e9;color:#2e7d32;padding:4px 10px;border-radius:99px;white-space:nowrap;';
+    s.innerHTML = `✓ ${label} <span onclick="페이지태그제거('${key}','공통',this)" style="cursor:pointer;font-weight:700;margin-left:2px;line-height:1;">×</span>`;
     tagsEl.appendChild(s);
   });
-  skItems.forEach(({ 대분류명, 중분류명, label }) => {
+  skEntries.forEach(([key, { 대분류명, 중분류명, label }]) => {
     const s = document.createElement('span');
     s.title = 대분류명 + ' › ' + 중분류명;
-    s.style.cssText = 'font-size:.78rem;background:var(--primary-soft);color:var(--primary);padding:4px 10px;border-radius:99px;white-space:nowrap;';
-    s.textContent = label;
+    s.style.cssText = 'display:inline-flex;align-items:center;gap:4px;font-size:.78rem;background:var(--primary-soft);color:var(--primary);padding:4px 10px;border-radius:99px;white-space:nowrap;';
+    s.innerHTML = `${label} <span onclick="페이지태그제거('${key}','역량',this)" style="cursor:pointer;font-weight:700;margin-left:2px;line-height:1;">×</span>`;
     tagsEl.appendChild(s);
   });
 }
@@ -2853,6 +2863,139 @@ document.getElementById('registerForm').addEventListener('submit', (e) => {
   카테고리데이터 (대분류 → 중분류 → 소분류)
 ════════════════════════════════════════════════ */
 const 카테고리데이터 = {
+  music: {
+    name: '🎵 음악',
+    subs: {
+      성악:     { name:'성악',         items:[
+        {id:'sg_classic',  label:'클래식 발성'}, {id:'sg_aria',   label:'아리아'},
+        {id:'sg_gagok',    label:'가곡'},         {id:'sg_exam',   label:'입시레슨'},
+      ]},
+      뮤지컬:   { name:'뮤지컬',       items:[
+        {id:'mu_number',   label:'뮤지컬 넘버'},  {id:'mu_acting', label:'연기/독백'},
+        {id:'mu_audition', label:'오디션 준비'},
+      ]},
+      보컬:     { name:'보컬',         items:[
+        {id:'vo_breath',   label:'발성 교정'},    {id:'vo_high',   label:'고음 트레이닝'},
+        {id:'vo_rnb',      label:'R&B/팝'},       {id:'vo_wedding',label:'축가 레슨'},
+      ]},
+      드럼:     { name:'드럼',         items:[
+        {id:'dr_pad',      label:'기본 패드 연습'},{id:'dr_jazz',  label:'재즈 드럼'},
+        {id:'dr_ccm',      label:'CCM 반주'},      {id:'dr_band',  label:'밴드 합주'},
+      ]},
+      일렉기타: { name:'일렉기타',     items:[
+        {id:'eg_basic',    label:'기초 코드'},    {id:'eg_rock',   label:'록/메탈'},
+        {id:'eg_blues',    label:'블루스'},
+      ]},
+      베이스기타:{ name:'베이스기타',  items:[
+        {id:'bg_basic',    label:'기초 베이스'},  {id:'bg_slap',   label:'슬랩 주법'},
+      ]},
+      건반:     { name:'건반(키보드)', items:[
+        {id:'kb_basic',    label:'기초 건반'},    {id:'kb_synth',  label:'신디사이저'},
+        {id:'kb_band',     label:'밴드 세션'},
+      ]},
+      피아노:   { name:'피아노',       items:[
+        {id:'pi_classic',  label:'클래식 피아노'},{id:'pi_jazz',   label:'재즈/팝 반주'},
+        {id:'pi_chord',    label:'코드 반주법'},  {id:'pi_newage', label:'뉴에이지'},
+      ]},
+      현악기:   { name:'현악기',       items:[
+        {id:'st_violin',   label:'바이올린'},     {id:'st_viola',  label:'비올라'},
+        {id:'st_cello',    label:'첼로'},         {id:'st_bass',   label:'콘트라베이스'},
+        {id:'st_harp',     label:'하프'},
+      ]},
+      관악기:   { name:'관악기',       items:[
+        {id:'wd_flute',    label:'플루트'},       {id:'wd_clarinet',label:'클라리넷'},
+        {id:'wd_sax',      label:'색소폰'},       {id:'wd_trumpet', label:'트럼펫'},
+        {id:'wd_oboe',     label:'오보에'},
+      ]},
+      타악기:   { name:'타악기',       items:[
+        {id:'pe_marimba',  label:'마림바'},       {id:'pe_timpani', label:'팀파니'},
+        {id:'pe_cajon',    label:'카혼'},
+      ]},
+      국악:     { name:'국악',         items:[
+        {id:'ko_gayageum', label:'가야금'},       {id:'ko_geomungo',label:'거문고'},
+        {id:'ko_haegeum',  label:'해금'},         {id:'ko_daegeum', label:'대금'},
+        {id:'ko_janggu',   label:'장구'},
+      ]},
+      기타음악: { name:'기타 음악',    items:[
+        {id:'me_compose',  label:'작곡'},         {id:'me_harmony', label:'화성학'},
+        {id:'me_ukulele',  label:'우쿨렐레'},
+      ]},
+    }
+  },
+  art: {
+    name: '🎨 미술',
+    subs: {
+      회화:     { name:'회화/순수미술',   items:[
+        {id:'fa_watercolor',label:'수채화'},      {id:'fa_oil',       label:'유화'},
+        {id:'fa_acrylic',   label:'아크릴화'},    {id:'fa_drawing',   label:'소묘(드로잉)'},
+        {id:'fa_oriental',  label:'동양화'},
+      ]},
+      디자인:   { name:'디자인/일러스트', items:[
+        {id:'de_visual',    label:'시각디자인'},  {id:'de_webtoon',   label:'웹툰'},
+        {id:'de_character', label:'캐릭터 일러스트'},{id:'de_digital',label:'디지털 드로잉'},
+        {id:'de_popart',    label:'팝아트'},
+      ]},
+      공예:     { name:'입체/공예',       items:[
+        {id:'cr_ceramic',   label:'도자기 공예'}, {id:'cr_leather',   label:'가죽 공예'},
+        {id:'cr_resin',     label:'레진 공예'},   {id:'cr_sculpture', label:'조소'},
+        {id:'cr_carving',   label:'조각'},
+      ]},
+      아동미술: { name:'아동/취미미술',   items:[
+        {id:'ki_art',       label:'아동 미술'},   {id:'ki_creative',  label:'창의 미술'},
+        {id:'ki_senior',    label:'시니어 미술'},
+      ]},
+      서예:     { name:'서예/캘리그라피', items:[
+        {id:'ca_brush',     label:'붓글씨'},      {id:'ca_calli',     label:'캘리그라피'},
+        {id:'ca_pen',       label:'펜글씨'},
+      ]},
+      기타미술: { name:'기타 미술',       items:[
+        {id:'ae_photo',     label:'사진'},        {id:'ae_video',     label:'영상 편집'},
+        {id:'ae_interior',  label:'인테리어 디자인'},
+      ]},
+    }
+  },
+  sports: {
+    name: '⚽ 체육',
+    subs: {
+      격기: { name:'격기 체육', items:[
+        {id:'ma_taekwondo', label:'태권도'},   {id:'ma_judo',    label:'유도'},
+        {id:'ma_hapkido',   label:'합기도'},   {id:'ma_muay',    label:'무에타이'},
+        {id:'ma_boxing',    label:'복싱'},     {id:'ma_mma',     label:'MMA(종합격투기)'},
+        {id:'ma_kumdo',     label:'검도'},     {id:'ma_jujitsu', label:'주짓수'},
+        {id:'ma_fencing',   label:'펜싱'},
+      ]},
+      구기: { name:'구기 체육', items:[
+        {id:'bs_soccer',    label:'축구/풋살'},{id:'bs_baseball',label:'야구/소프트볼'},
+        {id:'bs_volleyball',label:'배구'},     {id:'bs_basketball',label:'농구'},
+        {id:'bs_tabletennis',label:'탁구'},   {id:'bs_badminton',label:'배드민턴'},
+        {id:'bs_handball',  label:'핸드볼'},  {id:'bs_rugby',    label:'럭비'},
+        {id:'bs_hockey',    label:'하키'},    {id:'bs_tennis',   label:'테니스'},
+        {id:'bs_squash',    label:'스쿼시'},
+      ]},
+      기타체육: { name:'기타 체육', items:[
+        {id:'os_swim',      label:'수영'},    {id:'os_gymnastics',label:'체조/기계체조'},
+        {id:'os_track',     label:'육상'},    {id:'os_golf',     label:'골프'},
+        {id:'os_bowling',   label:'볼링'},    {id:'os_climbing', label:'클라이밍'},
+        {id:'os_yoga',      label:'요가/필라테스'},{id:'os_crossfit',label:'크로스핏/PT'},
+        {id:'os_dancesport',label:'댄스스포츠'},{id:'os_aerobics',label:'에어로빅'},
+      ]},
+    }
+  },
+  etc: {
+    name: '🤝 기타',
+    subs: {
+      취미: { name:'기타 취미', items:[
+        {id:'hb_baduk',  label:'바둑'},    {id:'hb_chess',   label:'체스'},
+        {id:'hb_cook',   label:'요리'},    {id:'hb_baking',  label:'베이킹'},
+        {id:'hb_magic',  label:'마술'},    {id:'hb_garden',  label:'가드닝(원예)'},
+      ]},
+      역량: { name:'기타 역량', items:[
+        {id:'cp_speech', label:'스피치'},  {id:'cp_essay',   label:'논술'},
+        {id:'cp_interview',label:'면접 컨설팅'},
+      ]},
+    }
+  },
+  /* ── 기존 호환 (매칭용 연기/무용 데이터 보존) ── */
   acting: {
     name: '🎭 연기/뮤지컬',
     subs: {
