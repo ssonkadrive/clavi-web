@@ -903,13 +903,34 @@
     .sk-item-label:hover { border-color:var(--primary-soft); }
     .sk-item-label input[type=checkbox] { display:none; }
     .sk-item-label .sk-check {
-      width:20px;height:20px;border-radius:6px;border:2px solid var(--border);
+      width:22px;height:22px;border-radius:6px;border:2px solid #bbb;
       display:flex;align-items:center;justify-content:center;flex-shrink:0;
-      font-size:.8rem;color:#fff;transition:all .15s;
+      font-size:.9rem;font-weight:700;color:#fff;transition:all .15s;background:#f0f0f0;
     }
-    .sk-item-label input:checked ~ .sk-check { background:var(--primary);border-color:var(--primary); }
-    .sk-item-label input:checked ~ .sk-check::after { content:'✓'; }
     .sk-item-label.checked { border-color:var(--primary);background:var(--primary-soft); }
+    .sk-item-label.checked .sk-check { background:var(--primary);border-color:var(--primary); }
+
+    /* 공통조건 칩 */
+    .sk-cc-grid { display:flex;flex-wrap:wrap;gap:8px;padding:4px 0 8px; }
+    .sk-cc-chip {
+      padding:7px 14px;border-radius:99px;border:1.5px solid var(--border);
+      font-size:.82rem;cursor:pointer;transition:all .15s;color:var(--text-muted);
+      background:var(--bg);font-family:var(--font);
+    }
+    .sk-cc-chip.on { background:var(--primary);border-color:var(--primary);color:#fff;font-weight:600; }
+
+    /* 선택 태그 */
+    .sk-tag-wrap { display:flex;flex-wrap:wrap;gap:6px;padding:10px 0 14px;border-bottom:1px solid var(--border);margin-bottom:14px; }
+    .sk-tag-chip {
+      display:inline-flex;align-items:center;gap:4px;
+      padding:5px 10px;border-radius:99px;background:var(--primary);color:#fff;
+      font-size:.78rem;cursor:pointer;font-family:var(--font);
+    }
+    .sk-tag-chip:hover { opacity:.85; }
+    .sk-tag-x { font-size:.9rem;line-height:1; }
+
+    /* 섹션 타이틀 */
+    .sk-section-title { font-size:.78rem;font-weight:700;color:var(--text-muted);letter-spacing:.04em;margin:12px 0 8px; }
 
     /* ── landingPage v2 ───────────────────────────── */
     .lp-wrap { display:flex;flex-direction:column;gap:0;overflow-x:hidden; }
@@ -1714,8 +1735,9 @@
           <label class="match-chip"><input type="checkbox" name="aSubject" value="일반/학습"   data-industry="general"   onchange="onSubjectChipChange('a','general',this)"/><span>📚 일반/학습</span></label>
         </div>
         <div id="aSubSkillPanel"></div>
+        <button onclick="openSkillModalStep1('a')" style="margin-top:10px;padding:9px 18px;border:1.5px dashed var(--primary);border-radius:99px;background:transparent;color:var(--primary);font-family:var(--font);font-size:.85rem;cursor:pointer;">＋ 공통조건 · 세부역량 추가</button>
         <div id="aSubSkillDisplay" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
-          <p style="font-size:.78rem;color:var(--text-muted);margin-bottom:8px;">✅ 선택된 세부 조건</p>
+          <p style="font-size:.78rem;color:var(--text-muted);margin-bottom:8px;">✅ 선택된 조건</p>
           <div id="aSubSkillTags" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
         </div>
       </section>
@@ -1899,8 +1921,9 @@
           <label class="match-chip"><input type="checkbox" name="iSubject" value="일반/학습"   data-industry="general"   onchange="onSubjectChipChange('i','general',this)"/><span>📚 일반/학습</span></label>
         </div>
         <div id="iSubSkillPanel"></div>
+        <button onclick="openSkillModalStep1('i')" style="margin-top:10px;padding:9px 18px;border:1.5px dashed var(--primary);border-radius:99px;background:transparent;color:var(--primary);font-family:var(--font);font-size:.85rem;cursor:pointer;">＋ 공통조건 · 세부역량 추가</button>
         <div id="iSubSkillDisplay" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
-          <p style="font-size:.78rem;color:var(--text-muted);margin-bottom:8px;">✅ 선택된 세부 조건</p>
+          <p style="font-size:.78rem;color:var(--text-muted);margin-bottom:8px;">✅ 선택된 조건</p>
           <div id="iSubSkillTags" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
         </div>
       </section>
@@ -2422,14 +2445,30 @@ async function saveProfileSetup() {
    3단계 계층형 스킬 선택 시스템
 ══════════════════════════════════════════════ */
 
+/* ── 공통조건 데이터 ── */
+const 공통조건목록 = [
+  { id:'cc_car',       label:'차량 지원' },
+  { id:'cc_gas',       label:'기름값 지원' },
+  { id:'cc_meal',      label:'식사 제공' },
+  { id:'cc_insurance', label:'4대보험' },
+  { id:'cc_parking',   label:'주차 가능' },
+  { id:'cc_bonus',     label:'명절 보너스' },
+  { id:'cc_studio',    label:'스튜디오 제공' },
+  { id:'cc_welfare',   label:'복지포인트' },
+  { id:'cc_housing',   label:'숙소 제공' },
+  { id:'cc_long',      label:'장기계약 우대' },
+  { id:'cc_flex',      label:'유연근무' },
+  { id:'cc_edu',       label:'교육비 지원' },
+];
+
 /* ── 상태 ── */
 const _sk = {
   prefix: '',   // 'a' | 'i'
-  step: 1,      // 1=대분류 2=중분류 3=소분류
+  step: 1,      // 1=전체(공통조건+대분류) 2=중분류 3=소분류
   catKey: '',
   subKey: '',
-  // selected: { [itemId]: { catKey, subKey, catName, subName, label } }
-  selected: {}
+  selected: {},      // 세부역량: { 'prefix:id': {...} }
+  공통조건: {}        // { 'prefix:id': { id, label } }
 };
 
 /* ── 대분류 체크박스 onChange ── */
@@ -2461,51 +2500,115 @@ function _openSkillModal() {
 /* ── 단계별 렌더링 ── */
 function _renderCurrentStep() {
   const cat = CATEGORIES[_sk.catKey];
-  const backBtn   = document.getElementById('skillBackBtn');
-  const breadEl   = document.getElementById('skillBreadcrumb');
-  const titleEl   = document.getElementById('subSkillModalTitle');
-  const body      = document.getElementById('subSkillModalBody');
-  const confirmBtn = document.getElementById('skillConfirmBtn');
+  const backBtn    = document.getElementById('skillBackBtn');
+  const breadEl    = document.getElementById('skillBreadcrumb');
+  const titleEl    = document.getElementById('subSkillModalTitle');
+  const body       = document.getElementById('subSkillModalBody');
 
   if (_sk.step === 1) {
     backBtn.style.display = 'none';
     breadEl.textContent = '';
-    titleEl.textContent = '분야를 선택하세요';
-    confirmBtn.style.display = 'block';
+    titleEl.textContent = '역량 · 조건 선택';
     body.innerHTML = _buildStep1();
   } else if (_sk.step === 2) {
     backBtn.style.display = 'inline';
     breadEl.textContent = cat.name;
     titleEl.textContent = '중분류를 선택하세요';
-    confirmBtn.style.display = 'block';
-    body.innerHTML = _buildStep2();
+    body.innerHTML = _buildSelectedTags() + _buildStep2();
   } else if (_sk.step === 3) {
     const sub = cat.subs[_sk.subKey];
     backBtn.style.display = 'inline';
     breadEl.textContent = cat.name + ' › ' + sub.name;
     titleEl.textContent = '세부 조건을 선택하세요';
-    confirmBtn.style.display = 'block';
-    body.innerHTML = _buildStep3();
+    body.innerHTML = _buildSelectedTags() + _buildStep3();
   }
 }
 
-/* Step1: 대분류 버튼 그리드 */
-function _buildStep1() {
-  const entries = Object.entries(CATEGORIES);
+/* 선택된 태그 (공통조건 + 세부역량) */
+function _buildSelectedTags() {
   const p = _sk.prefix;
-  let html = '<div class="sk-step1-grid">';
-  entries.forEach(([key, cat]) => {
+  const ccItems = Object.values(_sk.공통조건).filter(v => v && v.prefix === p);
+  const skItems = Object.values(_sk.selected).filter(v => v && v.prefix === p);
+  if (!ccItems.length && !skItems.length) return '';
+  let html = '<div class="sk-tag-wrap">';
+  ccItems.forEach(item => {
+    html += `<span class="sk-tag-chip" onclick="_remove공통조건('${item.id}',this)">${item.label} <span class="sk-tag-x">×</span></span>`;
+  });
+  skItems.forEach(item => {
+    html += `<span class="sk-tag-chip" onclick="_remove세부역량('${p}:${item.id}',this)">${item.label} <span class="sk-tag-x">×</span></span>`;
+  });
+  html += '</div>';
+  return html;
+}
+
+/* Step1: 공통조건 + 대분류 버튼 그리드 */
+function _buildStep1() {
+  const p = _sk.prefix;
+  let html = _buildSelectedTags();
+
+  // 공통조건
+  html += '<div class="sk-section-title">✅ 공통 조건 (원하는 복지/환경)</div>';
+  html += '<div class="sk-cc-grid">';
+  공통조건목록.forEach(item => {
+    const key = p + ':' + item.id;
+    const on = !!_sk.공통조건[key];
+    html += `<div class="sk-cc-chip${on ? ' on' : ''}" onclick="_toggle공통조건('${item.id}','${item.label}',this)">${item.label}</div>`;
+  });
+  html += '</div>';
+
+  // 전문역량 대분류
+  html += '<div class="sk-section-title" style="margin-top:14px;">🎯 전문 역량 선택</div>';
+  html += '<div class="sk-step1-grid">';
+  Object.entries(CATEGORIES).forEach(([key, cat]) => {
     const cnt = Object.values(_sk.selected).filter(s => s && s.catKey === key && s.prefix === p).length;
     const hasCls = cnt > 0 ? ' has-selection' : '';
     const [emoji, ...nameParts] = cat.name.split(' ');
     html += `<button class="sk-cat-btn${hasCls}" onclick="_sk.catKey='${key}';_sk.step=2;_renderCurrentStep()">
       <span class="sk-emoji">${emoji}</span>
       <span>${nameParts.join(' ')}</span>
-      <span class="sk-cnt">${cnt}개 선택</span>
+      <span class="sk-cnt">${cnt}개</span>
     </button>`;
   });
   html += '</div>';
   return html;
+}
+
+/* 공통조건 토글 */
+function _toggle공통조건(id, label, el) {
+  const key = _sk.prefix + ':' + id;
+  if (_sk.공통조건[key]) {
+    delete _sk.공통조건[key];
+    el.classList.remove('on');
+  } else {
+    _sk.공통조건[key] = { prefix: _sk.prefix, id, label };
+    el.classList.add('on');
+  }
+  // 태그 영역만 갱신 (스크롤 유지)
+  _refreshTagsInModal();
+}
+
+function _refreshTagsInModal() {
+  const body = document.getElementById('subSkillModalBody');
+  if (!body || _sk.step !== 1) return;
+  const tagWrap = body.querySelector('.sk-tag-wrap');
+  const newTags = _buildSelectedTags();
+  if (tagWrap) tagWrap.outerHTML = newTags || '';
+  else if (newTags) body.insertAdjacentHTML('afterbegin', newTags);
+}
+
+/* 태그 X 삭제 */
+function _remove공통조건(id, tagEl) {
+  const key = _sk.prefix + ':' + id;
+  delete _sk.공통조건[key];
+  tagEl.remove();
+  // 공통조건 칩 상태도 업데이트
+  _renderCurrentStep();
+}
+
+function _remove세부역량(key, tagEl) {
+  delete _sk.selected[key];
+  tagEl.remove();
+  _renderCurrentStep();
 }
 
 /* Step2: 중분류 목록 */
@@ -2574,31 +2677,57 @@ function skillStepBack() {
 function confirmSkills() {
   closeSubSkillModal(null, true);
   refreshSubSkillDisplay(_sk.prefix);
-  const cnt = Object.values(_sk.selected).filter(s => s && s.prefix === _sk.prefix).length;
-  if (cnt) showToast(`${cnt}개 세부 조건 선택됨 ✅`);
+  const skCnt = Object.values(_sk.selected).filter(s => s && s.prefix === _sk.prefix).length;
+  const ccCnt = Object.values(_sk.공통조건).filter(s => s && s.prefix === _sk.prefix).length;
+  const total = skCnt + ccCnt;
+  if (total) showToast(`총 ${total}개 조건 선택됨 ✅`);
 }
 
-/* ── 디스플레이 갱신 ── */
+/* ── 디스플레이 갱신 (페이지 내 태그) ── */
 function refreshSubSkillDisplay(prefix) {
   const display = document.getElementById(prefix + 'SubSkillDisplay');
   const tagsEl  = document.getElementById(prefix + 'SubSkillTags');
   if (!display || !tagsEl) return;
 
-  const items = Object.entries(_sk.selected)
-    .filter(([, v]) => v && v.prefix === prefix)
-    .map(([, v]) => v);
+  const skItems = Object.values(_sk.selected).filter(v => v && v.prefix === prefix);
+  const ccItems = Object.values(_sk.공통조건).filter(v => v && v.prefix === prefix);
 
   tagsEl.innerHTML = '';
-  if (!items.length) { display.style.display = 'none'; return; }
+  if (!skItems.length && !ccItems.length) { display.style.display = 'none'; return; }
 
   display.style.display = 'block';
-  items.forEach(({ catName, subName, label }) => {
+
+  // 공통조건 태그 (초록톤)
+  ccItems.forEach(({ label }) => {
+    const span = document.createElement('span');
+    span.style.cssText = 'font-size:.78rem;background:#e8f5e9;color:#2e7d32;padding:4px 10px;border-radius:99px;white-space:nowrap;cursor:default;';
+    span.textContent = '✓ ' + label;
+    tagsEl.appendChild(span);
+  });
+
+  // 세부역량 태그 (보라톤)
+  skItems.forEach(({ catName, subName, label }) => {
     const span = document.createElement('span');
     span.title = catName + ' › ' + subName;
     span.style.cssText = 'font-size:.78rem;background:var(--primary-soft);color:var(--primary);padding:4px 10px;border-radius:99px;white-space:nowrap;cursor:default;';
     span.textContent = label;
     tagsEl.appendChild(span);
   });
+}
+
+/* 선택한역량 getter (저장용) */
+function get선택한역량(prefix) {
+  return {
+    세부역량: Object.values(_sk.selected).filter(v => v && v.prefix === prefix).map(v => v.id),
+    공통조건: Object.values(_sk.공통조건).filter(v => v && v.prefix === prefix).map(v => v.id),
+  };
+}
+
+/* ── 외부에서 step1으로 모달 열기 ── */
+function openSkillModalStep1(prefix) {
+  _sk.prefix = prefix;
+  _sk.step   = 1;
+  _openSkillModal();
 }
 
 /* ── 모달 닫기 ── */
