@@ -2499,7 +2499,7 @@ const _supabase = supabase.createClient(
       showTermsModal(async (chosenRole, metaVal) => {
         currentUserRole = chosenRole;
         saveSession(chosenRole, session.access_token, displayName);
-        await _supabase.from('users').upsert({ id: u.id, agreed_at: new Date().toISOString(), role: chosenRole });
+        await _supabase.from('users').upsert({ id: u.id, agreed_at: new Date().toISOString(), role: chosenRole }, { onConflict: 'id' });
         showProfileSetup(chosenRole);
       });
     } else if (!existing.agreed_at) {
@@ -2564,7 +2564,7 @@ _supabase.auth.onAuthStateChange(async (event, session) => {
       showTermsModal(async (chosenRole, metaVal) => {
         currentUserRole = chosenRole;
         saveSession(chosenRole, session.access_token, displayName);
-        await _supabase.from('users').upsert({ id: u.id, agreed_at: new Date().toISOString(), role: chosenRole });
+        await _supabase.from('users').upsert({ id: u.id, agreed_at: new Date().toISOString(), role: chosenRole }, { onConflict: 'id' });
         showProfileSetup(chosenRole);
       });
     } else if (!existing.agreed_at) {
@@ -4735,7 +4735,7 @@ function initAcademyPhotoGrid() {
     showTermsModal(async (chosenRole) => {
       currentUserRole = chosenRole;
       saveSession(chosenRole, supa.access_token, session.name || '');
-      await _supabase.from('users').upsert({ id: supa.user.id, agreed_at: new Date().toISOString(), role: chosenRole });
+      await _supabase.from('users').upsert({ id: supa.user.id, agreed_at: new Date().toISOString(), role: chosenRole }, { onConflict: 'id' });
       enterApp();
     });
   } else {
