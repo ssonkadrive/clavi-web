@@ -4993,6 +4993,7 @@ function showTermsModal(callback) {
   document.getElementById('termsMetaInput').value = '';
   document.getElementById('termsScroll').scrollTop = 0;
   document.getElementById('termsOverlay').classList.add('active');
+  document.body.style.overflow = 'hidden';
 }
 
 function onTermsScroll() {
@@ -5035,6 +5036,7 @@ function checkTermsReady() {
 
 function rejectTerms() {
   document.getElementById('termsOverlay').classList.remove('active');
+  document.body.style.overflow = '';
   showToast('약관에 동의하지 않으면 서비스를 이용할 수 없습니다.');
   setTimeout(() => { _supabase.auth.signOut(); showPage('landingPage'); }, 1200);
 }
@@ -5042,6 +5044,7 @@ function rejectTerms() {
 async function acceptTerms() {
   const metaVal = document.getElementById('termsMetaInput').value.trim();
   document.getElementById('termsOverlay').classList.remove('active');
+  document.body.style.overflow = '';
   if (_termsPendingCallback) {
     await _termsPendingCallback(_termsRole, metaVal);
     _termsPendingCallback = null;
