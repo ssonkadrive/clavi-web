@@ -4040,34 +4040,60 @@ const INDUSTRY_LABEL = {
 };
 
 let currentFilter = 'all';
+let _jobListCache = [];
 
-function renderJobList() {
-  const jobs = JSON.parse(localStorage.getItem('clavi_jobs')||'[]');
-  const filtered = currentFilter==='all' ? jobs : jobs.filter(j=>j.industry===currentFilter);
+async function renderJobList() {
   const container = document.getElementById('jobListContainer');
   if (!container) return;
-  if (filtered.length===0) {
-    container.innerHTML='<div class="job-empty">📭 등록된 공고가 없습니다.<br>곧 새로운 공고가 올라올 예정이에요!</div>';
+
+  // 첫 로드 시 Supabase에서 데이터 가져오기
+  if (!_jobListCache.length) {
+    container.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-muted);font-size:.9rem;">불러오는 중...</div>';
+    const { data, error } = await _supabase
+      .from('academy_conditions')
+      .select('*, users(name)')
+      .order('updated_at', { ascending: false });
+    if (error || !data) {
+      container.innerHTML = '<div class="job-empty">❌ 불러오기 실패. 잠시 후 다시 시도해 주세요.</div>';
+      return;
+    }
+    _jobListCache = data;
+  }
+
+  const SUBJECT_KEY = { '연기/뮤지컬':'acting','체육/태권도':'taekwondo','무용/발레':'ballet','음악/악기':'music','미술/창의':'art','일반/학습':'general' };
+  const filtered = currentFilter === 'all'
+    ? _jobListCache
+    : _jobListCache.filter(c => (c.subjects||[]).some(s => SUBJECT_KEY[s] === currentFilter));
+
+  if (!filtered.length) {
+    container.innerHTML = '<div class="job-empty">📭 해당 분야의 공고가 없습니다.<br>다른 분야를 선택해 보세요.</div>';
     return;
   }
-  container.innerHTML = filtered.map(job => `
-    <div class="job-card">
+
+  const EMPLOY_LABEL = { fulltime:'정규직', parttime:'파트타임', per_class:'강의별' };
+  container.innerHTML = filtered.map(c => {
+    const name  = c.users?.name || '학원';
+    const subs  = (c.subjects||[]).join(' · ') || '분야 미지정';
+    const regs  = (c.regions||[]).join(', ')   || '지역 미지정';
+    const days  = (c.weekdays||[]).join(' ')   || '';
+    const emp   = (c.employ_types||[]).map(e=>EMPLOY_LABEL[e]||e).join(' / ') || '';
+    const pay   = c.pay_min ? (c.pay_min.toLocaleString()+'원' + (c.pay_max ? ' ~ '+c.pay_max.toLocaleString()+'원' : '+')) : '급여 협의';
+    const intro = c.intro ? c.intro.slice(0,60) + (c.intro.length>60?'…':'') : '';
+    return `
+    <div class="job-card" onclick="showToast('${name} 학원에 관심을 표시했습니다 ❤️')">
       <div class="job-card-top">
-        <span class="job-card-academy">${job.academyName}</span>
-        <span class="job-card-field">${INDUSTRY_LABEL[job.industry]||job.industry}</span>
+        <span class="job-card-academy">🏫 ${name}</span>
+        <span class="job-card-field">${subs}</span>
       </div>
-      <div class="job-card-title">${job.title}</div>
+      <div class="job-card-title" style="font-size:.95rem;margin:8px 0;">${regs}</div>
       <div class="job-card-tags">
-        ${job.skills.slice(0,3).map(s=>`<span class="job-card-tag">${s}</span>`).join('')}
-        ${job.employType?`<span class="job-card-tag">${job.employType}</span>`:''}
+        ${days ? `<span class="job-card-tag">${days}</span>` : ''}
+        ${emp  ? `<span class="job-card-tag">${emp}</span>`  : ''}
+        <span class="job-card-tag">💰 ${pay}</span>
       </div>
-      <div class="job-card-bottom">
-        <span class="job-card-pay">${job.payTypes?.map(p=>p.type+' '+p.amount).join(' / ')||'급여 협의'}</span>
-        <span class="job-card-date">${job.createdAt}</span>
-      </div>
-      <button class="apply-btn" onclick="applyJob(${job.id})">지원하기</button>
-    </div>
-  `).join('');
+      ${intro ? `<p style="font-size:.8rem;color:var(--text-muted);margin-top:8px;line-height:1.5;">${intro}</p>` : ''}
+    </div>`;
+  }).join('');
 }
 
 function filterJobs(filter) {
