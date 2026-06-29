@@ -858,6 +858,9 @@
       background:var(--primary);border-color:var(--primary);color:#fff;
       box-shadow:0 2px 8px rgba(91,108,255,.3);
     }
+    .subskill-section { margin-top:16px;padding-top:16px;border-top:1px solid var(--border); }
+    .subskill-title { font-size:.85rem;font-weight:700;color:var(--primary);margin-bottom:10px; }
+    .subskill-cat { font-size:.78rem;color:var(--text-muted);margin:10px 0 6px;font-weight:700; }
 
     /* ── landingPage v2 ───────────────────────────── */
     .lp-wrap { display:flex;flex-direction:column;gap:0;overflow-x:hidden; }
@@ -1652,15 +1655,16 @@
 
       <section class="card">
         <h2 class="card-title">🎯 원하는 강사 분야</h2>
-        <p class="card-desc">복수 선택 가능합니다.</p>
+        <p class="card-desc">대분류 선택 후 세부 조건을 고르세요.</p>
         <div class="match-chips" id="aSubjectChips">
-          <label class="match-chip"><input type="checkbox" name="aSubject" value="연기/뮤지컬"/><span>🎭 연기/뮤지컬</span></label>
-          <label class="match-chip"><input type="checkbox" name="aSubject" value="체육/태권도"/><span>🥋 체육/태권도</span></label>
-          <label class="match-chip"><input type="checkbox" name="aSubject" value="무용/발레"/><span>🩰 무용/발레</span></label>
-          <label class="match-chip"><input type="checkbox" name="aSubject" value="음악/악기"/><span>🎵 음악/악기</span></label>
-          <label class="match-chip"><input type="checkbox" name="aSubject" value="미술/창의"/><span>🎨 미술/창의</span></label>
-          <label class="match-chip"><input type="checkbox" name="aSubject" value="일반/학습"/><span>📚 일반/학습</span></label>
+          <label class="match-chip"><input type="checkbox" name="aSubject" value="연기/뮤지컬" data-industry="acting"   onchange="renderSubSkills('a','acting',this)"/><span>🎭 연기/뮤지컬</span></label>
+          <label class="match-chip"><input type="checkbox" name="aSubject" value="체육/태권도" data-industry="taekwondo" onchange="renderSubSkills('a','taekwondo',this)"/><span>🥋 체육/태권도</span></label>
+          <label class="match-chip"><input type="checkbox" name="aSubject" value="무용/발레"   data-industry="ballet"    onchange="renderSubSkills('a','ballet',this)"/><span>🩰 무용/발레</span></label>
+          <label class="match-chip"><input type="checkbox" name="aSubject" value="음악/악기"   data-industry="music"     onchange="renderSubSkills('a','music',this)"/><span>🎵 음악/악기</span></label>
+          <label class="match-chip"><input type="checkbox" name="aSubject" value="미술/창의"   data-industry="art"       onchange="renderSubSkills('a','art',this)"/><span>🎨 미술/창의</span></label>
+          <label class="match-chip"><input type="checkbox" name="aSubject" value="일반/학습"   data-industry="general"   onchange="renderSubSkills('a','general',this)"/><span>📚 일반/학습</span></label>
         </div>
+        <div id="aSubSkillPanel"></div>
       </section>
 
       <section class="card">
@@ -1832,15 +1836,16 @@
 
       <section class="card">
         <h2 class="card-title">🎯 나의 전문 분야</h2>
-        <p class="card-desc">복수 선택 가능합니다.</p>
+        <p class="card-desc">대분류 선택 후 세부 조건을 고르세요.</p>
         <div class="match-chips" id="iSubjectChips">
-          <label class="match-chip"><input type="checkbox" name="iSubject" value="연기/뮤지컬"/><span>🎭 연기/뮤지컬</span></label>
-          <label class="match-chip"><input type="checkbox" name="iSubject" value="체육/태권도"/><span>🥋 체육/태권도</span></label>
-          <label class="match-chip"><input type="checkbox" name="iSubject" value="무용/발레"/><span>🩰 무용/발레</span></label>
-          <label class="match-chip"><input type="checkbox" name="iSubject" value="음악/악기"/><span>🎵 음악/악기</span></label>
-          <label class="match-chip"><input type="checkbox" name="iSubject" value="미술/창의"/><span>🎨 미술/창의</span></label>
-          <label class="match-chip"><input type="checkbox" name="iSubject" value="일반/학습"/><span>📚 일반/학습</span></label>
+          <label class="match-chip"><input type="checkbox" name="iSubject" value="연기/뮤지컬" data-industry="acting"   onchange="renderSubSkills('i','acting',this)"/><span>🎭 연기/뮤지컬</span></label>
+          <label class="match-chip"><input type="checkbox" name="iSubject" value="체육/태권도" data-industry="taekwondo" onchange="renderSubSkills('i','taekwondo',this)"/><span>🥋 체육/태권도</span></label>
+          <label class="match-chip"><input type="checkbox" name="iSubject" value="무용/발레"   data-industry="ballet"    onchange="renderSubSkills('i','ballet',this)"/><span>🩰 무용/발레</span></label>
+          <label class="match-chip"><input type="checkbox" name="iSubject" value="음악/악기"   data-industry="music"     onchange="renderSubSkills('i','music',this)"/><span>🎵 음악/악기</span></label>
+          <label class="match-chip"><input type="checkbox" name="iSubject" value="미술/창의"   data-industry="art"       onchange="renderSubSkills('i','art',this)"/><span>🎨 미술/창의</span></label>
+          <label class="match-chip"><input type="checkbox" name="iSubject" value="일반/학습"   data-industry="general"   onchange="renderSubSkills('i','general',this)"/><span>📚 일반/학습</span></label>
         </div>
+        <div id="iSubSkillPanel"></div>
       </section>
 
       <section class="card">
@@ -2331,6 +2336,43 @@ async function saveProfileSetup() {
 
   showToast('저장 완료! CLAVI를 시작합니다 🚀');
   setTimeout(() => enterApp(), 700);
+}
+
+/* ── 대분류 클릭 시 세부 스킬 패널 렌더 ── */
+function renderSubSkills(prefix, industry, cb) {
+  const panel = document.getElementById(prefix + 'SubSkillPanel');
+  if (!panel) return;
+
+  // 이미 해당 섹션 있으면 제거 (체크 해제 시)
+  const existing = panel.querySelector(`[data-industry="${industry}"]`);
+  if (existing) { existing.remove(); return; }
+  if (!cb.checked) return;
+
+  const items = SPECIAL_SKILLS[industry] || [];
+  if (!items.length) return;
+
+  const hasCat = items[0].cat !== undefined;
+  let html = `<div class="subskill-section" data-industry="${industry}">`;
+  html += `<p class="subskill-title">${cb.closest('label').querySelector('span').textContent} 세부 조건</p>`;
+
+  if (hasCat) {
+    const cats = [...new Set(items.map(i => i.cat))];
+    cats.forEach(cat => {
+      html += `<p class="subskill-cat">${cat}</p><div class="match-chips">`;
+      items.filter(i => i.cat === cat).forEach(item => {
+        html += `<label class="match-chip"><input type="checkbox" name="${prefix}Skill" value="${item.id}"/><span>${item.label}</span></label>`;
+      });
+      html += `</div>`;
+    });
+  } else {
+    html += `<div class="match-chips">`;
+    items.forEach(item => {
+      html += `<label class="match-chip"><input type="checkbox" name="${prefix}Skill" value="${item.id}"/><span>${item.label}</span></label>`;
+    });
+    html += `</div>`;
+  }
+  html += `</div>`;
+  panel.insertAdjacentHTML('beforeend', html);
 }
 
 /* ── 체크박스 값 수집 헬퍼 ── */
