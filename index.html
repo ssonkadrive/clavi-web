@@ -4979,7 +4979,7 @@ let _termsPendingCallback = null;
 
 function showTermsModal(callback) {
   _termsScrolled = false;
-  _termsRole = localStorage.getItem('CLAVI_PENDING_ROLE') || 'instructor';
+  _termsRole = currentUserRole || localStorage.getItem('CLAVI_PENDING_ROLE') || 'instructor';
   _termsPendingCallback = callback;
   document.getElementById('termsProgressFill').style.width = '0%';
   document.getElementById('termsScrollHint').classList.remove('hidden');
