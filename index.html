@@ -913,6 +913,15 @@
       box-shadow:0 2px 6px rgba(91,108,255,.4);
     }
 
+    /* 과목 그룹 헤더 */
+    .sk-group-header {
+      font-size:.72rem;font-weight:700;color:var(--text-muted);
+      letter-spacing:.06em;text-transform:uppercase;
+      padding:10px 2px 4px;margin-top:4px;
+      border-bottom:1px solid var(--border);
+    }
+    .sk-group-header:first-child { margin-top:0; }
+
     /* 세부스킬 인라인 패널 */
     .sk-subskill-panel {
       margin:4px 0 8px 12px;padding:8px 10px;
@@ -2501,10 +2510,9 @@ function _역량저장소(prefix) {
 
 /* ── 팝업 내비게이션 상태 ── */
 const _팝업상태 = {
-  prefix: '',      // 'a' | 'i'
-  단계: 1,          // 1=홈(공통+대분류) 2=중분류 3=소분류
+  prefix: '',    // 'a' | 'i'
+  단계: 1,        // 1=홈(공통+대분류) 2=과목목록+세부스킬
   대분류키: '',
-  중분류키: '',
 };
 
 /* ══ 대분류 칩 onChange ══ */
@@ -2533,7 +2541,7 @@ function _팝업열기() {
 /* ══ 단계 인디케이터 HTML ══ */
 function _단계표시HTML() {
   const 단계 = _팝업상태.단계;
-  const 항목 = ['공통·역량', '중분류', '소분류'];
+  const 항목 = ['공통·역량', '과목 선택'];
   return `<div style="display:flex;align-items:center;gap:6px;margin-bottom:12px;">` +
     항목.map((t, i) => {
       const n = i + 1;
@@ -2545,7 +2553,7 @@ function _단계표시HTML() {
       return `<div style="display:flex;align-items:center;gap:4px;">
         <span style="width:22px;height:22px;border-radius:50%;background:${배경};color:${글자색};font-size:.72rem;font-weight:700;display:flex;align-items:center;justify-content:center;">${완료 ? '✓' : n}</span>
         <span style="font-size:.72rem;color:${색};font-weight:${활성 ? '700' : '400'};">${t}</span>
-        ${i < 2 ? `<span style="color:#ddd;font-size:.8rem;">›</span>` : ''}
+        ${i < 1 ? `<span style="color:#ddd;font-size:.8rem;">›</span>` : ''}
       </div>`;
     }).join('') +
   `</div>`;
@@ -2553,8 +2561,8 @@ function _단계표시HTML() {
 
 /* ══ 현재 단계 렌더링 ══ */
 function _단계렌더() {
-  const p      = _팝업상태.prefix;
-  const cat    = 카테고리데이터[_팝업상태.대분류키];
+  const p       = _팝업상태.prefix;
+  const cat     = 카테고리데이터[_팝업상태.대분류키];
   const backBtn = document.getElementById('skillBackBtn');
   const breadEl = document.getElementById('skillBreadcrumb');
   const titleEl = document.getElementById('subSkillModalTitle');
@@ -2562,43 +2570,37 @@ function _단계렌더() {
 
   if (_팝업상태.단계 === 1) {
     backBtn.style.display = 'none';
-    breadEl.textContent = '';
-    titleEl.textContent = '역량 · 조건 선택';
-    body.innerHTML = _홈화면HTML();
+    breadEl.textContent   = '';
+    titleEl.textContent   = '역량 · 조건 선택';
+    body.innerHTML        = _홈화면HTML();
   } else if (_팝업상태.단계 === 2) {
     backBtn.style.display = 'inline';
-    breadEl.textContent = cat.name;
-    titleEl.textContent = '중분류 선택';
-    body.innerHTML = _단계표시HTML() + _선택태그HTML() + _중분류HTML();
-  } else if (_팝업상태.단계 === 3) {
-    const sub = cat.subs[_팝업상태.중분류키];
-    backBtn.style.display = 'inline';
-    breadEl.textContent = cat.name + ' › ' + sub.name;
-    titleEl.textContent = '세부 조건 선택';
-    body.innerHTML = _단계표시HTML() + _선택태그HTML() + _소분류HTML();
+    breadEl.textContent   = cat ? cat.name : '';
+    titleEl.textContent   = '과목 선택 · 세부 역량 체크';
+    body.innerHTML        = _단계표시HTML() + _선택태그HTML() + _아이템목록HTML();
   }
 }
 
-/* ══ 선택된 태그 HTML ══ */
+/* ══ 선택된 태그 HTML (팝업 상단) ══ */
 function _선택태그HTML() {
-  const p       = _팝업상태.prefix;
-  const 저장소   = _역량저장소(p);
-  const cc목록   = Object.values(저장소.공통조건).filter(Boolean);
-  const sk목록   = Object.entries(저장소.세부역량).filter(([,v]) => v);
+  const p      = _팝업상태.prefix;
+  const 저장소  = _역량저장소(p);
+  const cc목록  = Object.values(저장소.공통조건).filter(Boolean);
+  const sk목록  = Object.entries(저장소.세부역량).filter(([,v]) => v);
   if (!cc목록.length && !sk목록.length) return '';
   let html = '<div class="sk-tag-wrap">';
   cc목록.forEach(item =>
     html += `<span class="sk-tag-chip sk-tag-cc" onclick="공통조건제거('${item.id}',this)">${item.label}<span class="sk-tag-x">×</span></span>`
   );
   sk목록.forEach(([key, item]) => {
-    const subs = item.세부스킬 ? Object.values(item.세부스킬).filter(Boolean) : [];
-    if (subs.length) {
-      subs.forEach(sub => {
-        const subKey = p + ':' + sub.id;
-        html += `<span class="sk-tag-chip sk-tag-sub" onclick="세부스킬제거('${key}','${subKey}',this)">${item.label} › ${sub.label}<span class="sk-tag-x">×</span></span>`;
+    const skills = item.skills ? Object.values(item.skills).filter(Boolean) : [];
+    if (skills.length) {
+      skills.forEach(sk => {
+        const skKey = p + ':' + sk.id;
+        html += `<span class="sk-tag-chip sk-tag-sub" onclick="스킬태그제거('${key}','${skKey}',this)">${item.name} › ${sk.name}<span class="sk-tag-x">×</span></span>`;
       });
     } else {
-      html += `<span class="sk-tag-chip" onclick="세부역량제거('${key}',this)">${item.label}<span class="sk-tag-x">×</span></span>`;
+      html += `<span class="sk-tag-chip" onclick="아이템태그제거('${key}',this)">${item.name}<span class="sk-tag-x">×</span></span>`;
     }
   });
   return html + '</div>';
@@ -2623,56 +2625,49 @@ function _홈화면HTML() {
   html += `<div class="sk-section-title" style="margin-top:16px;">🎯 전문 역량 <span style="font-weight:400;color:var(--text-muted);">— 분야를 선택하세요</span></div>
   <div class="sk-step1-grid">`;
   Object.entries(카테고리데이터).forEach(([key, cat]) => {
+    if (_비표시대분류?.has(key)) return;          // 레거시 숨김
     const cnt = Object.values(저장소.세부역량).filter(s => s?.대분류키 === key).length;
     const [emoji, ...rest] = cat.name.split(' ');
     html += `<button class="sk-cat-btn${cnt ? ' has-selection' : ''}" onclick="_팝업상태.대분류키='${key}';_팝업상태.단계=2;_단계렌더()">
       <span class="sk-emoji">${emoji}</span>
       <span>${rest.join(' ')}</span>
-      <span class="sk-cnt">${cnt}개</span>
+      <span class="sk-cnt">${cnt ? cnt + '개' : ''}</span>
     </button>`;
   });
   html += '</div>';
   return html;
 }
 
-/* ══ 중분류 HTML ══ */
-function _중분류HTML() {
-  const p    = _팝업상태.prefix;
-  const 저장소 = _역량저장소(p);
-  const subs = 카테고리데이터[_팝업상태.대분류키].subs;
-  let html = '<div class="sk-sub-list">';
-  Object.entries(subs).forEach(([subKey, sub]) => {
-    const cnt = Object.values(저장소.세부역량).filter(s => s?.대분류키 === _팝업상태.대분류키 && s?.중분류키 === subKey).length;
-    html += `<button class="sk-sub-btn${cnt ? ' has-selection' : ''}" onclick="_팝업상태.중분류키='${subKey}';_팝업상태.단계=3;_단계렌더()">
-      <span>${sub.name}</span>
-      <span class="sk-sub-cnt">${cnt}개</span>
-    </button>`;
-  });
-  return html + '</div>';
-}
-
-/* ══ 소분류 HTML (세부스킬 인라인 펼침 포함) ══ */
-function _소분류HTML() {
+/* ══ 과목 목록 HTML (단계2 — 과목 + 인라인 세부역량) ══ */
+function _아이템목록HTML() {
   const p      = _팝업상태.prefix;
   const 저장소  = _역량저장소(p);
-  const items  = 카테고리데이터[_팝업상태.대분류키].subs[_팝업상태.중분류키].items;
+  const cat    = 카테고리데이터[_팝업상태.대분류키];
+  if (!cat?.items?.length) return '<p style="color:var(--text-muted);padding:20px;">항목이 없습니다.</p>';
+
   let html = '<div class="sk-item-list">';
-  items.forEach(item => {
+  let lastGroup = null;
+  cat.items.forEach(item => {
+    if (item.group && item.group !== lastGroup) {
+      lastGroup = item.group;
+      html += `<div class="sk-group-header">${item.group}</div>`;
+    }
     const key     = p + ':' + item.id;
-    const checked = !!저장소.세부역량[key];
-    html += `<div class="sk-item-label${checked ? ' checked' : ''}" onclick="소분류토글('${item.id}','${encodeURIComponent(item.label)}',this)">
+    const entry   = 저장소.세부역량[key];
+    const checked = !!entry;
+    html += `<div class="sk-item-label${checked ? ' checked' : ''}" onclick="아이템토글('${item.id}','${encodeURIComponent(item.name)}',this)">
       <span class="sk-check">${checked ? '✓' : ''}</span>
-      <span style="font-size:.88rem;">${item.label}</span>
+      <span style="font-size:.88rem;flex:1;">${item.name}</span>
     </div>`;
-    if (item.세부스킬?.length) {
-      const selectedSubs = checked ? (저장소.세부역량[key]?.세부스킬 || {}) : {};
-      html += `<div class="sk-subskill-panel" id="ssp_${key}" style="display:${checked ? 'block' : 'none'};">`;
-      item.세부스킬.forEach(sub => {
-        const subKey = p + ':' + sub.id;
-        const subOn  = !!selectedSubs[subKey];
-        html += `<div class="sk-subskill-item${subOn ? ' on' : ''}" onclick="세부스킬토글('${item.id}','${sub.id}','${encodeURIComponent(sub.label)}',this)">
-          <span class="sk-sub-check">${subOn ? '✓' : ''}</span>
-          <span style="font-size:.82rem;">${sub.label}</span>
+    if (item.skills?.length) {
+      const selSkills = entry?.skills || {};
+      html += `<div class="sk-subskill-panel" id="ssp_${key}" style="display:${checked ? 'flex' : 'none'};">`;
+      item.skills.forEach(skill => {
+        const sk  = p + ':' + skill.id;
+        const on  = !!selSkills[sk];
+        html += `<div class="sk-subskill-item${on ? ' on' : ''}" onclick="스킬토글('${item.id}','${skill.id}','${encodeURIComponent(skill.name)}',this)">
+          <span class="sk-sub-check">${on ? '✓' : ''}</span>
+          <span>${skill.name}</span>
         </div>`;
       });
       html += '</div>';
@@ -2691,14 +2686,12 @@ function 공통조건토글(id, label, el) {
   _태그영역갱신();
 }
 
-function 소분류토글(id, encodedLabel, el) {
-  const label  = decodeURIComponent(encodedLabel);
-  const p      = _팝업상태.prefix;
-  const key    = p + ':' + id;
-  const 저장소  = _역량저장소(p);
-  const cat    = 카테고리데이터[_팝업상태.대분류키];
-  const sub    = cat.subs[_팝업상태.중분류키];
-  const itemDef = sub.items.find(i => i.id === id);
+function 아이템토글(id, encodedName, el) {
+  const name  = decodeURIComponent(encodedName);
+  const p     = _팝업상태.prefix;
+  const key   = p + ':' + id;
+  const 저장소 = _역량저장소(p);
+  const cat   = 카테고리데이터[_팝업상태.대분류키];
   if (저장소.세부역량[key]) {
     delete 저장소.세부역량[key];
     el.classList.remove('checked');
@@ -2706,30 +2699,30 @@ function 소분류토글(id, encodedLabel, el) {
     const panel = document.getElementById('ssp_' + key);
     if (panel) panel.style.display = 'none';
   } else {
-    저장소.세부역량[key] = { id, label, 대분류키: _팝업상태.대분류키, 중분류키: _팝업상태.중분류키, 대분류명: cat.name, 중분류명: sub.name, 세부스킬: {} };
+    저장소.세부역량[key] = { id, name, 대분류키: _팝업상태.대분류키, 대분류명: cat?.name ?? '', skills: {} };
     el.classList.add('checked');
     el.querySelector('.sk-check').textContent = '✓';
     const panel = document.getElementById('ssp_' + key);
-    if (panel) panel.style.display = 'block';
+    if (panel) panel.style.display = 'flex';
   }
   _태그영역갱신();
 }
 
-function 세부스킬토글(parentId, subId, encodedLabel, el) {
-  const label   = decodeURIComponent(encodedLabel);
+function 스킬토글(parentId, skillId, encodedName, el) {
+  const name    = decodeURIComponent(encodedName);
   const p       = _팝업상태.prefix;
   const key     = p + ':' + parentId;
-  const subKey  = p + ':' + subId;
+  const skillKey= p + ':' + skillId;
   const 저장소   = _역량저장소(p);
   const entry   = 저장소.세부역량[key];
   if (!entry) return;
-  if (!entry.세부스킬) entry.세부스킬 = {};
-  if (entry.세부스킬[subKey]) {
-    delete entry.세부스킬[subKey];
+  if (!entry.skills) entry.skills = {};
+  if (entry.skills[skillKey]) {
+    delete entry.skills[skillKey];
     el.classList.remove('on');
     el.querySelector('.sk-sub-check').textContent = '';
   } else {
-    entry.세부스킬[subKey] = { id: subId, label };
+    entry.skills[skillKey] = { id: skillId, name };
     el.classList.add('on');
     el.querySelector('.sk-sub-check').textContent = '✓';
   }
@@ -2749,28 +2742,26 @@ function _태그영역갱신() {
 function 공통조건제거(id, tagEl) {
   const key = _팝업상태.prefix + ':' + id;
   delete _역량저장소(_팝업상태.prefix).공통조건[key];
-  tagEl.closest('.sk-tag-chip').remove();
   _단계렌더();
 }
-function 세부역량제거(key, tagEl) {
-  const 저장소 = _역량저장소(_팝업상태.prefix);
-  delete 저장소.세부역량[key];
-  tagEl.closest('.sk-tag-chip').remove();
+function 아이템태그제거(key, tagEl) {
+  delete _역량저장소(_팝업상태.prefix).세부역량[key];
   _단계렌더();
 }
-function 세부스킬제거(parentKey, subKey, tagEl) {
+function 스킬태그제거(parentKey, skillKey, tagEl) {
   const 저장소 = _역량저장소(_팝업상태.prefix);
   const entry  = 저장소.세부역량[parentKey];
-  if (entry?.세부스킬) delete entry.세부스킬[subKey];
-  tagEl.closest('.sk-tag-chip').remove();
+  if (entry?.skills) {
+    delete entry.skills[skillKey];
+    if (!Object.keys(entry.skills).length) delete 저장소.세부역량[parentKey];
+  }
   _단계렌더();
 }
 
 /* ══ 뒤로가기 ══ */
 function skillStepBack() {
-  if (_팝업상태.단계 === 3)      { _팝업상태.단계 = 2; _단계렌더(); }
-  else if (_팝업상태.단계 === 2) { _팝업상태.단계 = 1; _단계렌더(); }
-  else                            { closeSubSkillModal(null, true); }
+  if (_팝업상태.단계 === 2) { _팝업상태.단계 = 1; _단계렌더(); }
+  else                       { closeSubSkillModal(null, true); }
 }
 
 /* ══ 선택 완료 ══ */
@@ -2782,114 +2773,113 @@ function confirmSkills() {
   if (total) showToast(`총 ${total}개 조건 선택됨 ✅`);
 }
 
-/* ══ 페이지 태그 X 삭제 ══ */
-function 페이지태그제거(key, 종류, subKey, spanEl) {
+/* ══ 페이지 태그 X 삭제 (메인 화면) ══ */
+function 페이지태그제거(key, 종류, skillKey, spanEl) {
   const prefix = key.split(':')[0];
-  const 저장소 = _역량저장소(prefix);
+  const 저장소  = _역량저장소(prefix);
   if (종류 === '공통') {
     delete 저장소.공통조건[key];
-  } else if (종류 === '세부' && subKey) {
+  } else if (종류 === '스킬' && skillKey) {
     const entry = 저장소.세부역량[key];
-    if (entry?.세부스킬) delete entry.세부스킬[subKey];
-    // 세부스킬 모두 지워졌으면 부모도 제거
-    if (entry?.세부스킬 && !Object.keys(entry.세부스킬).length) delete 저장소.세부역량[key];
+    if (entry?.skills) {
+      delete entry.skills[skillKey];
+      if (!Object.keys(entry.skills).length) delete 저장소.세부역량[key];
+    }
   } else {
     delete 저장소.세부역량[key];
   }
   spanEl.parentElement.remove();
   const tagsEl = document.getElementById(prefix + 'SubSkillTags');
   if (tagsEl && !tagsEl.children.length) {
-    const display = document.getElementById(prefix + 'SubSkillDisplay');
-    if (display) display.style.display = 'none';
+    const disp = document.getElementById(prefix + 'SubSkillDisplay');
+    if (disp) disp.style.display = 'none';
   }
 }
 
 /* ══ 페이지 내 태그 갱신 ══ */
 function refreshSubSkillDisplay(prefix) {
-  const display = document.getElementById(prefix + 'SubSkillDisplay');
-  const tagsEl  = document.getElementById(prefix + 'SubSkillTags');
+  const display   = document.getElementById(prefix + 'SubSkillDisplay');
+  const tagsEl    = document.getElementById(prefix + 'SubSkillTags');
   if (!display || !tagsEl) return;
-  const 저장소   = _역량저장소(prefix);
-  const skEntries = Object.entries(저장소.세부역량).filter(([,v]) => v);
-  const ccEntries = Object.entries(저장소.공통조건).filter(([,v]) => v);
+  const 저장소     = _역량저장소(prefix);
+  const skEntries  = Object.entries(저장소.세부역량).filter(([,v]) => v);
+  const ccEntries  = Object.entries(저장소.공통조건).filter(([,v]) => v);
   tagsEl.innerHTML = '';
   if (!skEntries.length && !ccEntries.length) { display.style.display = 'none'; return; }
   display.style.display = 'block';
 
-  const CC_STYLE = 'display:inline-flex;align-items:center;gap:4px;font-size:.78rem;background:#e8f5e9;color:#2e7d32;padding:4px 10px;border-radius:99px;white-space:nowrap;';
-  const SK_STYLE = 'display:inline-flex;align-items:center;gap:4px;font-size:.78rem;background:var(--primary-soft);color:var(--primary);padding:4px 10px;border-radius:99px;white-space:nowrap;';
-  const X_STYLE  = 'cursor:pointer;font-weight:700;margin-left:2px;line-height:1;opacity:.7;';
+  const CC = 'display:inline-flex;align-items:center;gap:4px;font-size:.78rem;background:#e8f5e9;color:#2e7d32;padding:4px 10px;border-radius:99px;white-space:nowrap;';
+  const SK = 'display:inline-flex;align-items:center;gap:4px;font-size:.78rem;background:var(--primary-soft);color:var(--primary);padding:4px 10px;border-radius:99px;white-space:nowrap;';
+  const X  = 'cursor:pointer;font-weight:700;margin-left:3px;line-height:1;opacity:.6;';
 
-  ccEntries.forEach(([key, { label }]) => {
+  ccEntries.forEach(([key, item]) => {
     const s = document.createElement('span');
-    s.style.cssText = CC_STYLE;
-    s.innerHTML = `✓ ${label} <span onclick="페이지태그제거('${key}','공통',null,this)" style="${X_STYLE}">×</span>`;
+    s.style.cssText = CC;
+    s.innerHTML = `✓ ${item.label} <span onclick="페이지태그제거('${key}','공통',null,this)" style="${X}">×</span>`;
     tagsEl.appendChild(s);
   });
 
   skEntries.forEach(([key, item]) => {
-    const subs = item.세부스킬 ? Object.entries(item.세부스킬).filter(([,v]) => v) : [];
-    if (subs.length) {
-      subs.forEach(([subKey, sub]) => {
+    const skills = item.skills ? Object.entries(item.skills).filter(([,v]) => v) : [];
+    if (skills.length) {
+      skills.forEach(([skillKey, sk]) => {
         const s = document.createElement('span');
-        s.style.cssText = SK_STYLE;
-        s.title = item.대분류명 + ' › ' + item.중분류명;
-        s.innerHTML = `${item.label} › ${sub.label} <span onclick="페이지태그제거('${key}','세부','${subKey}',this)" style="${X_STYLE}">×</span>`;
+        s.style.cssText = SK;
+        s.title = item.대분류명 ?? '';
+        s.innerHTML = `${item.name} › ${sk.name} <span onclick="페이지태그제거('${key}','스킬','${skillKey}',this)" style="${X}">×</span>`;
         tagsEl.appendChild(s);
       });
     } else {
       const s = document.createElement('span');
-      s.style.cssText = SK_STYLE;
-      s.title = item.대분류명 + ' › ' + item.중분류명;
-      s.innerHTML = `${item.label} <span onclick="페이지태그제거('${key}','역량',null,this)" style="${X_STYLE}">×</span>`;
+      s.style.cssText = SK;
+      s.title = item.대분류명 ?? '';
+      s.innerHTML = `${item.name} <span onclick="페이지태그제거('${key}','아이템',null,this)" style="${X}">×</span>`;
       tagsEl.appendChild(s);
     }
   });
 }
 
-/* ══ 매칭 점수 산정 ══ */
+/* ══ 매칭 점수 산정 ══
+   가중치: 과목 선택=10pt · 세부역량 스킬=5pt · 공통조건=3pt
+   반환: { 점수, 최대점수, 매칭률(%), 세부내역, 알림대상(50%↑) }
+════════════════════════════════════════════════ */
 function 계산매칭점수(academyPrefix, instructorPrefix) {
-  const 학원  = _역량저장소(academyPrefix);
-  const 강사  = _역량저장소(instructorPrefix);
-  let 요구점수합 = 0, 충족점수합 = 0;
-  const 세부내역 = { 충족: [], 미충족: [] };
+  const 학원 = _역량저장소(academyPrefix);
+  const 강사 = _역량저장소(instructorPrefix);
+  let 요구 = 0, 충족 = 0;
+  const 내역 = { 충족: [], 미충족: [] };
 
-  // 공통조건 (가중치 3)
   Object.entries(학원.공통조건).forEach(([key, item]) => {
     if (!item) return;
-    const w = 3;
-    요구점수합 += w;
-    if (강사.공통조건[key]) { 충족점수합 += w; 세부내역.충족.push(item.label); }
-    else 세부내역.미충족.push(item.label);
+    요구 += 3;
+    if (강사.공통조건[key]) { 충족 += 3; 내역.충족.push(item.label); }
+    else 내역.미충족.push(item.label);
   });
 
-  // 세부역량: 소분류(10) + 세부스킬(5 each)
   Object.entries(학원.세부역량).forEach(([key, item]) => {
     if (!item) return;
-    const 소분류w = item.weight ?? 10;
-    요구점수합 += 소분류w;
+    요구 += 10;
     const 강사항목 = 강사.세부역량[key];
     if (강사항목) {
-      충족점수합 += 소분류w;
-      세부내역.충족.push(item.label);
-      const 학원세부스킬 = Object.entries(item.세부스킬 || {}).filter(([,v]) => v);
-      학원세부스킬.forEach(([subKey, sub]) => {
-        const sw = 5;
-        요구점수합 += sw;
-        if (강사항목.세부스킬?.[subKey]) { 충족점수합 += sw; 세부내역.충족.push(`${item.label} › ${sub.label}`); }
-        else 세부내역.미충족.push(`${item.label} › ${sub.label}`);
+      충족 += 10;
+      내역.충족.push(item.name);
+      Object.entries(item.skills || {}).forEach(([skKey, sk]) => {
+        if (!sk) return;
+        요구 += 5;
+        if (강사항목.skills?.[skKey]) { 충족 += 5; 내역.충족.push(`${item.name} › ${sk.name}`); }
+        else 내역.미충족.push(`${item.name} › ${sk.name}`);
       });
     } else {
-      세부내역.미충족.push(item.label);
-      Object.values(item.세부스킬 || {}).filter(Boolean).forEach(sub => {
-        요구점수합 += 5;
-        세부내역.미충족.push(`${item.label} › ${sub.label}`);
+      내역.미충족.push(item.name);
+      Object.values(item.skills || {}).filter(Boolean).forEach(sk => {
+        요구 += 5;
+        내역.미충족.push(`${item.name} › ${sk.name}`);
       });
     }
   });
 
-  const 매칭률 = 요구점수합 ? Math.round(충족점수합 / 요구점수합 * 100) : 0;
-  return { 점수: 충족점수합, 최대점수: 요구점수합, 매칭률, 세부내역, 알림대상: 매칭률 >= 50 };
+  const 매칭률 = 요구 ? Math.round(충족 / 요구 * 100) : 0;
+  return { 점수: 충족, 최대점수: 요구, 매칭률, 세부내역: 내역, 알림대상: 매칭률 >= 50 };
 }
 
 /* ══ 외부에서 단계1로 열기 ══ */
@@ -3019,422 +3009,315 @@ document.getElementById('registerForm').addEventListener('submit', (e) => {
 });
 
 /* ════════════════════════════════════════════════
-  카테고리데이터 (대분류 → 중분류 → 소분류)
+  카테고리데이터  구조: 대분류 → items(과목) → skills(세부역량)
+  스키마: { id, name, group?, skills:[{id, name}] }
 ════════════════════════════════════════════════ */
 const 카테고리데이터 = {
-  music: {
-    name: '🎵 음악',
-    subs: {
-      성악:     { name:'성악',         items:[
-        {id:'sg_classic',  label:'클래식 발성'}, {id:'sg_aria',   label:'아리아'},
-        {id:'sg_gagok',    label:'가곡'},         {id:'sg_exam',   label:'입시레슨'},
-      ]},
-      뮤지컬:   { name:'뮤지컬',       items:[
-        {id:'mu_number',   label:'뮤지컬 넘버'},  {id:'mu_acting', label:'연기/독백'},
-        {id:'mu_audition', label:'오디션 준비'},
-      ]},
-      보컬:     { name:'보컬',         items:[
-        { id:'vo_breath',  label:'발성 교정',    weight:10, 세부스킬:[{id:'vb_resonance',label:'공명 발성',weight:5},{id:'vb_breath',label:'호흡 훈련',weight:5}]},
-        { id:'vo_high',    label:'고음 트레이닝',weight:10, 세부스킬:[{id:'vh_mix',label:'믹스보이스',weight:5},{id:'vh_falsetto',label:'팔세토',weight:5}]},
-        { id:'vo_rnb',     label:'R&B/팝',       weight:10, 세부스킬:[{id:'vr_melisma',label:'멜리스마',weight:5},{id:'vr_rhythm',label:'리듬/그루브',weight:5}]},
-        { id:'vo_wedding', label:'축가 레슨',     weight:10},
-      ]},
-      드럼:     { name:'드럼',         items:[
-        {id:'dr_pad',      label:'기본 패드 연습'},{id:'dr_jazz',  label:'재즈 드럼'},
-        {id:'dr_ccm',      label:'CCM 반주'},      {id:'dr_band',  label:'밴드 합주'},
-      ]},
-      일렉기타: { name:'일렉기타',     items:[
-        {id:'eg_basic',    label:'기초 코드'},    {id:'eg_rock',   label:'록/메탈'},
-        {id:'eg_blues',    label:'블루스'},
-      ]},
-      베이스기타:{ name:'베이스기타',  items:[
-        {id:'bg_basic',    label:'기초 베이스'},  {id:'bg_slap',   label:'슬랩 주법'},
-      ]},
-      건반:     { name:'건반(키보드)', items:[
-        {id:'kb_basic',    label:'기초 건반'},    {id:'kb_synth',  label:'신디사이저'},
-        {id:'kb_band',     label:'밴드 세션'},
-      ]},
-      피아노:   { name:'피아노',       items:[
-        { id:'pi_classic', label:'클래식 피아노', weight:10, 세부스킬:[{id:'pc_sheet',label:'악보 읽기',weight:5},{id:'pc_scale',label:'스케일/아르페지오',weight:5},{id:'pc_interpret',label:'곡 해석',weight:5},{id:'pc_exam',label:'입시 레슨',weight:5}]},
-        { id:'pi_jazz',    label:'재즈/팝 반주',  weight:10, 세부스킬:[{id:'pj_chord',label:'재즈 코드',weight:5},{id:'pj_improv',label:'임프로비제이션',weight:5}]},
-        { id:'pi_chord',   label:'코드 반주법',   weight:10, 세부스킬:[{id:'ph_basic',label:'기초 코드',weight:5},{id:'ph_gospel',label:'가스펠 반주',weight:5}]},
-        { id:'pi_newage',  label:'뉴에이지',      weight:10},
-      ]},
-      현악기:   { name:'현악기',       items:[
-        {id:'st_violin',   label:'바이올린'},     {id:'st_viola',  label:'비올라'},
-        {id:'st_cello',    label:'첼로'},         {id:'st_bass',   label:'콘트라베이스'},
-        {id:'st_harp',     label:'하프'},
-      ]},
-      관악기:   { name:'관악기',       items:[
-        {id:'wd_flute',    label:'플루트'},       {id:'wd_clarinet',label:'클라리넷'},
-        {id:'wd_sax',      label:'색소폰'},       {id:'wd_trumpet', label:'트럼펫'},
-        {id:'wd_oboe',     label:'오보에'},
-      ]},
-      타악기:   { name:'타악기',       items:[
-        {id:'pe_marimba',  label:'마림바'},       {id:'pe_timpani', label:'팀파니'},
-        {id:'pe_cajon',    label:'카혼'},
-      ]},
-      국악:     { name:'국악',         items:[
-        {id:'ko_gayageum', label:'가야금'},       {id:'ko_geomungo',label:'거문고'},
-        {id:'ko_haegeum',  label:'해금'},         {id:'ko_daegeum', label:'대금'},
-        {id:'ko_janggu',   label:'장구'},
-      ]},
-      기타음악: { name:'기타 음악',    items:[
-        {id:'me_compose',  label:'작곡'},         {id:'me_harmony', label:'화성학'},
-        {id:'me_ukulele',  label:'우쿨렐레'},
-      ]},
-    }
-  },
-  art: {
-    name: '🎨 미술',
-    subs: {
-      회화:     { name:'회화/순수미술',   items:[
-        {id:'fa_watercolor',label:'수채화'},      {id:'fa_oil',       label:'유화'},
-        {id:'fa_acrylic',   label:'아크릴화'},    {id:'fa_drawing',   label:'소묘(드로잉)'},
-        {id:'fa_oriental',  label:'동양화'},
-      ]},
-      디자인:   { name:'디자인/일러스트', items:[
-        {id:'de_visual',    label:'시각디자인'},  {id:'de_webtoon',   label:'웹툰'},
-        {id:'de_character', label:'캐릭터 일러스트'},{id:'de_digital',label:'디지털 드로잉'},
-        {id:'de_popart',    label:'팝아트'},
-      ]},
-      공예:     { name:'입체/공예',       items:[
-        {id:'cr_ceramic',   label:'도자기 공예'}, {id:'cr_leather',   label:'가죽 공예'},
-        {id:'cr_resin',     label:'레진 공예'},   {id:'cr_sculpture', label:'조소'},
-        {id:'cr_carving',   label:'조각'},
-      ]},
-      아동미술: { name:'아동/취미미술',   items:[
-        {id:'ki_art',       label:'아동 미술'},   {id:'ki_creative',  label:'창의 미술'},
-        {id:'ki_senior',    label:'시니어 미술'},
-      ]},
-      서예:     { name:'서예/캘리그라피', items:[
-        {id:'ca_brush',     label:'붓글씨'},      {id:'ca_calli',     label:'캘리그라피'},
-        {id:'ca_pen',       label:'펜글씨'},
-      ]},
-      기타미술: { name:'기타 미술',       items:[
-        {id:'ae_photo',     label:'사진'},        {id:'ae_video',     label:'영상 편집'},
-        {id:'ae_interior',  label:'인테리어 디자인'},
-      ]},
-    }
-  },
-  sports: {
-    name: '⚽ 체육',
-    subs: {
-      격기: { name:'격기 체육', items:[
-        { id:'ma_taekwondo', label:'태권도',  weight:10, 세부스킬:[
-          {id:'tk_poomsae',  label:'품새',       weight:5},
-          {id:'tk_sparring', label:'겨루기',     weight:5},
-          {id:'tk_demo',     label:'시범단',     weight:5},
-          {id:'tk_kids',     label:'유아태권도', weight:5},
-          {id:'tk_referee',  label:'심판/지도자',weight:3},
-        ]},
-        { id:'ma_judo',    label:'유도',    weight:10, 세부스킬:[
-          {id:'jd_throw',    label:'메치기', weight:5},
-          {id:'jd_ground',   label:'굳히기', weight:5},
-          {id:'jd_fall',     label:'낙법',   weight:5},
-          {id:'jd_exam',     label:'입시유도',weight:3},
-        ]},
-        { id:'ma_hapkido', label:'합기도',  weight:10, 세부스킬:[
-          {id:'hk_self',     label:'호신술', weight:5},
-          {id:'hk_joint',    label:'관절기', weight:5},
-          {id:'hk_fall',     label:'낙법',   weight:5},
-        ]},
-        { id:'ma_muay',    label:'무에타이',weight:10, 세부스킬:[
-          {id:'mt_kick',     label:'킥 테크닉',  weight:5},
-          {id:'mt_clinch',   label:'클린치',     weight:5},
-          {id:'mt_pad',      label:'미트 트레이닝',weight:5},
-        ]},
-        { id:'ma_boxing',  label:'복싱',    weight:10, 세부스킬:[
-          {id:'bx_step',     label:'기초 스텝',  weight:5},
-          {id:'bx_combo',    label:'콤비네이션', weight:5},
-          {id:'bx_sparring', label:'스파링',     weight:5},
-        ]},
-        { id:'ma_mma',     label:'MMA(종합격투기)', weight:10, 세부스킬:[
-          {id:'mm_stand',    label:'스탠딩 타격', weight:5},
-          {id:'mm_grapple',  label:'그래플링',    weight:5},
-          {id:'mm_fitness',  label:'체력 관리',   weight:3},
-        ]},
-        { id:'ma_kumdo',   label:'검도',    weight:10, 세부스킬:[
-          {id:'km_basic',    label:'기본격',   weight:5},
-          {id:'km_kata',     label:'품새/형',  weight:5},
-          {id:'km_match',    label:'스파링',   weight:5},
-        ]},
-        { id:'ma_jujitsu', label:'주짓수',  weight:10, 세부스킬:[
-          {id:'jj_ground',   label:'그라운드',   weight:5},
-          {id:'jj_standing', label:'서있는 기술',weight:5},
-          {id:'jj_self',     label:'호신',       weight:3},
-        ]},
-        { id:'ma_fencing', label:'펜싱',    weight:10, 세부스킬:[
-          {id:'fc_foil',     label:'플뢰레',  weight:5},
-          {id:'fc_epee',     label:'에페',    weight:5},
-          {id:'fc_sabre',    label:'사브르',  weight:5},
-        ]},
-      ]},
-      구기: { name:'구기 체육', items:[
-        { id:'bs_soccer',     label:'축구/풋살', weight:10, 세부스킬:[
-          {id:'sc_dribble',   label:'드리블',     weight:5},
-          {id:'sc_pass',      label:'패스/전술',  weight:5},
-          {id:'sc_gk',        label:'골키퍼',     weight:5},
-          {id:'sc_futsal',    label:'풋살 특화',  weight:3},
-        ]},
-        { id:'bs_baseball',   label:'야구/소프트볼', weight:10, 세부스킬:[
-          {id:'bb_pitch',     label:'투구',   weight:5},
-          {id:'bb_hit',       label:'타격',   weight:5},
-          {id:'bb_field',     label:'수비',   weight:5},
-        ]},
-        { id:'bs_volleyball', label:'배구', weight:10, 세부스킬:[
-          {id:'vb_serve',     label:'서브',     weight:5},
-          {id:'vb_spike',     label:'스파이크', weight:5},
-          {id:'vb_block',     label:'블로킹',   weight:5},
-        ]},
-        { id:'bs_basketball', label:'농구', weight:10, 세부스킬:[
-          {id:'bk_shoot',     label:'슈팅',    weight:5},
-          {id:'bk_dribble',   label:'드리블',  weight:5},
-          {id:'bk_tactic',    label:'팀전술',  weight:5},
-        ]},
-        { id:'bs_tabletennis',label:'탁구',      weight:10, 세부스킬:[{id:'tt_basic',label:'기초 기술',weight:5},{id:'tt_spin',label:'스핀 서브',weight:5}]},
-        { id:'bs_badminton',  label:'배드민턴',   weight:10, 세부스킬:[{id:'bd_serve',label:'서브',weight:5},{id:'bd_smash',label:'스매시',weight:5}]},
-        { id:'bs_handball',   label:'핸드볼',    weight:10},
-        { id:'bs_rugby',      label:'럭비',      weight:10},
-        { id:'bs_hockey',     label:'하키',      weight:10},
-        { id:'bs_tennis',     label:'테니스',    weight:10, 세부스킬:[{id:'tn_forehand',label:'포핸드',weight:5},{id:'tn_backhand',label:'백핸드',weight:5},{id:'tn_serve',label:'서브',weight:5}]},
-        { id:'bs_squash',     label:'스쿼시',    weight:10},
-      ]},
-      기타체육: { name:'기타 체육', items:[
-        { id:'os_swim',       label:'수영', weight:10, 세부스킬:[{id:'sw_free',label:'자유형',weight:5},{id:'sw_back',label:'배영',weight:5},{id:'sw_breast',label:'평영',weight:5},{id:'sw_fly',label:'접영',weight:5}]},
-        { id:'os_gymnastics', label:'체조/기계체조', weight:10, 세부스킬:[{id:'gy_floor',label:'마루운동',weight:5},{id:'gy_vault',label:'뜀틀',weight:5}]},
-        { id:'os_track',      label:'육상',      weight:10, 세부스킬:[{id:'tr_sprint',label:'단거리',weight:5},{id:'tr_long',label:'장거리',weight:5},{id:'tr_jump',label:'도약',weight:5}]},
-        { id:'os_golf',       label:'골프',      weight:10, 세부스킬:[{id:'gf_swing',label:'스윙 교정',weight:5},{id:'gf_putt',label:'퍼팅',weight:5}]},
-        { id:'os_bowling',    label:'볼링',      weight:10},
-        { id:'os_climbing',   label:'클라이밍',  weight:10},
-        { id:'os_yoga',       label:'요가/필라테스', weight:10, 세부스킬:[{id:'yg_basic',label:'기초 요가',weight:5},{id:'yg_pilates',label:'필라테스',weight:5}]},
-        { id:'os_crossfit',   label:'크로스핏/PT', weight:10, 세부스킬:[{id:'cf_wod',label:'WOD 프로그래밍',weight:5},{id:'cf_pt',label:'개인 PT',weight:5}]},
-        { id:'os_dancesport', label:'댄스스포츠', weight:10, 세부스킬:[{id:'ds_latin',label:'라틴댄스',weight:5},{id:'ds_ballroom',label:'볼룸댄스',weight:5}]},
-        { id:'os_aerobics',   label:'에어로빅',  weight:10},
-      ]},
-    }
-  },
-  etc: {
-    name: '🤝 기타',
-    subs: {
-      취미: { name:'기타 취미', items:[
-        {id:'hb_baduk',  label:'바둑'},    {id:'hb_chess',   label:'체스'},
-        {id:'hb_cook',   label:'요리'},    {id:'hb_baking',  label:'베이킹'},
-        {id:'hb_magic',  label:'마술'},    {id:'hb_garden',  label:'가드닝(원예)'},
-      ]},
-      역량: { name:'기타 역량', items:[
-        {id:'cp_speech', label:'스피치'},  {id:'cp_essay',   label:'논술'},
-        {id:'cp_interview',label:'면접 컨설팅'},
-      ]},
-    }
-  },
-  /* ── 기존 호환 (매칭용 연기/무용 데이터 보존) ── */
-  acting: {
-    name: '🎭 연기/뮤지컬',
-    subs: {
-      media:    { name: '매체 연기/오디션', items: [
-        { id:'act_media_cam',   label:'카메라 연기 기초' },
-        { id:'act_media_audit', label:'오디션 코칭' },
-        { id:'act_media_mono',  label:'독백·지문 지도' },
-        { id:'act_media_cf',    label:'CF/광고 연기' },
-      ]},
-      musical:  { name: '뮤지컬', items: [
-        { id:'act_mus_vocal',   label:'뮤지컬 보컬' },
-        { id:'act_mus_dance',   label:'뮤지컬 안무/움직임' },
-        { id:'act_mus_acting',  label:'뮤지컬 연기' },
-      ]},
-      entrance: { name: '입시 지도', items: [
-        { id:'act_ent_univ',    label:'연영과 입시 지도' },
-        { id:'act_ent_script',  label:'입시 작품 창작' },
-        { id:'act_ent_field',   label:'주말 입시 현장 케어' },
-      ]},
-      kids:     { name: '아역/유소년', items: [
-        { id:'act_kids_basic',  label:'유소년 기초 연기' },
-        { id:'act_kids_audit',  label:'아역 오디션 케어' },
-      ]},
-      etc:      { name: '기타', items: [
-        { id:'act_etc_monitor', label:'모니터링 피드백' },
-        { id:'act_etc_sub',     label:'출강·긴급 대체 가능' },
-      ]},
-    }
-  },
-  taekwondo: {
-    name: '🥋 체육/스포츠',
-    subs: {
-      gyeki: { name: '격기 종목', items: [
-        { id:'sp_taekwondo',  label:'태권도' },
-        { id:'sp_judo',       label:'유도' },
-        { id:'sp_boxing',     label:'복싱' },
-        { id:'sp_wrestling',  label:'레슬링' },
-        { id:'sp_hapkido',    label:'합기도' },
-        { id:'sp_muay',       label:'무에타이' },
-        { id:'sp_mma',        label:'MMA/종합격투기' },
-        { id:'sp_ssireum',    label:'씨름' },
-        { id:'sp_kumdo',      label:'검도' },
-        { id:'sp_jujitsu',    label:'주짓수' },
-      ]},
-      taekwondo: { name: '태권도 전문조건', items: [
-        { id:'tkd_degree4',   label:'4년제 태권도학과 전공자' },
-        { id:'tkd_4dan',      label:'4단 이상' },
-        { id:'tkd_cert',      label:'사범자격증' },
-        { id:'tkd_sports2',   label:'생활체육 2급 이상' },
-        { id:'tkd_demo',      label:'대표시범단 출신' },
-        { id:'tkd_fight',     label:'겨루기선수단 출신' },
-        { id:'tkd_poomsae',   label:'품새선수단 출신' },
-        { id:'tkd_sibeom',    label:'시범단 운영가능' },
-        { id:'tkd_poomsae2',  label:'품새단 운영가능' },
-        { id:'tkd_fight2',    label:'겨루기 운영가능' },
-        { id:'tkd_asst',      label:'보조사범' },
-        { id:'tkd_master',    label:'정사범' },
-        { id:'tkd_head',      label:'지도관장' },
-        { id:'tkd_car1',      label:'1종보통/스타렉스 운행' },
-        { id:'tkd_bus',       label:'대형면허/버스 운행' },
-        { id:'tkd_car_need',  label:'차량지원 필요' },
-        { id:'tkd_car_own',   label:'본인 차량 있음' },
-        { id:'tkd_long',      label:'2년 이상 장기계약 의향' },
-      ]},
-      gugi: { name: '구기 종목', items: [
-        { id:'sp_soccer',     label:'축구/풋살' },
-        { id:'sp_baseball',   label:'야구/소프트볼' },
-        { id:'sp_volleyball', label:'배구' },
-        { id:'sp_basketball', label:'농구' },
-        { id:'sp_tabletennis',label:'탁구' },
-        { id:'sp_badminton',  label:'배드민턴' },
-        { id:'sp_handball',   label:'핸드볼' },
-        { id:'sp_rugby',      label:'럭비' },
-        { id:'sp_hockey',     label:'하키' },
-      ]},
-      etc_sports: { name: '기타 체육', items: [
-        { id:'sp_judo',       label:'유도' },
-        { id:'sp_boxing',     label:'복싱' },
-        { id:'sp_hapkido',    label:'합기도' },
-        { id:'sp_muay',       label:'무에타이' },
-        { id:'sp_mma',        label:'MMA/종합격투기' },
-        { id:'sp_kumdo',      label:'검도' },
-        { id:'sp_jujitsu',    label:'주짓수' },
-        { id:'sp_swim',       label:'수영' },
-        { id:'sp_tennis',     label:'테니스' },
-        { id:'sp_gym',        label:'체조/기계체조' },
-        { id:'sp_track',      label:'육상' },
-        { id:'sp_golf',       label:'골프' },
-        { id:'sp_bowling',    label:'볼링' },
-        { id:'sp_climbing',   label:'클라이밍' },
-        { id:'sp_yoga',       label:'요가/필라테스' },
-        { id:'sp_crossfit',   label:'크로스핏/PT' },
-      ]},
-    }
-  },
-  ballet: {
-    name: '🩰 무용/발레',
-    subs: {
-      ballet_cls: { name: '발레', items: [
-        { id:'bal_infant',      label:'유아 발레 전문' },
-        { id:'bal_pointe',      label:'포인트 지도' },
-        { id:'bal_entrance',    label:'전공 입시 가능' },
-        { id:'bal_competition', label:'발표회·대회 동행' },
-        { id:'bal_sub',         label:'긴급 대타 대기' },
-      ]},
-      modern:     { name: '현대무용', items: [
-        { id:'mod_basic',       label:'현대무용 기초' },
-        { id:'mod_entrance',    label:'입시 지도' },
-        { id:'mod_creative',    label:'창작 안무' },
-      ]},
-      kpop:       { name: 'K-POP/방송댄스', items: [
-        { id:'kpop_basic',      label:'K-POP 기초' },
-        { id:'kpop_cover',      label:'커버댄스' },
-        { id:'kpop_kids',       label:'유소년 댄스' },
-      ]},
-      jazz:       { name: '재즈댄스', items: [
-        { id:'jazz_basic',      label:'재즈 기초' },
-        { id:'jazz_advance',    label:'재즈 중급 이상' },
-      ]},
-    }
-  },
-  music: {
-    name: '🎵 음악/악기',
-    subs: {
-      keyboard:   { name: '건반악기', items: [
-        { id:'mus_piano',       label:'피아노' },
-        { id:'mus_organ',       label:'오르간' },
-        { id:'mus_keyboard',    label:'키보드' },
-      ]},
-      string:     { name: '현악기', items: [
-        { id:'mus_violin',      label:'바이올린' },
-        { id:'mus_viola',       label:'비올라' },
-        { id:'mus_cello',       label:'첼로' },
-        { id:'mus_guitar',      label:'기타' },
-        { id:'mus_bass',        label:'베이스 기타' },
-        { id:'mus_harp',        label:'하프' },
-      ]},
-      wind:       { name: '관악기', items: [
-        { id:'mus_flute',       label:'플루트' },
-        { id:'mus_clarinet',    label:'클라리넷' },
-        { id:'mus_saxophone',   label:'색소폰' },
-        { id:'mus_trumpet',     label:'트럼펫' },
-        { id:'mus_trombone',    label:'트롬본' },
-      ]},
-      percussion: { name: '타악기', items: [
-        { id:'mus_drum',        label:'드럼' },
-        { id:'mus_marimba',     label:'마림바' },
-        { id:'mus_percussion',  label:'타악 전반' },
-      ]},
-      vocal:      { name: '보컬/성악', items: [
-        { id:'mus_vocal_pop',     label:'실용 보컬' },
-        { id:'mus_vocal_classic', label:'성악' },
-        { id:'mus_vocal_musical', label:'뮤지컬 보컬' },
-        { id:'mus_vocal_rap',     label:'랩/힙합 보컬' },
-      ]},
-      theory:     { name: '이론/기타', items: [
-        { id:'mus_theory',      label:'화성학·시창' },
-        { id:'mus_competition', label:'콩쿠르·연주회 동행' },
-        { id:'mus_kids',        label:'유아·초등 음악' },
-        { id:'mus_sub',         label:'대체·대타 가능' },
-      ]},
-    }
-  },
-  art: {
-    name: '🎨 미술/창의',
-    subs: {
-      fine:     { name: '순수미술', items: [
-        { id:'art_drawing',    label:'소묘/데생' },
-        { id:'art_painting',   label:'회화 (수채·유화)' },
-        { id:'art_portfolio',  label:'포트폴리오·입시' },
-      ]},
-      creative: { name: '창의미술', items: [
-        { id:'art_infant',     label:'유아 창의미술' },
-        { id:'art_kids',       label:'초등 창의미술' },
-        { id:'art_craft',      label:'공예/만들기' },
-        { id:'art_clay',       label:'클레이·도예' },
-      ]},
-      digital:  { name: '디지털/디자인', items: [
-        { id:'art_digital',    label:'디지털 드로잉' },
-        { id:'art_design',     label:'그래픽 디자인' },
-        { id:'art_webtoon',    label:'웹툰/일러스트' },
-        { id:'art_photo',      label:'사진/영상' },
-      ]},
-      contest:  { name: '대회/전시', items: [
-        { id:'art_competition',label:'전시·대회 동행' },
-        { id:'art_sub',        label:'대체·대타 가능' },
-      ]},
-    }
-  },
-  general: {
-    name: '📚 일반/학습',
-    subs: {
-      elementary:  { name: '초등 지도', items: [
-        { id:'gen_infant',    label:'유아·초등 지도' },
-        { id:'gen_homework',  label:'숙제·테스트 관리' },
-        { id:'gen_english',   label:'영어 과외' },
-        { id:'gen_math',      label:'수학 과외' },
-      ]},
-      management: { name: '학원 운영 보조', items: [
-        { id:'gen_consult',   label:'학부모 상담 가능' },
-        { id:'gen_flexible',  label:'시간 조율 가능' },
-        { id:'gen_sub',       label:'대체·대타 가능' },
-      ]},
-    }
-  },
+  music: { name:'🎵 음악', items:[
+    // ── 건반/피아노 ──
+    { id:'m_piano',    name:'피아노',       group:'건반/피아노', skills:[
+      {id:'pi_classic',  name:'클래식 피아노 전문'},
+      {id:'pi_jazz',     name:'재즈/팝 반주'},
+      {id:'pi_exam',     name:'입시 레슨 가능'},
+      {id:'pi_kids',     name:'유아 피아노'},
+      {id:'pi_gospel',   name:'가스펠/교회 반주'},
+    ]},
+    { id:'m_keyboard', name:'건반(키보드)', group:'건반/피아노', skills:[
+      {id:'kb_synth',    name:'신디사이저 운용'},
+      {id:'kb_band',     name:'밴드 세션 가능'},
+    ]},
+    // ── 보컬/성악 ──
+    { id:'m_vocal',    name:'보컬(실용)',   group:'보컬/성악', skills:[
+      {id:'vo_basic',    name:'기초 발성 교정'},
+      {id:'vo_high',     name:'고음 트레이닝'},
+      {id:'vo_rnb',      name:'R&B/팝 보컬'},
+      {id:'vo_musical',  name:'뮤지컬 보컬'},
+      {id:'vo_exam',     name:'입시 보컬 레슨'},
+    ]},
+    { id:'m_vocal_cl', name:'성악(클래식)', group:'보컬/성악', skills:[
+      {id:'sg_classic',  name:'클래식 발성 전문'},
+      {id:'sg_aria',     name:'아리아 지도'},
+      {id:'sg_gagok',    name:'가곡 레슨'},
+      {id:'sg_exam',     name:'입시 레슨'},
+    ]},
+    { id:'m_musical',  name:'뮤지컬',      group:'보컬/성악', skills:[
+      {id:'mu_number',   name:'뮤지컬 넘버'},
+      {id:'mu_acting',   name:'연기/독백 지도'},
+      {id:'mu_audition', name:'오디션 준비 코칭'},
+    ]},
+    // ── 기타/베이스 ──
+    { id:'m_guitar_e', name:'일렉기타',    group:'기타/베이스', skills:[
+      {id:'eg_basic',    name:'기초 코드'},
+      {id:'eg_rock',     name:'록/메탈'},
+      {id:'eg_blues',    name:'블루스'},
+    ]},
+    { id:'m_guitar_a', name:'어쿠스틱기타',group:'기타/베이스', skills:[
+      {id:'ag_chord',    name:'코드 반주'},
+      {id:'ag_fingering',name:'핑거스타일'},
+    ]},
+    { id:'m_bass',     name:'베이스기타',  group:'기타/베이스', skills:[
+      {id:'bg_basic',    name:'기초 베이스'},
+      {id:'bg_slap',     name:'슬랩 주법'},
+    ]},
+    // ── 드럼/타악기 ──
+    { id:'m_drum',     name:'드럼',        group:'드럼/타악기', skills:[
+      {id:'dr_pad',      name:'기본 패드 연습'},
+      {id:'dr_jazz',     name:'재즈 드럼'},
+      {id:'dr_ccm',      name:'CCM 반주'},
+      {id:'dr_band',     name:'밴드 합주'},
+    ]},
+    { id:'m_percussion',name:'타악기',     group:'드럼/타악기', skills:[
+      {id:'pe_marimba',  name:'마림바'},
+      {id:'pe_cajon',    name:'카혼'},
+    ]},
+    // ── 관현악 ──
+    { id:'m_strings',  name:'현악기',      group:'관현악', skills:[
+      {id:'st_violin',   name:'바이올린'},
+      {id:'st_viola',    name:'비올라'},
+      {id:'st_cello',    name:'첼로'},
+      {id:'st_bass',     name:'콘트라베이스'},
+    ]},
+    { id:'m_winds',    name:'관악기',      group:'관현악', skills:[
+      {id:'wd_flute',    name:'플루트'},
+      {id:'wd_clarinet', name:'클라리넷'},
+      {id:'wd_sax',      name:'색소폰'},
+      {id:'wd_trumpet',  name:'트럼펫'},
+    ]},
+    // ── 국악/기타 ──
+    { id:'m_gugak',    name:'국악',        group:'국악/기타', skills:[
+      {id:'ko_gayageum', name:'가야금'},
+      {id:'ko_geomungo', name:'거문고'},
+      {id:'ko_haegeum',  name:'해금'},
+      {id:'ko_janggu',   name:'장구'},
+    ]},
+    { id:'m_theory',   name:'작곡/이론',   group:'국악/기타', skills:[
+      {id:'me_compose',  name:'작곡 지도'},
+      {id:'me_harmony',  name:'화성학'},
+      {id:'me_ukulele',  name:'우쿨렐레'},
+    ]},
+  ]},
+
+  art: { name:'🎨 미술', items:[
+    { id:'a_painting',   name:'회화/순수미술',   group:'회화', skills:[
+      {id:'fa_watercolor',name:'수채화'},
+      {id:'fa_oil',       name:'유화'},
+      {id:'fa_acrylic',   name:'아크릴화'},
+      {id:'fa_drawing',   name:'소묘(드로잉)'},
+      {id:'fa_oriental',  name:'동양화'},
+    ]},
+    { id:'a_design',     name:'디자인/일러스트', group:'디자인', skills:[
+      {id:'de_visual',    name:'시각디자인'},
+      {id:'de_webtoon',   name:'웹툰 지도'},
+      {id:'de_character', name:'캐릭터 일러스트'},
+      {id:'de_digital',   name:'디지털 드로잉'},
+    ]},
+    { id:'a_craft',      name:'입체/공예',       group:'공예', skills:[
+      {id:'cr_ceramic',   name:'도자기 공예'},
+      {id:'cr_leather',   name:'가죽 공예'},
+      {id:'cr_resin',     name:'레진 공예'},
+      {id:'cr_sculpture', name:'조소/조각'},
+    ]},
+    { id:'a_kids',       name:'아동/취미미술',   group:'아동/취미', skills:[
+      {id:'ki_art',       name:'아동 미술'},
+      {id:'ki_creative',  name:'창의 미술'},
+      {id:'ki_senior',    name:'시니어 미술'},
+    ]},
+    { id:'a_calligraphy',name:'서예/캘리그라피', group:'서예', skills:[
+      {id:'ca_brush',     name:'붓글씨'},
+      {id:'ca_calli',     name:'캘리그라피'},
+      {id:'ca_pen',       name:'펜글씨'},
+    ]},
+    { id:'a_media',      name:'사진/영상',       group:'미디어', skills:[
+      {id:'ae_photo',     name:'사진'},
+      {id:'ae_video',     name:'영상 편집'},
+      {id:'ae_interior',  name:'인테리어 디자인'},
+    ]},
+  ]},
+
+  sports: { name:'⚽ 체육', items:[
+    // ── 격기 ──
+    { id:'sports_taekwondo',  name:'태권도',         group:'격기', skills:[
+      {id:'tkd_univ',           name:'4년제 태권도학과 전공'},
+      {id:'tkd_4dan',           name:'4단 이상 보유'},
+      {id:'tkd_master',         name:'사범자격증 보유'},
+      {id:'tkd_demo_team',      name:'대표시범단 출신'},
+      {id:'tkd_sparring',       name:'겨루기선수단 출신'},
+      {id:'tkd_poomsae',        name:'품새선수단 출신'},
+      {id:'tkd_manage_demo',    name:'시범단 운영 가능'},
+      {id:'tkd_manage_poomsae', name:'품새단 운영 가능'},
+    ]},
+    { id:'sports_judo',       name:'유도',           group:'격기', skills:[
+      {id:'jd_univ',            name:'4년제 유도학과 전공'},
+      {id:'jd_dan',             name:'4단 이상 보유'},
+      {id:'jd_master',          name:'사범자격증 보유'},
+      {id:'jd_throw',           name:'메치기 전문'},
+      {id:'jd_ground',          name:'굳히기 전문'},
+      {id:'jd_fall',            name:'낙법 지도 가능'},
+      {id:'jd_exam',            name:'입시 유도 레슨'},
+    ]},
+    { id:'sports_hapkido',    name:'합기도',         group:'격기', skills:[
+      {id:'hk_dan',             name:'단증 보유'},
+      {id:'hk_self',            name:'호신술 전문'},
+      {id:'hk_kids',            name:'유아 합기도'},
+    ]},
+    { id:'sports_muay',       name:'무에타이',       group:'격기', skills:[
+      {id:'mt_kick',            name:'킥 테크닉'},
+      {id:'mt_clinch',          name:'클린치 기술'},
+      {id:'mt_pad',             name:'미트 트레이닝'},
+    ]},
+    { id:'sports_boxing',     name:'복싱',           group:'격기', skills:[
+      {id:'bx_coach',           name:'지도자자격증 보유'},
+      {id:'bx_step',            name:'기초 스텝 지도'},
+      {id:'bx_sparring',        name:'스파링 지도'},
+    ]},
+    { id:'sports_mma',        name:'MMA(종합격투기)',group:'격기', skills:[
+      {id:'mm_stand',           name:'스탠딩 타격'},
+      {id:'mm_grapple',         name:'그래플링'},
+      {id:'mm_fitness',         name:'체력관리 프로그램'},
+    ]},
+    { id:'sports_kumdo',      name:'검도',           group:'격기', skills:[
+      {id:'km_dan',             name:'단증 보유'},
+      {id:'km_basic',           name:'기본격 지도'},
+      {id:'km_kids',            name:'유아 검도'},
+    ]},
+    { id:'sports_jujitsu',    name:'주짓수',         group:'격기', skills:[
+      {id:'jj_ground',          name:'그라운드 기술'},
+      {id:'jj_standing',        name:'서있는 기술'},
+      {id:'jj_gi',              name:'기도복(기) 수련'},
+      {id:'jj_nogi',            name:'노기 수련'},
+    ]},
+    { id:'sports_fencing',    name:'펜싱',           group:'격기', skills:[
+      {id:'fc_foil',            name:'플뢰레'},
+      {id:'fc_epee',            name:'에페'},
+      {id:'fc_sabre',           name:'사브르'},
+    ]},
+    // ── 구기 ──
+    { id:'sports_soccer',     name:'축구/풋살',      group:'구기', skills:[
+      {id:'sc_license',         name:'지도자자격증 보유'},
+      {id:'sc_dribble',         name:'드리블/패스 훈련'},
+      {id:'sc_gk',              name:'골키퍼 코칭'},
+      {id:'sc_kids',            name:'유소년 전문'},
+      {id:'sc_futsal',          name:'풋살 특화'},
+    ]},
+    { id:'sports_baseball',   name:'야구/소프트볼',  group:'구기', skills:[
+      {id:'bb_pitch',           name:'투구 지도'},
+      {id:'bb_hit',             name:'타격 지도'},
+      {id:'bb_field',           name:'수비 지도'},
+      {id:'bb_kids',            name:'유소년 야구'},
+    ]},
+    { id:'sports_volleyball', name:'배구',           group:'구기', skills:[
+      {id:'vb_serve',           name:'서브'},
+      {id:'vb_spike',           name:'스파이크'},
+      {id:'vb_block',           name:'블로킹'},
+    ]},
+    { id:'sports_basketball', name:'농구',           group:'구기', skills:[
+      {id:'bk_shoot',           name:'슈팅 트레이닝'},
+      {id:'bk_dribble',         name:'드리블'},
+      {id:'bk_tactic',          name:'팀전술 지도'},
+    ]},
+    { id:'sports_tabletennis',name:'탁구',           group:'구기', skills:[
+      {id:'tt_basic',           name:'기초 기술'},
+      {id:'tt_spin',            name:'스핀 서브'},
+    ]},
+    { id:'sports_badminton',  name:'배드민턴',       group:'구기', skills:[
+      {id:'bd_serve',           name:'서브'},
+      {id:'bd_smash',           name:'스매시'},
+      {id:'bd_double',          name:'복식 전술'},
+    ]},
+    { id:'sports_tennis',     name:'테니스',         group:'구기', skills:[
+      {id:'tn_forehand',        name:'포핸드'},
+      {id:'tn_backhand',        name:'백핸드'},
+      {id:'tn_serve',           name:'서브'},
+      {id:'tn_coach',           name:'지도자자격증 보유'},
+    ]},
+    { id:'sports_handball',   name:'핸드볼',         group:'구기', skills:[]},
+    { id:'sports_rugby',      name:'럭비',           group:'구기', skills:[]},
+    // ── 기타 체육 ──
+    { id:'sports_swim',       name:'수영',           group:'기타 체육', skills:[
+      {id:'sw_free',            name:'자유형'},
+      {id:'sw_back',            name:'배영'},
+      {id:'sw_breast',          name:'평영'},
+      {id:'sw_fly',             name:'접영'},
+      {id:'sw_infant',          name:'영아/유아 수영'},
+    ]},
+    { id:'sports_gymnastics', name:'체조/기계체조',  group:'기타 체육', skills:[
+      {id:'gy_floor',           name:'마루운동'},
+      {id:'gy_vault',           name:'뜀틀'},
+      {id:'gy_creative',        name:'창작 체조'},
+    ]},
+    { id:'sports_golf',       name:'골프',           group:'기타 체육', skills:[
+      {id:'gf_swing',           name:'스윙 교정'},
+      {id:'gf_putt',            name:'퍼팅'},
+      {id:'gf_coach',           name:'지도자자격증 보유'},
+    ]},
+    { id:'sports_yoga',       name:'요가/필라테스',  group:'기타 체육', skills:[
+      {id:'yg_basic',           name:'기초 요가'},
+      {id:'yg_pilates',         name:'필라테스'},
+      {id:'yg_prenatal',        name:'산전/산후 요가'},
+    ]},
+    { id:'sports_crossfit',   name:'크로스핏/PT',    group:'기타 체육', skills:[
+      {id:'cf_wod',             name:'WOD 프로그래밍'},
+      {id:'cf_pt',              name:'개인 PT'},
+      {id:'cf_rehab',           name:'재활 운동'},
+    ]},
+    { id:'sports_dancesport', name:'댄스스포츠',     group:'기타 체육', skills:[
+      {id:'ds_latin',           name:'라틴댄스'},
+      {id:'ds_ballroom',        name:'볼룸댄스'},
+    ]},
+    { id:'sports_track',      name:'육상',           group:'기타 체육', skills:[
+      {id:'tr_sprint',          name:'단거리'},
+      {id:'tr_long',            name:'장거리'},
+      {id:'tr_throw',           name:'투척'},
+    ]},
+    { id:'sports_bowling',    name:'볼링',           group:'기타 체육', skills:[]},
+    { id:'sports_climbing',   name:'클라이밍',       group:'기타 체육', skills:[]},
+    { id:'sports_aerobics',   name:'에어로빅',       group:'기타 체육', skills:[]},
+  ]},
+
+  etc: { name:'🤝 기타', items:[
+    { id:'etc_baduk',     name:'바둑',           group:'취미', skills:[
+      {id:'hb_kid',         name:'유아 바둑'},
+      {id:'hb_exam',        name:'입시 바둑'},
+    ]},
+    { id:'etc_chess',     name:'체스',           group:'취미', skills:[]},
+    { id:'etc_cook',      name:'요리',           group:'취미', skills:[
+      {id:'hb_korean',      name:'한식'},
+      {id:'hb_western',     name:'양식'},
+      {id:'hb_baking',      name:'베이킹'},
+    ]},
+    { id:'etc_magic',     name:'마술',           group:'취미', skills:[]},
+    { id:'etc_garden',    name:'가드닝',         group:'취미', skills:[]},
+    { id:'etc_speech',    name:'스피치',         group:'역량', skills:[
+      {id:'cp_debate',      name:'토론 지도'},
+      {id:'cp_mc',          name:'MC 훈련'},
+    ]},
+    { id:'etc_essay',     name:'논술',           group:'역량', skills:[
+      {id:'cp_essay_h',     name:'고교 논술'},
+      {id:'cp_essay_u',     name:'대학 논술'},
+    ]},
+    { id:'etc_interview', name:'면접 컨설팅',   group:'역량', skills:[
+      {id:'cp_corp',        name:'기업 면접'},
+      {id:'cp_public',      name:'공무원 면접'},
+    ]},
+  ]},
+  /* ── 하위 호환 (레거시 매칭용) ── */
+  acting: { name:'🎭 연기/뮤지컬', _legacy:true, items:[
+    { id:'act_musical', name:'뮤지컬', skills:[]},
+    { id:'act_media',   name:'매체연기', skills:[]},
+  ]},
+  ballet: { name:'🩰 무용/발레', _legacy:true, items:[
+    { id:'blt_ballet',  name:'발레', skills:[]},
+    { id:'blt_modern',  name:'현대무용', skills:[]},
+  ]},
+  general:{ name:'📚 일반/학습', _legacy:true, items:[
+    { id:'gen_study',   name:'학습지도', skills:[]},
+  ]},
 };
+
+/* ── 레거시 항목 홈화면에서 숨기기 ──
+   (acting/ballet/general 은 기존 DB 데이터와 호환만 유지) */
+const _비표시대분류 = new Set(['acting','ballet','general']);
+
 
 /* ════════════════════════════════════════════════
   공용 특기 데이터 (레거시 — buildSpecialHTML에서만 사용)
