@@ -4841,6 +4841,10 @@ function initAcademyPhotoGrid() {
   if (_authHandled) return;
 
   const uid = supa.user.id;
+  _adminUid = uid;
+
+  // 슈퍼어드민 분기
+  if (uid === SUPER_ADMIN_ID) { showAdminPage(); return; }
 
   // 1차: localStorage 캐시
   if (isAgreedLocally(uid)) { enterApp(); return; }
