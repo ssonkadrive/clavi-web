@@ -1938,8 +1938,11 @@
       </section>
 
       <section class="card">
-        <h2 class="card-title">📅 수업 가능 요일</h2>
-        <div class="match-chips" id="aWeekdayChips">
+        <h2 class="card-title">📅 수업 요일 &amp; 시간</h2>
+        <p class="card-desc" style="margin-bottom:12px;">강사가 출강할 요일과 수업 시간을 설정해 주세요.</p>
+
+        <div class="ts-label">요일 <span style="font-size:.75rem;color:var(--text-muted);">(복수 선택 · 협의 선택 시 요일 무관)</span></div>
+        <div class="match-chips" style="margin-bottom:16px;">
           <label class="match-chip"><input type="checkbox" name="aWeekday" value="월"/><span>월</span></label>
           <label class="match-chip"><input type="checkbox" name="aWeekday" value="화"/><span>화</span></label>
           <label class="match-chip"><input type="checkbox" name="aWeekday" value="수"/><span>수</span></label>
@@ -1947,7 +1950,32 @@
           <label class="match-chip"><input type="checkbox" name="aWeekday" value="금"/><span>금</span></label>
           <label class="match-chip"><input type="checkbox" name="aWeekday" value="토"/><span>토</span></label>
           <label class="match-chip"><input type="checkbox" name="aWeekday" value="일"/><span>일</span></label>
+          <label class="match-chip"><input type="checkbox" name="aWeekday" value="협의" onchange="onAWeekdayNego(this)"/><span>협의</span></label>
         </div>
+
+        <div class="ts-label">수업 시간 <span style="font-size:.75rem;color:var(--text-muted);">(강사 가능 시간이 이 범위를 포함해야 매칭)</span></div>
+        <div class="ts-quick-row">
+          <button type="button" class="ts-quick" onclick="setATime(9,12)">🌅 오전 (09~12)</button>
+          <button type="button" class="ts-quick" onclick="setATime(13,18)">☀️ 오후 (13~18)</button>
+          <button type="button" class="ts-quick" onclick="setATime(18,22)">🌙 저녁 (18~22)</button>
+        </div>
+        <div class="ts-row">
+          <select id="aTimeStart" class="region-select" style="flex:1;" onchange="validateATime()">
+            <option value="">시작 시간</option>
+            ${timeOptions()}
+          </select>
+          <span class="ts-tilde">~</span>
+          <select id="aTimeEnd" class="region-select" style="flex:1;" onchange="validateATime()">
+            <option value="">종료 시간</option>
+            ${timeOptions()}
+          </select>
+        </div>
+        <div id="aTimeErr" class="ts-err"></div>
+
+        <label class="ts-fulltime-label" style="margin-top:14px;">
+          <input type="checkbox" id="aFulltime" name="aFulltime" value="1"/>
+          <span>전임 강사만 구합니다 <small>(파트타임 강사 매칭 제외)</small></span>
+        </label>
       </section>
 
       <section class="card">
@@ -2109,8 +2137,11 @@
       </section>
 
       <section class="card">
-        <h2 class="card-title">📅 수업 가능 요일</h2>
-        <div class="match-chips" id="iWeekdayChips">
+        <h2 class="card-title">📅 출강 가능 요일 &amp; 시간</h2>
+        <p class="card-desc" style="margin-bottom:12px;">가능한 요일과 시간대를 선택해 주세요.</p>
+
+        <div class="ts-label">요일</div>
+        <div class="match-chips" style="margin-bottom:16px;">
           <label class="match-chip"><input type="checkbox" name="iWeekday" value="월"/><span>월</span></label>
           <label class="match-chip"><input type="checkbox" name="iWeekday" value="화"/><span>화</span></label>
           <label class="match-chip"><input type="checkbox" name="iWeekday" value="수"/><span>수</span></label>
@@ -2118,7 +2149,36 @@
           <label class="match-chip"><input type="checkbox" name="iWeekday" value="금"/><span>금</span></label>
           <label class="match-chip"><input type="checkbox" name="iWeekday" value="토"/><span>토</span></label>
           <label class="match-chip"><input type="checkbox" name="iWeekday" value="일"/><span>일</span></label>
+          <label class="match-chip"><input type="checkbox" name="iWeekday" value="요일무관" onchange="onIWeekdayAny(this)"/><span>요일 무관</span></label>
+          <label class="match-chip"><input type="checkbox" name="iWeekday" value="협의" onchange="onIWeekdayNego(this)"/><span>협의</span></label>
         </div>
+
+        <div class="ts-label">가능 시간 <span style="font-size:.75rem;color:var(--text-muted);">(원장 수업시간을 포함하는 범위로 설정)</span></div>
+        <div class="ts-quick-row">
+          <button type="button" class="ts-quick" onclick="setITime(9,12)">🌅 오전</button>
+          <button type="button" class="ts-quick" onclick="setITime(13,18)">☀️ 오후</button>
+          <button type="button" class="ts-quick" onclick="setITime(18,22)">🌙 저녁</button>
+          <button type="button" class="ts-quick" onclick="setITime(9,22)">⏱ 시간 무관</button>
+          <button type="button" class="ts-quick" onclick="setITimeNego()">🤝 협의</button>
+        </div>
+        <div class="ts-row" id="iTimeRow">
+          <select id="iTimeStart" class="region-select" style="flex:1;" onchange="validateITime()">
+            <option value="">시작 시간</option>
+            ${timeOptions()}
+          </select>
+          <span class="ts-tilde">~</span>
+          <select id="iTimeEnd" class="region-select" style="flex:1;" onchange="validateITime()">
+            <option value="">종료 시간</option>
+            ${timeOptions()}
+          </select>
+        </div>
+        <div id="iTimeNegoBadge" style="display:none;padding:8px 14px;background:var(--primary-soft);color:var(--primary);border-radius:var(--radius-sm);font-size:.85rem;font-weight:700;">🤝 시간 협의 (매칭 조건 미적용)</div>
+        <div id="iTimeErr" class="ts-err"></div>
+
+        <label class="ts-fulltime-label" style="margin-top:14px;">
+          <input type="checkbox" id="iFulltime" name="iFulltime" value="1"/>
+          <span>전임으로만 희망합니다 <small>(파트타임 공고 매칭 제외)</small></span>
+        </label>
       </section>
 
       <section class="card">
@@ -3236,6 +3296,105 @@ function confirmSubSkills() { confirmSkills(); }
 function renderSubSkills(prefix, industry, cb) { onSubjectChipChange(prefix, industry, cb); }
 
 /* ══════════════════════════════════════════════
+   요일/시간 선택기 스타일
+══════════════════════════════════════════════ */
+const _tsStyle = document.createElement('style');
+_tsStyle.textContent = `
+.ts-label { font-size:.82rem; font-weight:700; color:var(--text-muted); margin-bottom:8px; }
+.ts-quick-row { display:flex; flex-wrap:wrap; gap:6px; margin-bottom:10px; }
+.ts-quick {
+  padding:6px 13px; border-radius:var(--radius-pill);
+  border:1.5px solid var(--border); background:#fff;
+  font-family:var(--font); font-size:.8rem; font-weight:600; color:var(--text);
+  cursor:pointer; transition:all .15s;
+}
+.ts-quick:hover, .ts-quick.active { background:var(--primary); color:#fff; border-color:var(--primary); }
+.ts-row { display:flex; align-items:center; gap:8px; margin-bottom:6px; }
+.ts-tilde { font-size:1.1rem; color:var(--text-muted); flex-shrink:0; }
+.ts-err { font-size:.78rem; color:#ef4444; min-height:18px; }
+.ts-fulltime-label {
+  display:flex; align-items:center; gap:8px;
+  padding:10px 14px; border-radius:var(--radius-sm);
+  background:#fafafa; border:1.5px solid var(--border);
+  cursor:pointer; font-size:.85rem; font-weight:600;
+}
+.ts-fulltime-label input[type=checkbox] { width:16px; height:16px; accent-color:var(--primary); }
+.ts-fulltime-label small { font-weight:400; color:var(--text-muted); }
+`;
+document.head.appendChild(_tsStyle);
+
+/* 30분 단위 시간 옵션 생성 */
+function timeOptions() {
+  let html = '';
+  for (let h = 6; h <= 23; h++) {
+    ['00','30'].forEach(m => {
+      const val = `${String(h).padStart(2,'0')}:${m}`;
+      html += `<option value="${val}">${val}</option>`;
+    });
+  }
+  html += '<option value="24:00">24:00</option>';
+  return html;
+}
+
+/* ── 학원 시간 ── */
+function setATime(s, e) {
+  document.getElementById('aTimeStart').value = `${String(s).padStart(2,'0')}:00`;
+  document.getElementById('aTimeEnd').value   = `${String(e).padStart(2,'0')}:00`;
+  document.querySelectorAll('.ts-quick').forEach(b => {
+    if (b.getAttribute('onclick') === `setATime(${s},${e})`) b.classList.add('active');
+    else if (b.closest('section') === document.getElementById('aTimeStart')?.closest('section')) b.classList.remove('active');
+  });
+  validateATime();
+}
+function validateATime() {
+  const s = document.getElementById('aTimeStart').value;
+  const e = document.getElementById('aTimeEnd').value;
+  const err = document.getElementById('aTimeErr');
+  if (s && e && s >= e) { err.textContent = '종료 시간은 시작 시간보다 늦어야 합니다.'; }
+  else { err.textContent = ''; }
+}
+function onAWeekdayNego(cb) {
+  if (cb.checked) {
+    document.querySelectorAll('input[name="aWeekday"]').forEach(c => { if (c.value !== '협의') c.checked = false; });
+  }
+}
+
+/* ── 강사 시간 ── */
+let _iTimeNego = false;
+function setITime(s, e) {
+  _iTimeNego = false;
+  document.getElementById('iTimeRow').style.display = 'flex';
+  document.getElementById('iTimeNegoBadge').style.display = 'none';
+  document.getElementById('iTimeStart').value = `${String(s).padStart(2,'0')}:00`;
+  document.getElementById('iTimeEnd').value   = `${String(e).padStart(2,'0')}:00`;
+  validateITime();
+}
+function setITimeNego() {
+  _iTimeNego = true;
+  document.getElementById('iTimeRow').style.display = 'none';
+  document.getElementById('iTimeNegoBadge').style.display = 'block';
+  document.getElementById('iTimeStart').value = '';
+  document.getElementById('iTimeEnd').value = '';
+}
+function validateITime() {
+  const s = document.getElementById('iTimeStart').value;
+  const e = document.getElementById('iTimeEnd').value;
+  const err = document.getElementById('iTimeErr');
+  if (s && e && s >= e) { err.textContent = '종료 시간은 시작 시간보다 늦어야 합니다.'; }
+  else { err.textContent = ''; }
+}
+function onIWeekdayAny(cb) {
+  if (cb.checked) {
+    document.querySelectorAll('input[name="iWeekday"]').forEach(c => { if (c.value !== '요일무관') c.checked = false; });
+  }
+}
+function onIWeekdayNego(cb) {
+  if (cb.checked) {
+    document.querySelectorAll('input[name="iWeekday"]').forEach(c => { if (c.value !== '협의') c.checked = false; });
+  }
+}
+
+/* ══════════════════════════════════════════════
    지역 선택기 (시/도 → 구/군/시)
 ══════════════════════════════════════════════ */
 const KOREA_REGIONS = {
@@ -3393,13 +3552,19 @@ async function saveAcademyConditions() {
   const pay_min      = parseInt(document.getElementById('aPayMin').value) || 0;
   const pay_max      = parseInt(document.getElementById('aPayMax').value) || 0;
   const intro        = document.getElementById('aIntro').value.trim();
+  const time_start   = document.getElementById('aTimeStart').value || null;
+  const time_end     = document.getElementById('aTimeEnd').value || null;
+  const fulltime_only = document.getElementById('aFulltime').checked;
+  const weekday_nego = weekdays.includes('협의');
 
   if (!subjects.length) { showToast('분야를 하나 이상 선택해 주세요.'); return; }
   if (!regions.length)  { showToast('지역을 하나 이상 선택해 주세요.'); return; }
+  if (time_start && time_end && time_start >= time_end) { showToast('종료 시간은 시작 시간보다 늦어야 합니다.'); return; }
 
   const { error } = await _supabase.from('academy_conditions').upsert({
     user_id: session.user.id,
     subjects, regions, weekdays, employ_types, pay_min, pay_max, intro,
+    time_start, time_end, fulltime_only, weekday_nego,
     updated_at: new Date().toISOString()
   }, { onConflict: 'user_id' });
 
@@ -3419,13 +3584,21 @@ async function saveInstructorConditions() {
   const employ_types = getChecked('iEmploy');
   const pay_min      = parseInt(document.getElementById('iPayMin').value) || 0;
   const intro        = document.getElementById('iIntro').value.trim();
+  const time_start   = _iTimeNego ? null : (document.getElementById('iTimeStart').value || null);
+  const time_end     = _iTimeNego ? null : (document.getElementById('iTimeEnd').value || null);
+  const time_nego    = _iTimeNego;
+  const fulltime_only = document.getElementById('iFulltime').checked;
+  const weekday_nego = weekdays.includes('협의');
+  const weekday_any  = weekdays.includes('요일무관');
 
   if (!subjects.length) { showToast('전문 분야를 하나 이상 선택해 주세요.'); return; }
   if (!regions.length)  { showToast('출강 가능 지역을 하나 이상 선택해 주세요.'); return; }
+  if (!time_nego && time_start && time_end && time_start >= time_end) { showToast('종료 시간은 시작 시간보다 늦어야 합니다.'); return; }
 
   const { error } = await _supabase.from('instructor_conditions').upsert({
     user_id: session.user.id,
     subjects, regions, weekdays, employ_types, pay_min, intro,
+    time_start, time_end, time_nego, fulltime_only, weekday_nego, weekday_any,
     updated_at: new Date().toISOString()
   }, { onConflict: 'user_id' });
 
