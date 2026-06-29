@@ -2561,10 +2561,14 @@ async function completeRegistration(uid, role) {
 /* ─── 로그인 후 기존가입자 여부 확인 → 분기 처리 ─── */
 async function checkExistingUser(u, session, role, displayName) {
   const uid = u.id;
+  const email = u.email || '';
   _adminUid = uid;
 
-  // 슈퍼어드민 분기
-  if (uid === SUPER_ADMIN_ID) {
+  console.log('[checkExistingUser] uid=', uid, 'email=', email, 'SUPER_ADMIN_ID=', SUPER_ADMIN_ID);
+
+  // 슈퍼어드민 분기 (UUID 또는 이메일로 체크)
+  if (uid === SUPER_ADMIN_ID || email === 'shj6759@naver.com') {
+    console.log('[ADMIN] 어드민 감지 → 어드민 페이지 이동');
     markAgreedLocally(uid);
     saveSession(role, session.access_token, displayName);
     currentUserRole = role;
@@ -4847,10 +4851,13 @@ function initAcademyPhotoGrid() {
   if (_authHandled) return;
 
   const uid = supa.user.id;
+  const email = supa.user.email || '';
   _adminUid = uid;
 
-  // 슈퍼어드민 분기
-  if (uid === SUPER_ADMIN_ID) { showAdminPage(); return; }
+  console.log('[bootApp] uid=', uid, 'email=', email);
+
+  // 슈퍼어드민 분기 (UUID 또는 이메일로 체크)
+  if (uid === SUPER_ADMIN_ID || email === 'shj6759@naver.com') { showAdminPage(); return; }
 
   // 1차: localStorage 캐시
   if (isAgreedLocally(uid)) { enterApp(); return; }
