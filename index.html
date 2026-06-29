@@ -4756,10 +4756,22 @@ function initAcademyPhotoGrid() {
 }
 
 /* ── 앱 시작 시 세션 자동 복원 (모든 선언 후 실행) ── */
-(function bootApp() {
+(async function bootApp() {
   const session = loadSession();
-  if (session?.role && session?.token) {
-    currentUserRole = session.role;
+  if (!session?.role || !session?.token) return;
+  currentUserRole = session.role;
+  const { data: { session: supa } } = await _supabase.auth.getSession();
+  if (!supa?.user) { enterApp(); return; }
+  const { data: existing } = await _supabase
+    .from('users').select('agreed_at').eq('id', supa.user.id).maybeSingle();
+  if (!existing || !existing.agreed_at) {
+    showTermsModal(async (chosenRole) => {
+      currentUserRole = chosenRole;
+      saveSession(chosenRole, supa.access_token, session.name || '');
+      await _supabase.from('users').upsert({ id: supa.user.id, agreed_at: new Date().toISOString(), role: chosenRole });
+      enterApp();
+    });
+  } else {
     enterApp();
   }
 })();
