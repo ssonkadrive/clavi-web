@@ -1789,7 +1789,6 @@
         <h2 class="card-title">🎯 원하는 강사 분야</h2>
         <p class="card-desc">대분류 선택 후 세부 조건을 고르세요.</p>
         <div class="match-chips" id="aSubjectChips">
-          <button class="match-chip-btn" id="a_chip_acting"  onclick="openSkillModalFor('a','acting')">🎭 연기/뮤지컬<span class="chip-badge" id="a_badge_acting"></span></button>
           <button class="match-chip-btn" id="a_chip_music"   onclick="openSkillModalFor('a','music')">🎵 음악<span class="chip-badge" id="a_badge_music"></span></button>
           <button class="match-chip-btn" id="a_chip_art"     onclick="openSkillModalFor('a','art')">🎨 미술<span class="chip-badge" id="a_badge_art"></span></button>
           <button class="match-chip-btn" id="a_chip_sports"  onclick="openSkillModalFor('a','sports')">⚽ 체육<span class="chip-badge" id="a_badge_sports"></span></button>
@@ -1974,7 +1973,6 @@
         <h2 class="card-title">🎯 나의 전문 분야</h2>
         <p class="card-desc">대분류 선택 후 세부 조건을 고르세요.</p>
         <div class="match-chips" id="iSubjectChips">
-          <button class="match-chip-btn" id="i_chip_acting"  onclick="openSkillModalFor('i','acting')">🎭 연기/뮤지컬<span class="chip-badge" id="i_badge_acting"></span></button>
           <button class="match-chip-btn" id="i_chip_music"   onclick="openSkillModalFor('i','music')">🎵 음악<span class="chip-badge" id="i_badge_music"></span></button>
           <button class="match-chip-btn" id="i_chip_art"     onclick="openSkillModalFor('i','art')">🎨 미술<span class="chip-badge" id="i_badge_art"></span></button>
           <button class="match-chip-btn" id="i_chip_sports"  onclick="openSkillModalFor('i','sports')">⚽ 체육<span class="chip-badge" id="i_badge_sports"></span></button>
@@ -3330,6 +3328,40 @@ const 카테고리데이터 = {
   ]},
 
   etc: { name:'🤝 기타', items:[
+    // ── 연기/뮤지컬 ──
+    { id:'act_media',     name:'매체 연기',           group:'연기/뮤지컬', skills:[
+      {id:'act_film',       name:'영화/드라마 연기'},
+      {id:'act_camera',     name:'카메라 연기 기초'},
+      {id:'act_monologue',  name:'독백/모놀로그'},
+      {id:'act_audition',   name:'오디션 코칭'},
+    ]},
+    { id:'act_exam',      name:'입시 연기',           group:'연기/뮤지컬', skills:[
+      {id:'act_univ',       name:'연극영화과 입시 전문'},
+      {id:'act_script',     name:'당일대사/즉흥 연기'},
+      {id:'act_movement',   name:'신체표현/움직임'},
+    ]},
+    { id:'act_musical_v', name:'뮤지컬 보컬',         group:'연기/뮤지컬', skills:[
+      {id:'mu_belting',     name:'벨팅 발성'},
+      {id:'mu_classical',   name:'클래식 성악 기반'},
+      {id:'mu_number',      name:'뮤지컬 넘버 해석'},
+      {id:'mu_m_audition',  name:'뮤지컬 오디션 준비'},
+    ]},
+    { id:'act_musical_d', name:'뮤지컬 댄스/재즈댄스',group:'연기/뮤지컬', skills:[
+      {id:'md_jazz',        name:'재즈댄스'},
+      {id:'md_tap',         name:'탭댄스'},
+      {id:'md_choreograph', name:'안무 창작 가능'},
+    ]},
+    { id:'act_body',      name:'신체훈련/움직임',     group:'연기/뮤지컬', skills:[
+      {id:'body_mime',      name:'마임/판토마임'},
+      {id:'body_stage',     name:'무대 동선 훈련'},
+      {id:'body_physical',  name:'신체 표현 지도'},
+    ]},
+    { id:'act_kids',      name:'아동 연기 / 뮤지컬 사범', group:'연기/뮤지컬', skills:[
+      {id:'kids_acting',    name:'아동 연기 지도'},
+      {id:'kids_musical',   name:'뮤지컬 학원 사범'},
+      {id:'kids_improv',    name:'즉흥극 지도'},
+    ]},
+    // ── 취미 ──
     { id:'etc_baduk',     name:'바둑',           group:'취미', skills:[
       {id:'hb_kid',         name:'유아 바둑'},
       {id:'hb_exam',        name:'입시 바둑'},
@@ -3403,7 +3435,7 @@ const 카테고리데이터 = {
 
 /* ── 레거시 항목 홈화면에서 숨기기 ──
    (acting/ballet/general 은 기존 DB 데이터와 호환만 유지) */
-const _비표시대분류 = new Set(['ballet','general']);
+const _비표시대분류 = new Set(['acting','ballet','general']);
 
 
 /* ════════════════════════════════════════════════
