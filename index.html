@@ -2731,7 +2731,7 @@ function _아이템목록HTML() {
     const groupId   = `grp_${p}_${그룹명.replace(/[\s/]/g,'_')}`;
     const icon      = _그룹아이콘[그룹명] || '📌';
     const selCnt    = items.filter(it => !!저장소.세부역량[p+':'+it.id]).length;
-    const isOpen    = selCnt > 0 || idx === 0;
+    const isOpen    = selCnt > 0;
 
     html += `<div class="sk-group-accordion">
       <div class="sk-group-toggle${isOpen?' open':''}" onclick="_그룹토글('${groupId}',this)">
