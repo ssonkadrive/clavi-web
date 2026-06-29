@@ -2511,15 +2511,6 @@ const _supabase = supabase.createClient(
   'sb_publishable_hTeqOZsZA9VQ31fvJvxJvg_a0x1mV7B'
 );
 
-/* agreed_at 저장 헬퍼 — email 절대 건드리지 않음 */
-async function saveAgreedAt(uid, role) {
-  const { error } = await _supabase.rpc('accept_terms', { p_role: role });
-  if (error) console.error('[saveAgreedAt] rpc error:', error);
-}
-
-/* OAuth 콜백 처리 — onAuthStateChange에 위임, 여기선 아무것도 안 함 */
-(async () => {})();
-
 /* ════════════════════════════════════════════════
   소셜 로그인/가입 핸들러
 ════════════════════════════════════════════════ */
@@ -2533,9 +2524,8 @@ async function handleSocialLogin(provider) {
   localStorage.setItem('CLAVI_PENDING_ROLE', role);
   const opts = { redirectTo: 'https://clavi-web.vercel.app' };
   if (provider === 'kakao') opts.scopes = 'profile_nickname';
-  const label = provider === 'kakao' ? '카카오' : provider;
   const { error } = await _supabase.auth.signInWithOAuth({ provider, options: opts });
-  if (error) showToast(`${label} 로그인 오류: ` + error.message);
+  if (error) showToast(`로그인 오류: ` + error.message);
 }
 
 async function handleSocialRegister(provider) {
@@ -2548,47 +2538,81 @@ async function handleSocialRegister(provider) {
   localStorage.setItem('CLAVI_PENDING_ROLE', role);
   const opts = { redirectTo: 'https://clavi-web.vercel.app' };
   if (provider === 'kakao') opts.scopes = 'profile_nickname';
-  const label = provider === 'kakao' ? '카카오' : provider;
   const { error } = await _supabase.auth.signInWithOAuth({ provider, options: opts });
-  if (error) showToast(`${label} 가입 오류: ` + error.message);
+  if (error) showToast(`가입 오류: ` + error.message);
 }
 
-let _authHandled = false; // 중복 처리 방지
+/* ─── 약관 동의 로컬 캐시 헬퍼 ─── */
+function isAgreedLocally(uid)  { return !!localStorage.getItem('CLAVI_AGREED_' + uid); }
+function markAgreedLocally(uid){ localStorage.setItem('CLAVI_AGREED_' + uid, '1'); }
 
-/* OAuth 리턴 후 role 복원 */
-_supabase.auth.onAuthStateChange(async (event, session) => {
-  if (event === 'SIGNED_IN' && session?.user) {
-    if (_authHandled) return;
-    _authHandled = true;
-    const pending = localStorage.getItem('CLAVI_PENDING_ROLE');
-    const role = pending || loadSession()?.role || 'instructor';
-    if (pending) localStorage.removeItem('CLAVI_PENDING_ROLE');
-    const u = session.user;
-    const displayName = u.user_metadata?.full_name || u.user_metadata?.name
-                     || u.user_metadata?.nickname || u.email || u.id;
+/* ─── agreed_at DB 저장 (RPC) + 로컬 캐시 동시 저장 ─── */
+async function completeRegistration(uid, role) {
+  markAgreedLocally(uid); // DB 실패해도 로컬엔 반드시 기록
+  await _supabase.rpc('accept_terms', { p_role: role });
+}
+
+/* ─── 로그인 후 기존가입자 여부 확인 → 분기 처리 ─── */
+async function checkExistingUser(u, session, role, displayName) {
+  const uid = u.id;
+
+  // 1차: localStorage 캐시 확인 (DB RLS와 무관하게 동작)
+  if (isAgreedLocally(uid)) {
     saveSession(role, session.access_token, displayName);
     currentUserRole = role;
-    const { data: existing } = await _supabase
-      .from('users').select('id,agreed_at').eq('id', u.id).maybeSingle();
-    if (!existing || !existing.agreed_at) {
-      showToast('환영합니다! 약관에 동의해 주세요 🎉');
-      const isNew = !existing;
-      showTermsModal(async (chosenRole) => {
-        currentUserRole = chosenRole;
-        saveSession(chosenRole, session.access_token, displayName);
-        await saveAgreedAt(u.id, chosenRole);
-        if (isNew) {
-          showProfileSetup(chosenRole);
-        } else {
-          showToast('로그인 성공! 환영합니다 🎉');
-          setTimeout(() => enterApp(), 600);
-        }
-      });
+    showToast('로그인 성공! 환영합니다 🎉');
+    setTimeout(() => enterApp(), 600);
+    return;
+  }
+
+  // 2차: DB 확인
+  const { data: existing } = await _supabase
+    .from('users').select('role, agreed_at').eq('id', uid).maybeSingle();
+
+  if (existing?.agreed_at) {
+    // DB에 있으면 로컬 캐시에도 기록해 두고 입장
+    markAgreedLocally(uid);
+    const savedRole = existing.role || role;
+    saveSession(savedRole, session.access_token, displayName);
+    currentUserRole = savedRole;
+    showToast('로그인 성공! 환영합니다 🎉');
+    setTimeout(() => enterApp(), 600);
+    return;
+  }
+
+  // 신규 또는 미동의 → 약관 모달
+  const isNew = !existing;
+  saveSession(role, session.access_token, displayName);
+  currentUserRole = role;
+  showToast('환영합니다! 약관에 동의해 주세요 🎉');
+  showTermsModal(async (chosenRole) => {
+    currentUserRole = chosenRole;
+    saveSession(chosenRole, session.access_token, displayName);
+    await completeRegistration(uid, chosenRole);
+    if (isNew) {
+      showProfileSetup(chosenRole);
     } else {
-      showToast('로그인 성공! 환영합니다 🎉');
+      showToast('가입 완료! CLAVI를 시작합니다 🚀');
       setTimeout(() => enterApp(), 600);
     }
-  }
+  });
+}
+
+/* ─── onAuthStateChange: SIGNED_IN 한 번만 처리 ─── */
+let _authHandled = false;
+_supabase.auth.onAuthStateChange(async (event, session) => {
+  if (event !== 'SIGNED_IN' || !session?.user) return;
+  if (_authHandled) return;
+  _authHandled = true;
+
+  const u = session.user;
+  const pending = localStorage.getItem('CLAVI_PENDING_ROLE');
+  const role = pending || loadSession()?.role || 'instructor';
+  if (pending) localStorage.removeItem('CLAVI_PENDING_ROLE');
+  const displayName = u.user_metadata?.full_name || u.user_metadata?.name
+                   || u.user_metadata?.nickname || u.email || u.id;
+
+  await checkExistingUser(u, session, role, displayName);
 });
 
 function showProfileSetup(role) {
@@ -4803,20 +4827,26 @@ function initAcademyPhotoGrid() {
   currentUserRole = session.role;
   const { data: { session: supa } } = await _supabase.auth.getSession();
   if (!supa?.user) { enterApp(); return; }
-  if (_authHandled) return; // onAuthStateChange가 이미 처리 중
+  if (_authHandled) return;
+
+  const uid = supa.user.id;
+
+  // 1차: localStorage 캐시
+  if (isAgreedLocally(uid)) { enterApp(); return; }
+
+  // 2차: DB 확인
   const { data: existing } = await _supabase
-    .from('users').select('agreed_at').eq('id', supa.user.id).maybeSingle();
-  if (!existing || !existing.agreed_at) {
-    _authHandled = true;
-    showTermsModal(async (chosenRole) => {
-      currentUserRole = chosenRole;
-      saveSession(chosenRole, supa.access_token, session.name || '');
-      await saveAgreedAt(supa.user.id, chosenRole);
-      enterApp();
-    });
-  } else {
+    .from('users').select('agreed_at').eq('id', uid).maybeSingle();
+  if (existing?.agreed_at) { markAgreedLocally(uid); enterApp(); return; }
+
+  // 미동의 → 약관 모달
+  _authHandled = true;
+  showTermsModal(async (chosenRole) => {
+    currentUserRole = chosenRole;
+    saveSession(chosenRole, supa.access_token, session.name || '');
+    await completeRegistration(uid, chosenRole);
     enterApp();
-  }
+  });
 })();
 
 /* ════════════════════════════════════════════════
