@@ -2427,29 +2427,25 @@ const _supabase = supabase.createClient(
   소셜 로그인/가입 핸들러
 ════════════════════════════════════════════════ */
 async function handleSocialLogin(provider) {
-  if (provider === 'naver') {
-    showToast('네이버 로그인은 정식 출시 후 지원됩니다 😊');
-    return;
-  }
   const role = document.querySelector('input[name="loginRole"]:checked')?.value || 'instructor';
   localStorage.setItem('CLAVI_PENDING_ROLE', role);
   const opts = { redirectTo: window.location.href.split('?')[0] };
+  const actualProvider = provider === 'naver' ? 'custom:naver' : provider;
   if (provider === 'kakao') opts.scopes = 'profile_nickname';
-  const { error } = await _supabase.auth.signInWithOAuth({ provider, options: opts });
-  if (error) showToast(`${provider === 'kakao' ? '카카오' : '구글'} 로그인 오류: ` + error.message);
+  const label = provider === 'kakao' ? '카카오' : provider === 'naver' ? '네이버' : provider;
+  const { error } = await _supabase.auth.signInWithOAuth({ provider: actualProvider, options: opts });
+  if (error) showToast(`${label} 로그인 오류: ` + error.message);
 }
 
 async function handleSocialRegister(provider) {
-  if (provider === 'naver') {
-    showToast('네이버 가입은 정식 출시 후 지원됩니다 😊');
-    return;
-  }
   const role = document.querySelector('input[name="registerRole"]:checked')?.value || 'instructor';
   localStorage.setItem('CLAVI_PENDING_ROLE', role);
   const opts = { redirectTo: window.location.href.split('?')[0] };
+  const actualProvider = provider === 'naver' ? 'custom:naver' : provider;
   if (provider === 'kakao') opts.scopes = 'profile_nickname';
-  const { error } = await _supabase.auth.signInWithOAuth({ provider, options: opts });
-  if (error) showToast(`${provider === 'kakao' ? '카카오' : '구글'} 가입 오류: ` + error.message);
+  const label = provider === 'kakao' ? '카카오' : provider === 'naver' ? '네이버' : provider;
+  const { error } = await _supabase.auth.signInWithOAuth({ provider: actualProvider, options: opts });
+  if (error) showToast(`${label} 가입 오류: ` + error.message);
 }
 
 /* OAuth 리턴 후 role 복원 */
