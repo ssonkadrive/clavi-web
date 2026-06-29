@@ -1932,6 +1932,23 @@
       </section>
 
       <section class="card">
+        <h2 class="card-title">💵 과목별 시급 설정</h2>
+        <p class="card-desc">과목을 선택하고 해당 과목의 최대 시급을 입력하세요. 강사의 최소 희망 시급과 비교해 매칭합니다.</p>
+        <div class="ts-row" style="flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+          <select id="aPaySubjectPick" class="region-select" style="flex:1;min-width:140px;">
+            <option value="">과목 선택</option>
+          </select>
+          <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:140px;">
+            <input type="number" id="aPaySubjectAmount" class="form-input" placeholder="시급 (원)" min="0" step="1000" style="flex:1;"/>
+            <span style="color:var(--text-muted);font-size:.82rem;white-space:nowrap;">원/h</span>
+          </div>
+          <button type="button" class="region-add-btn" onclick="addAPaySubject()">+ 추가</button>
+        </div>
+        <div id="aPaySubjectErr" class="ts-err" style="margin-bottom:8px;"></div>
+        <div id="aPaySubjectTags" style="display:flex;flex-wrap:wrap;gap:7px;min-height:10px;"></div>
+      </section>
+
+      <section class="card">
         <h2 class="card-title">📍 학원 지역</h2>
         <p class="card-desc">강사가 근무할 학원 위치를 설정해 주세요.</p>
         <div id="aRegionSelector"></div>
@@ -3320,6 +3337,51 @@ function timeOptions() {
   return html;
 }
 
+/* ── 학원 과목별 시급 태그 ── */
+function initAPaySubjectSelect() {
+  const el = document.getElementById('aPaySubjectPick');
+  if (!el || el.options.length > 1) return;
+  const allSubjects = [
+    ...(_setupCatSubjects.music  || []),
+    ...(_setupCatSubjects.art    || []),
+    ...(_setupCatSubjects.sports || []),
+    ...(_setupCatSubjects.etc    || []),
+  ];
+  allSubjects.forEach(s => {
+    const o = document.createElement('option');
+    o.value = s; o.textContent = s;
+    el.appendChild(o);
+  });
+}
+
+function addAPaySubject() {
+  initAPaySubjectSelect();
+  const subject = document.getElementById('aPaySubjectPick').value;
+  const amount  = parseInt(document.getElementById('aPaySubjectAmount').value) || 0;
+  const err     = document.getElementById('aPaySubjectErr');
+  if (!subject) { err.textContent = '과목을 선택해 주세요.'; return; }
+  if (!amount)  { err.textContent = '시급을 입력해 주세요.'; return; }
+  err.textContent = '';
+
+  const tagsEl  = document.getElementById('aPaySubjectTags');
+  const existing = [...tagsEl.querySelectorAll('[data-subject]')].map(t => t.dataset.subject);
+  if (existing.includes(subject)) { err.textContent = '이미 추가된 과목입니다. 기존 항목을 삭제 후 다시 추가하세요.'; return; }
+
+  const tag = document.createElement('span');
+  tag.dataset.subject = subject;
+  tag.dataset.pay     = amount;
+  tag.className       = 'region-tag';
+  tag.innerHTML = `💵 ${subject} ${amount.toLocaleString()}원/h <button type="button" class="region-tag-x" onclick="this.parentNode.remove()">×</button>`;
+  tagsEl.appendChild(tag);
+  document.getElementById('aPaySubjectPick').value    = '';
+  document.getElementById('aPaySubjectAmount').value  = '';
+}
+
+function getAPaySubjects() {
+  return [...document.querySelectorAll('#aPaySubjectTags [data-subject]')]
+    .map(t => ({ subject: t.dataset.subject, pay: parseInt(t.dataset.pay) }));
+}
+
 /* ── 학원 요일+시간 태그 ── */
 function addASchedule() {
   const day   = document.getElementById('aDayPick').value;
@@ -3556,6 +3618,7 @@ async function saveAcademyConditions() {
   const { error } = await _supabase.from('academy_conditions').upsert({
     user_id: session.user.id,
     subjects, regions, employ_types, pay_max, intro,
+    subject_pays: getAPaySubjects(),
     schedules, weekday_nego, fulltime_only,
     updated_at: new Date().toISOString()
   }, { onConflict: 'user_id' });
@@ -5132,6 +5195,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderRegionSelector('setupAcademyRegionSelector', 1);
   renderRegionSelector('aRegionSelector', 99);
   renderRegionSelector('iRegionSelector', 5);
+  initAPaySubjectSelect();
 
   const timeHtml = timeOptions();
   ['aTimeStartPick','aTimeEndPick','iTimeStart','iTimeEnd'].forEach(id => {
