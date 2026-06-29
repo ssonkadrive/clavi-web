@@ -2692,12 +2692,10 @@ async function saveProfileSetup() {
   const uid  = session.user.id;
   const role = currentUserRole;
 
-  // users 테이블에 기본 row 삽입
-  const { error: uErr } = await _supabase.from('users').upsert({
-    id: uid,
-    email: session.user.email || null,
-    role
-  }, { onConflict: 'id' });
+  // users 행은 약관 수락 시 이미 생성됨 → role만 업데이트
+  const { error: uErr } = await _supabase.from('users')
+    .update({ role })
+    .eq('id', uid);
   if (uErr) { showToast('저장 오류: ' + uErr.message); return; }
 
   if (role === 'academy') {
