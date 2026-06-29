@@ -1949,12 +1949,10 @@
           </select>
           <select id="aTimeStartPick" class="region-select" style="flex:1;min-width:100px;">
             <option value="">시작 시간</option>
-            ${timeOptions()}
           </select>
           <span class="ts-tilde">~</span>
           <select id="aTimeEndPick" class="region-select" style="flex:1;min-width:100px;">
             <option value="">종료 시간</option>
-            ${timeOptions()}
           </select>
           <button type="button" class="region-add-btn" onclick="addASchedule()">+ 추가</button>
         </div>
@@ -1984,19 +1982,11 @@
       </section>
 
       <section class="card">
-        <h2 class="card-title">💰 제시 시급 범위</h2>
-        <p class="card-desc">강사에게 제시할 시급 범위를 입력해 주세요.</p>
-        <div style="display:flex;gap:12px;align-items:center;">
-          <div style="flex:1;">
-            <label class="section-label">최소</label>
-            <input type="number" id="aPayMin" class="form-input" placeholder="예) 20000" min="0" step="1000"/>
-          </div>
-          <span style="padding-top:24px;color:var(--text-muted);">~</span>
-          <div style="flex:1;">
-            <label class="section-label">최대</label>
-            <input type="number" id="aPayMax" class="form-input" placeholder="예) 40000" min="0" step="1000"/>
-          </div>
-          <span style="padding-top:24px;color:var(--text-muted);font-size:.85rem;">원/시간</span>
+        <h2 class="card-title">💰 최대 제시 시급</h2>
+        <p class="card-desc">이 금액 이상 원하는 강사는 매칭에서 제외됩니다.</p>
+        <div style="display:flex;align-items:center;gap:10px;">
+          <input type="number" id="aPayMax" class="form-input" placeholder="예) 40000" min="0" step="1000" style="flex:1;"/>
+          <span style="color:var(--text-muted);font-size:.85rem;white-space:nowrap;">원/시간 이하</span>
         </div>
       </section>
 
@@ -2160,12 +2150,10 @@
         <div class="ts-row" id="iTimeRow">
           <select id="iTimeStart" class="region-select" style="flex:1;" onchange="validateITime()">
             <option value="">시작 시간</option>
-            ${timeOptions()}
           </select>
           <span class="ts-tilde">~</span>
           <select id="iTimeEnd" class="region-select" style="flex:1;" onchange="validateITime()">
             <option value="">종료 시간</option>
-            ${timeOptions()}
           </select>
         </div>
         <div id="iTimeNegoBadge" style="display:none;padding:8px 14px;background:var(--primary-soft);color:var(--primary);border-radius:var(--radius-sm);font-size:.85rem;font-weight:700;">🤝 시간 협의 (매칭 조건 미적용)</div>
@@ -3555,7 +3543,6 @@ async function saveAcademyConditions() {
   const regions      = getRegionSelectorValues('aRegionSelector');
   const weekdays     = getChecked('aWeekday');
   const employ_types = getChecked('aEmploy');
-  const pay_min      = parseInt(document.getElementById('aPayMin').value) || 0;
   const pay_max      = parseInt(document.getElementById('aPayMax').value) || 0;
   const intro        = document.getElementById('aIntro').value.trim();
   const schedules    = getASchedules();
@@ -3568,7 +3555,7 @@ async function saveAcademyConditions() {
 
   const { error } = await _supabase.from('academy_conditions').upsert({
     user_id: session.user.id,
-    subjects, regions, employ_types, pay_min, pay_max, intro,
+    subjects, regions, employ_types, pay_max, intro,
     schedules, weekday_nego, fulltime_only,
     updated_at: new Date().toISOString()
   }, { onConflict: 'user_id' });
@@ -5140,11 +5127,17 @@ function initAcademyPhotoGrid() {
   buildAppealGrid('aAppealGrid', 4, 'academy-photo-box');
 }
 
-/* 지역 선택기 초기화 */
+/* 지역 선택기 + 시간 옵션 초기화 */
 document.addEventListener('DOMContentLoaded', () => {
   renderRegionSelector('setupAcademyRegionSelector', 1);
   renderRegionSelector('aRegionSelector', 99);
   renderRegionSelector('iRegionSelector', 5);
+
+  const timeHtml = timeOptions();
+  ['aTimeStartPick','aTimeEndPick','iTimeStart','iTimeEnd'].forEach(id => {
+    const el = document.getElementById(id);
+    if (el) el.innerHTML = '<option value="">시간 선택</option>' + timeHtml;
+  });
 });
 
 /* ── 앱 시작 시 세션 자동 복원 (모든 선언 후 실행) ── */
