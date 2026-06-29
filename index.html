@@ -1976,7 +1976,7 @@
 <!-- ══════════════════════════════════════════════
   서브스킬 팝업 모달
 ══════════════════════════════════════════════════ -->
-<div id="subSkillModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:3000;align-items:center;justify-content:center;padding:20px;" onclick="closeSubSkillModal(event)">
+<div id="subSkillModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:3000;align-items:center;justify-content:center;padding:20px;" onclick="if(event.target===this)closeSubSkillModal(null,true)">
   <div id="subSkillModal" style="background:var(--surface);border-radius:20px;width:100%;max-width:460px;max-height:82vh;display:flex;flex-direction:column;box-shadow:0 20px 60px rgba(0,0,0,.25);">
     <!-- 헤더 -->
     <div style="display:flex;align-items:center;gap:8px;padding:18px 20px 0;">
