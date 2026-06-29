@@ -2493,8 +2493,10 @@ const _supabase = supabase.createClient(
     const displayName = u.user_metadata?.name || u.user_metadata?.email || u.email || u.id;
     saveSession(role, data.session.access_token, displayName);
     currentUserRole = role;
-    const { data: existing } = await _supabase.from('users').select('id,agreed_at').eq('id', u.id).maybeSingle();
+    const { data: existing, error: existErr } = await _supabase.from('users').select('id,agreed_at').eq('id', u.id).maybeSingle();
+    console.log('[CLAVI-NAVER] existing:', existing, 'error:', existErr);
     if (!existing) {
+      console.log('[CLAVI-NAVER] 신규유저 → showTermsModal');
       showToast('환영합니다! 약관에 동의해 주세요 🎉');
       showTermsModal(async (chosenRole, metaVal) => {
         currentUserRole = chosenRole;
@@ -2503,12 +2505,14 @@ const _supabase = supabase.createClient(
         showProfileSetup(chosenRole);
       });
     } else if (!existing.agreed_at) {
+      console.log('[CLAVI-NAVER] agreed_at 없음 → showTermsModal');
       showTermsModal(async (chosenRole, metaVal) => {
         await _supabase.from('users').update({ agreed_at: new Date().toISOString() }).eq('id', u.id);
         showToast('로그인 성공! 환영합니다 🎉');
         setTimeout(() => enterApp(), 600);
       });
     } else {
+      console.log('[CLAVI-NAVER] agreed_at 있음 → enterApp');
       showToast('로그인 성공! 환영합니다 🎉');
       setTimeout(() => enterApp(), 600);
     }
