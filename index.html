@@ -2697,7 +2697,7 @@ async function saveProfileSetup() {
     id: uid,
     email: session.user.email || null,
     role
-  });
+  }, { onConflict: 'id' });
   if (uErr) { showToast('저장 오류: ' + uErr.message); return; }
 
   if (role === 'academy') {
