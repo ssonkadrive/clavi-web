@@ -4963,20 +4963,7 @@ showPage = function(id) {
       </div>
     </div>
 
-    <!-- 역할 선택 -->
-    <div class="terms-role-section">
-      <p>회원 유형을 선택해 주세요 <span style="color:var(--accent)">*</span></p>
-      <div class="terms-role-btns">
-        <label class="terms-role-btn" id="termsBtnAcademy">
-          <input type="radio" name="termsRole" value="academy" onchange="onTermsRoleChange(this)"> 🏫 학원장 회원
-        </label>
-        <label class="terms-role-btn" id="termsBtnInstructor">
-          <input type="radio" name="termsRole" value="instructor" onchange="onTermsRoleChange(this)"> 🎓 강사 회원
-        </label>
-      </div>
-    </div>
-
-    <p class="terms-hint" id="termsHint">약관을 끝까지 읽고 회원 유형을 선택해야 동의 버튼이 활성화됩니다.</p>
+    <p class="terms-hint" id="termsHint">약관을 끝까지 읽어야 동의 버튼이 활성화됩니다.</p>
     <div class="terms-footer">
       <button class="terms-btn-reject" onclick="rejectTerms()">거절</button>
       <button class="terms-btn-accept" id="termsBtnAccept" disabled onclick="acceptTerms()">수락 및 가입완료</button>
@@ -4992,14 +4979,12 @@ let _termsPendingCallback = null;
 
 function showTermsModal(callback) {
   _termsScrolled = false;
-  _termsRole = '';
+  _termsRole = localStorage.getItem('CLAVI_PENDING_ROLE') || 'instructor';
   _termsPendingCallback = callback;
   document.getElementById('termsProgressFill').style.width = '0%';
   document.getElementById('termsScrollHint').classList.remove('hidden');
   document.getElementById('termsBtnAccept').disabled = true;
-  document.getElementById('termsHint').textContent = '약관을 끝까지 읽고 회원 유형을 선택해야 동의 버튼이 활성화됩니다.';
-  document.querySelectorAll('.terms-role-btn').forEach(b => b.classList.remove('selected'));
-  document.querySelectorAll('input[name="termsRole"]').forEach(r => r.checked = false);
+  document.getElementById('termsHint').textContent = '약관을 끝까지 읽어야 동의 버튼이 활성화됩니다.';
 
   document.getElementById('termsScroll').scrollTop = 0;
   document.getElementById('termsOverlay').classList.add('active');
@@ -5018,18 +5003,10 @@ function onTermsScroll() {
   checkTermsReady();
 }
 
-function onTermsRoleChange(el) {
-  _termsRole = el.value;
-  document.querySelectorAll('.terms-role-btn').forEach(b => b.classList.remove('selected'));
-  el.closest('.terms-role-btn').classList.add('selected');
-  checkTermsReady();
-}
-
 function checkTermsReady() {
-  const ready = _termsScrolled && _termsRole;
-  document.getElementById('termsBtnAccept').disabled = !ready;
-  if (ready) {
-    document.getElementById('termsHint').textContent = '✅ 모든 조건이 충족됐습니다!';
+  document.getElementById('termsBtnAccept').disabled = !_termsScrolled;
+  if (_termsScrolled) {
+    document.getElementById('termsHint').textContent = '✅ 약관을 모두 읽었습니다. 동의 버튼을 눌러주세요.';
   }
 }
 
