@@ -1296,6 +1296,11 @@
 
   <!-- 로그아웃 -->
   <div class="drawer-footer">
+    <div id="adminDrawerBtn" style="display:none;margin-bottom:8px;">
+      <button class="drawer-logout" style="color:var(--primary);" onclick="closeDrawer();showAdminPage()">
+        <span style="font-size:1.1rem;">🛡️</span> 슈퍼어드민 페이지
+      </button>
+    </div>
     <button class="drawer-logout" onclick="handleLogout()">
       <span style="font-size:1.1rem;">🚪</span> 로그아웃
     </button>
@@ -5303,6 +5308,7 @@ async function banUser(uid, email) {
 }
 
 function showAdminPage() {
+  document.getElementById('adminDrawerBtn').style.display = 'block';
   showPage('adminPage');
   loadAdminUsers();
 }
