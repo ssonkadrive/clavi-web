@@ -2512,20 +2512,9 @@ const _supabase = supabase.createClient(
 );
 
 /* agreed_at 저장 헬퍼 — email 절대 건드리지 않음 */
-async function saveAgreedAt(uid, role, email) {
-  const now = new Date().toISOString();
-  // update 먼저 시도 (트리거가 이미 row 만든 경우)
-  const { data: upd } = await _supabase
-    .from('users').update({ agreed_at: now, role })
-    .eq('id', uid).select('id');
-  if (upd && upd.length > 0) return; // 성공
-  // row 없음 → email 포함해서 insert
-  const { error: insErr } = await _supabase
-    .from('users').insert({ id: uid, email: email || null, agreed_at: now, role });
-  if (insErr) {
-    // 혹시 race condition으로 중간에 row 생긴 경우 → update로 재시도
-    await _supabase.from('users').update({ agreed_at: now, role }).eq('id', uid);
-  }
+async function saveAgreedAt(uid, role) {
+  const { error } = await _supabase.rpc('accept_terms', { p_role: role });
+  if (error) console.error('[saveAgreedAt] rpc error:', error);
 }
 
 /* OAuth 콜백 처리 — onAuthStateChange에 위임, 여기선 아무것도 안 함 */
@@ -2587,7 +2576,7 @@ _supabase.auth.onAuthStateChange(async (event, session) => {
       showTermsModal(async (chosenRole) => {
         currentUserRole = chosenRole;
         saveSession(chosenRole, session.access_token, displayName);
-        await saveAgreedAt(u.id, chosenRole, u.email);
+        await saveAgreedAt(u.id, chosenRole);
         if (isNew) {
           showProfileSetup(chosenRole);
         } else {
@@ -4822,7 +4811,7 @@ function initAcademyPhotoGrid() {
     showTermsModal(async (chosenRole) => {
       currentUserRole = chosenRole;
       saveSession(chosenRole, supa.access_token, session.name || '');
-      await saveAgreedAt(supa.user.id, chosenRole, supa.user.email);
+      await saveAgreedAt(supa.user.id, chosenRole);
       enterApp();
     });
   } else {
