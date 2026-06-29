@@ -903,12 +903,15 @@
     .sk-item-label:hover { border-color:var(--primary-soft); }
     .sk-item-label input[type=checkbox] { display:none; }
     .sk-item-label .sk-check {
-      width:22px;height:22px;border-radius:6px;border:2px solid #bbb;
+      width:24px;height:24px;border-radius:7px;border:2px solid #ccc;
       display:flex;align-items:center;justify-content:center;flex-shrink:0;
-      font-size:.9rem;font-weight:700;color:#fff;transition:all .15s;background:#f0f0f0;
+      font-size:1rem;font-weight:900;color:#fff;transition:all .15s;background:#eee;
     }
     .sk-item-label.checked { border-color:var(--primary);background:var(--primary-soft); }
-    .sk-item-label.checked .sk-check { background:var(--primary);border-color:var(--primary); }
+    .sk-item-label.checked .sk-check {
+      background:var(--primary);border-color:var(--primary);color:#fff;
+      box-shadow:0 2px 6px rgba(91,108,255,.4);
+    }
 
     /* 공통조건 칩 */
     .sk-cc-grid { display:flex;flex-wrap:wrap;gap:8px;padding:4px 0 8px; }
@@ -2528,14 +2531,14 @@ function _renderCurrentStep() {
 function _buildSelectedTags() {
   const p = _sk.prefix;
   const ccItems = Object.values(_sk.공통조건).filter(v => v && v.prefix === p);
-  const skItems = Object.values(_sk.selected).filter(v => v && v.prefix === p);
+  const skItems = Object.entries(_sk.selected).filter(([,v]) => v && v.prefix === p);
   if (!ccItems.length && !skItems.length) return '';
   let html = '<div class="sk-tag-wrap">';
   ccItems.forEach(item => {
     html += `<span class="sk-tag-chip" onclick="_remove공통조건('${item.id}',this)">${item.label} <span class="sk-tag-x">×</span></span>`;
   });
-  skItems.forEach(item => {
-    html += `<span class="sk-tag-chip" onclick="_remove세부역량('${p}:${item.id}',this)">${item.label} <span class="sk-tag-x">×</span></span>`;
+  skItems.forEach(([key, item]) => {
+    html += `<span class="sk-tag-chip" onclick="_remove세부역량('${key}',this)">${item.label} <span class="sk-tag-x">×</span></span>`;
   });
   html += '</div>';
   return html;
@@ -2658,7 +2661,7 @@ function _toggleSkillItem(id, label, el) {
     el.querySelector('.sk-check').textContent = '';
   } else {
     _sk.selected[key] = {
-      prefix: p, catKey: _sk.catKey, subKey: _sk.subKey,
+      prefix: p, id, catKey: _sk.catKey, subKey: _sk.subKey,
       catName: cat.name, subName: sub.name, label
     };
     el.classList.add('checked');
@@ -2876,17 +2879,25 @@ const CATEGORIES = {
   taekwondo: {
     name: '🥋 체육/스포츠',
     subs: {
-      gyeki: { name: '격기 종목', items: [
-        { id:'sp_taekwondo',  label:'태권도' },
-        { id:'sp_judo',       label:'유도' },
-        { id:'sp_boxing',     label:'복싱' },
-        { id:'sp_wrestling',  label:'레슬링' },
-        { id:'sp_hapkido',    label:'합기도' },
-        { id:'sp_muay',       label:'무에타이' },
-        { id:'sp_mma',        label:'MMA/종합격투기' },
-        { id:'sp_ssireum',    label:'씨름' },
-        { id:'sp_kumdo',      label:'검도' },
-        { id:'sp_jujitsu',    label:'주짓수' },
+      gyeki: { name: '태권도', items: [
+        { id:'tkd_degree4',   label:'4년제 태권도학과 전공자' },
+        { id:'tkd_4dan',      label:'4단 이상' },
+        { id:'tkd_cert',      label:'사범자격증' },
+        { id:'tkd_sports2',   label:'생활체육 2급 이상' },
+        { id:'tkd_demo',      label:'대표시범단 출신' },
+        { id:'tkd_fight',     label:'겨루기선수단 출신' },
+        { id:'tkd_poomsae',   label:'품새선수단 출신' },
+        { id:'tkd_sibeom',    label:'시범단 운영가능' },
+        { id:'tkd_poomsae2',  label:'품새단 운영가능' },
+        { id:'tkd_fight2',    label:'겨루기 운영가능' },
+        { id:'tkd_asst',      label:'보조사범' },
+        { id:'tkd_master',    label:'정사범' },
+        { id:'tkd_head',      label:'지도관장' },
+        { id:'tkd_car1',      label:'1종보통/스타렉스 운행' },
+        { id:'tkd_bus',       label:'대형면허/버스 운행' },
+        { id:'tkd_car_need',  label:'차량지원 필요' },
+        { id:'tkd_car_own',   label:'본인 차량 있음' },
+        { id:'tkd_long',      label:'2년 이상 장기계약 의향' },
       ]},
       gugi: { name: '구기 종목', items: [
         { id:'sp_soccer',     label:'축구/풋살' },
@@ -2900,6 +2911,13 @@ const CATEGORIES = {
         { id:'sp_hockey',     label:'하키' },
       ]},
       etc_sports: { name: '기타 체육', items: [
+        { id:'sp_judo',       label:'유도' },
+        { id:'sp_boxing',     label:'복싱' },
+        { id:'sp_hapkido',    label:'합기도' },
+        { id:'sp_muay',       label:'무에타이' },
+        { id:'sp_mma',        label:'MMA/종합격투기' },
+        { id:'sp_kumdo',      label:'검도' },
+        { id:'sp_jujitsu',    label:'주짓수' },
         { id:'sp_swim',       label:'수영' },
         { id:'sp_tennis',     label:'테니스' },
         { id:'sp_gym',        label:'체조/기계체조' },
@@ -2907,24 +2925,8 @@ const CATEGORIES = {
         { id:'sp_golf',       label:'골프' },
         { id:'sp_bowling',    label:'볼링' },
         { id:'sp_climbing',   label:'클라이밍' },
-        { id:'sp_squash',     label:'스쿼시' },
         { id:'sp_yoga',       label:'요가/필라테스' },
         { id:'sp_crossfit',   label:'크로스핏/PT' },
-      ]},
-      tkd_expert: { name: '태권도 전문 조건', items: [
-        { id:'tkd_degree4',   label:'4년제 태권도학과 전공자' },
-        { id:'tkd_4dan',      label:'4단 이상' },
-        { id:'tkd_cert',      label:'사범자격증' },
-        { id:'tkd_sports2',   label:'생활체육 2급 이상' },
-        { id:'tkd_demo',      label:'대표시범단 출신' },
-        { id:'tkd_sibeom',    label:'시범단 운영가능' },
-        { id:'tkd_poomsae2',  label:'품새단 운영가능' },
-        { id:'tkd_fight2',    label:'겨루기 운영가능' },
-        { id:'tkd_car1',      label:'1종보통/스타렉스 운행' },
-        { id:'tkd_bus',       label:'대형면허/버스 운행' },
-        { id:'tkd_car_need',  label:'차량지원 필요' },
-        { id:'tkd_car_own',   label:'본인 차량 있음' },
-        { id:'tkd_long',      label:'2년 이상 장기계약 의향' },
       ]},
     }
   },
