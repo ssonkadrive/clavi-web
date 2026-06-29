@@ -2402,6 +2402,34 @@ const _supabase = supabase.createClient(
 
 /* OAuth 콜백 처리 — 페이지 로드 시 세션 복원 */
 (async () => {
+  const params = new URLSearchParams(window.location.search);
+
+  // 네이버 Edge Function 콜백
+  if (params.get('naver_token')) {
+    const token = params.get('naver_token');
+    const role  = params.get('role') || 'instructor';
+    window.history.replaceState({}, '', '/');
+    const { data, error } = await _supabase.auth.verifyOtp({ token_hash: token, type: 'magiclink' });
+    if (error || !data?.session) {
+      showToast('네이버 로그인 오류: ' + (error?.message || '다시 시도해주세요'));
+      return;
+    }
+    const u = data.session.user;
+    const displayName = u.user_metadata?.name || u.user_metadata?.email || u.email || u.id;
+    saveSession(role, data.session.access_token, displayName);
+    currentUserRole = role;
+    const { data: existing } = await _supabase.from('users').select('id').eq('id', u.id).maybeSingle();
+    if (!existing) {
+      showToast('환영합니다! 기본 정보를 입력해 주세요 🎉');
+      showProfileSetup(role);
+    } else {
+      showToast('로그인 성공! 환영합니다 🎉');
+      setTimeout(() => enterApp(), 600);
+    }
+    return;
+  }
+
+  // 일반 OAuth 콜백
   const { data: { session } } = await _supabase.auth.getSession();
   if (session?.user) {
     const pending = localStorage.getItem('CLAVI_PENDING_ROLE');
@@ -2412,7 +2440,6 @@ const _supabase = supabase.createClient(
                      || u.user_metadata?.nickname || u.email || u.id;
     saveSession(role, session.access_token, displayName);
     currentUserRole = role;
-    // 신규 유저 여부 확인 (users 테이블에 row 없으면 신규)
     const { data: existing } = await _supabase
       .from('users').select('id').eq('id', u.id).maybeSingle();
     if (!existing) {
@@ -2428,29 +2455,31 @@ const _supabase = supabase.createClient(
 ════════════════════════════════════════════════ */
 async function handleSocialLogin(provider) {
   const role = document.querySelector('input[name="loginRole"]:checked')?.value || 'instructor';
+  if (provider === 'naver') {
+    localStorage.setItem('CLAVI_PENDING_ROLE', role);
+    window.location.href = `https://nbngaaskwekhtzbmcyjo.supabase.co/functions/v1/naver-auth/login?role=${role}`;
+    return;
+  }
   localStorage.setItem('CLAVI_PENDING_ROLE', role);
-  const actualProvider = provider === 'naver' ? 'custom:naver' : provider;
-  const opts = {
-    redirectTo: 'https://clavi-web.vercel.app',
-    skipBrowserRedirect: false,
-  };
+  const opts = { redirectTo: 'https://clavi-web.vercel.app' };
   if (provider === 'kakao') opts.scopes = 'profile_nickname';
-  const label = provider === 'kakao' ? '카카오' : provider === 'naver' ? '네이버' : provider;
-  const { error } = await _supabase.auth.signInWithOAuth({ provider: actualProvider, options: opts });
+  const label = provider === 'kakao' ? '카카오' : provider;
+  const { error } = await _supabase.auth.signInWithOAuth({ provider, options: opts });
   if (error) showToast(`${label} 로그인 오류: ` + error.message);
 }
 
 async function handleSocialRegister(provider) {
   const role = document.querySelector('input[name="registerRole"]:checked')?.value || 'instructor';
+  if (provider === 'naver') {
+    localStorage.setItem('CLAVI_PENDING_ROLE', role);
+    window.location.href = `https://nbngaaskwekhtzbmcyjo.supabase.co/functions/v1/naver-auth/login?role=${role}`;
+    return;
+  }
   localStorage.setItem('CLAVI_PENDING_ROLE', role);
-  const actualProvider = provider === 'naver' ? 'custom:naver' : provider;
-  const opts = {
-    redirectTo: 'https://clavi-web.vercel.app',
-    skipBrowserRedirect: false,
-  };
+  const opts = { redirectTo: 'https://clavi-web.vercel.app' };
   if (provider === 'kakao') opts.scopes = 'profile_nickname';
-  const label = provider === 'kakao' ? '카카오' : provider === 'naver' ? '네이버' : provider;
-  const { error } = await _supabase.auth.signInWithOAuth({ provider: actualProvider, options: opts });
+  const label = provider === 'kakao' ? '카카오' : provider;
+  const { error } = await _supabase.auth.signInWithOAuth({ provider, options: opts });
   if (error) showToast(`${label} 가입 오류: ` + error.message);
 }
 
