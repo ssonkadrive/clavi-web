@@ -2429,8 +2429,11 @@ const _supabase = supabase.createClient(
 async function handleSocialLogin(provider) {
   const role = document.querySelector('input[name="loginRole"]:checked')?.value || 'instructor';
   localStorage.setItem('CLAVI_PENDING_ROLE', role);
-  const opts = { redirectTo: window.location.href.split('?')[0] };
   const actualProvider = provider === 'naver' ? 'custom:naver' : provider;
+  const opts = {
+    redirectTo: 'https://clavi-web.vercel.app',
+    skipBrowserRedirect: false,
+  };
   if (provider === 'kakao') opts.scopes = 'profile_nickname';
   const label = provider === 'kakao' ? '카카오' : provider === 'naver' ? '네이버' : provider;
   const { error } = await _supabase.auth.signInWithOAuth({ provider: actualProvider, options: opts });
@@ -2440,8 +2443,11 @@ async function handleSocialLogin(provider) {
 async function handleSocialRegister(provider) {
   const role = document.querySelector('input[name="registerRole"]:checked')?.value || 'instructor';
   localStorage.setItem('CLAVI_PENDING_ROLE', role);
-  const opts = { redirectTo: window.location.href.split('?')[0] };
   const actualProvider = provider === 'naver' ? 'custom:naver' : provider;
+  const opts = {
+    redirectTo: 'https://clavi-web.vercel.app',
+    skipBrowserRedirect: false,
+  };
   if (provider === 'kakao') opts.scopes = 'profile_nickname';
   const label = provider === 'kakao' ? '카카오' : provider === 'naver' ? '네이버' : provider;
   const { error } = await _supabase.auth.signInWithOAuth({ provider: actualProvider, options: opts });
