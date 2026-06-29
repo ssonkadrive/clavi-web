@@ -1917,6 +1917,20 @@
   토스트
 ══════════════════════════════════════════════════ -->
 <!-- ══════════════════════════════════════════════
+  서브스킬 팝업 모달
+══════════════════════════════════════════════════ -->
+<div id="subSkillModalOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.45);z-index:3000;align-items:flex-end;justify-content:center;" onclick="closeSubSkillModal(event)">
+  <div id="subSkillModal" style="background:var(--surface);border-radius:24px 24px 0 0;width:100%;max-width:480px;max-height:80vh;overflow-y:auto;padding:24px 20px 36px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
+      <h3 id="subSkillModalTitle" style="font-size:1rem;color:var(--text);"></h3>
+      <button onclick="closeSubSkillModal(null,true)" style="background:none;border:none;font-size:1.3rem;cursor:pointer;color:var(--text-muted);">✕</button>
+    </div>
+    <div id="subSkillModalBody"></div>
+    <button onclick="confirmSubSkills()" style="margin-top:20px;width:100%;padding:14px;border:none;border-radius:var(--radius-pill);background:linear-gradient(135deg,var(--primary),var(--accent));color:#fff;font-family:var(--font);font-size:1rem;cursor:pointer;">선택 완료</button>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
   [N1] 알림함 (공통)
 ══════════════════════════════════════════════════ -->
 <section id="notificationsPage" class="page-section">
@@ -2338,41 +2352,79 @@ async function saveProfileSetup() {
   setTimeout(() => enterApp(), 700);
 }
 
-/* ── 대분류 클릭 시 세부 스킬 패널 렌더 ── */
+/* ── 서브스킬 팝업 ── */
+let _subSkillCtx = { prefix: '', industry: '', cb: null };
+
 function renderSubSkills(prefix, industry, cb) {
-  const panel = document.getElementById(prefix + 'SubSkillPanel');
-  if (!panel) return;
-
-  // 이미 해당 섹션 있으면 제거 (체크 해제 시)
-  const existing = panel.querySelector(`[data-industry="${industry}"]`);
-  if (existing) { existing.remove(); return; }
-  if (!cb.checked) return;
-
+  if (!cb.checked) {
+    // 체크 해제 시 해당 분야 선택값 초기화
+    document.querySelectorAll(`input[name="${prefix}Skill"][data-industry="${industry}"]`)
+      .forEach(el => el.remove());
+    return;
+  }
   const items = SPECIAL_SKILLS[industry] || [];
   if (!items.length) return;
 
-  const hasCat = items[0].cat !== undefined;
-  let html = `<div class="subskill-section" data-industry="${industry}">`;
-  html += `<p class="subskill-title">${cb.closest('label').querySelector('span').textContent} 세부 조건</p>`;
+  _subSkillCtx = { prefix, industry, cb };
+  const label = cb.closest('label').querySelector('span').textContent;
+  document.getElementById('subSkillModalTitle').textContent = label + ' 세부 조건';
 
+  const hasCat = items[0].cat !== undefined;
+  let html = '';
   if (hasCat) {
     const cats = [...new Set(items.map(i => i.cat))];
     cats.forEach(cat => {
-      html += `<p class="subskill-cat">${cat}</p><div class="match-chips">`;
+      html += `<p class="subskill-cat">${cat}</p><div class="match-chips" style="margin-bottom:4px;">`;
       items.filter(i => i.cat === cat).forEach(item => {
-        html += `<label class="match-chip"><input type="checkbox" name="${prefix}Skill" value="${item.id}"/><span>${item.label}</span></label>`;
+        html += `<label class="match-chip"><input type="checkbox" name="_subSkillTmp" value="${item.id}" data-industry="${industry}"/><span>${item.label}</span></label>`;
       });
       html += `</div>`;
     });
   } else {
     html += `<div class="match-chips">`;
     items.forEach(item => {
-      html += `<label class="match-chip"><input type="checkbox" name="${prefix}Skill" value="${item.id}"/><span>${item.label}</span></label>`;
+      html += `<label class="match-chip"><input type="checkbox" name="_subSkillTmp" value="${item.id}" data-industry="${industry}"/><span>${item.label}</span></label>`;
     });
     html += `</div>`;
   }
-  html += `</div>`;
-  panel.insertAdjacentHTML('beforeend', html);
+  document.getElementById('subSkillModalBody').innerHTML = html;
+
+  // 기존 선택값 복원
+  const saved = [...document.querySelectorAll(`input[name="${prefix}Skill"][data-industry="${industry}"]`)].map(e => e.value);
+  document.querySelectorAll('#subSkillModalBody input[type="checkbox"]').forEach(el => {
+    if (saved.includes(el.value)) el.checked = true;
+  });
+
+  const overlay = document.getElementById('subSkillModalOverlay');
+  overlay.style.display = 'flex';
+  document.body.style.overflow = 'hidden';
+}
+
+function confirmSubSkills() {
+  const { prefix, industry } = _subSkillCtx;
+  // 기존 히든 인풋 제거
+  document.querySelectorAll(`input[name="${prefix}Skill"][data-industry="${industry}"]`).forEach(e => e.remove());
+
+  // 선택된 값 히든 인풋으로 저장
+  const panel = document.getElementById(prefix + 'SubSkillPanel');
+  document.querySelectorAll('#subSkillModalBody input:checked').forEach(el => {
+    const hidden = document.createElement('input');
+    hidden.type = 'hidden';
+    hidden.name = prefix + 'Skill';
+    hidden.value = el.value;
+    hidden.dataset.industry = industry;
+    panel.appendChild(hidden);
+  });
+
+  closeSubSkillModal(null, true);
+  const count = document.querySelectorAll(`input[name="${prefix}Skill"][data-industry="${industry}"]`).length;
+  if (count) showToast(`${count}개 세부 조건 선택됨 ✅`);
+}
+
+function closeSubSkillModal(e, force) {
+  if (!force && e && document.getElementById('subSkillModal').contains(e.target)) return;
+  document.getElementById('subSkillModalOverlay').style.display = 'none';
+  document.body.style.overflow = '';
 }
 
 /* ── 체크박스 값 수집 헬퍼 ── */
@@ -2511,7 +2563,14 @@ const SPECIAL_SKILLS = {
     { id:"tkd_main",      cat:"업무범위",    label:"메인수업 가능" },
     { id:"tkd_assoc",     cat:"업무범위",    label:"협회심사 책임관리" },
     { id:"tkd_team",      cat:"업무범위",    label:"시범단·선수단 운영" },
-    { id:"tkd_takeover",  cat:"업무범위",    label:"도장인수·책임관장" }
+    { id:"tkd_takeover",  cat:"업무범위",    label:"도장인수·책임관장" },
+    { id:"tkd_sibeom",    cat:"운영 가능",   label:"시범단 운영가능" },
+    { id:"tkd_poomsae2",  cat:"운영 가능",   label:"품새단 운영가능" },
+    { id:"tkd_fight2",    cat:"운영 가능",   label:"겨루기 운영가능" },
+    { id:"tkd_car_need",  cat:"차량 관련",   label:"차량지원 필요" },
+    { id:"tkd_gas_need",  cat:"차량 관련",   label:"기름값 지원 희망" },
+    { id:"tkd_car_own",   cat:"차량 관련",   label:"본인 차량 있음 (자가출퇴근 가능)" },
+    { id:"tkd_bus_ok",    cat:"차량 관련",   label:"대중교통 출퇴근 가능" }
   ],
   ballet: [
     { id:"infant",      label:"유아 발레 전문",       desc:"3~6세 유아반 지도 경험" },
