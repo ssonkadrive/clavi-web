@@ -2533,18 +2533,17 @@ function _buildStep3() {
   items.forEach(item => {
     const checked = !!_sk.selected[p + ':' + item.id];
     const chkCls  = checked ? ' checked' : '';
-    html += `<label class="sk-item-label${chkCls}" onclick="_toggleSkillItem('${item.id}','${item.label}',this)">
-      <input type="checkbox"${checked ? ' checked' : ''}/>
-      <span class="sk-check"></span>
+    html += `<div class="sk-item-label${chkCls}" onclick="_toggleSkillItem('${item.id}','${item.label}',this)">
+      <span class="sk-check">${checked ? '✓' : ''}</span>
       <span style="font-size:.88rem;">${item.label}</span>
-    </label>`;
+    </div>`;
   });
   html += '</div>';
   return html;
 }
 
 /* ── 소분류 토글 ── */
-function _toggleSkillItem(id, label, labelEl) {
+function _toggleSkillItem(id, label, el) {
   const p   = _sk.prefix;
   const key = p + ':' + id;
   const cat = CATEGORIES[_sk.catKey];
@@ -2552,15 +2551,15 @@ function _toggleSkillItem(id, label, labelEl) {
 
   if (_sk.selected[key]) {
     delete _sk.selected[key];
-    labelEl.classList.remove('checked');
-    labelEl.querySelector('input').checked = false;
+    el.classList.remove('checked');
+    el.querySelector('.sk-check').textContent = '';
   } else {
     _sk.selected[key] = {
       prefix: p, catKey: _sk.catKey, subKey: _sk.subKey,
       catName: cat.name, subName: sub.name, label
     };
-    labelEl.classList.add('checked');
-    labelEl.querySelector('input').checked = true;
+    el.classList.add('checked');
+    el.querySelector('.sk-check').textContent = '✓';
   }
 }
 
@@ -2746,49 +2745,57 @@ const CATEGORIES = {
     }
   },
   taekwondo: {
-    name: '🥋 체육/태권도',
+    name: '🥋 체육/스포츠',
     subs: {
-      academic:  { name: '학력/전공', items: [
-        { id:'tkd_degree4',  label:'4년제 태권도학과 전공자' },
-        { id:'tkd_gpa',      label:'대학성적표 공개 가능자' },
+      gyeki: { name: '격기 종목', items: [
+        { id:'sp_taekwondo',  label:'태권도' },
+        { id:'sp_judo',       label:'유도' },
+        { id:'sp_boxing',     label:'복싱' },
+        { id:'sp_wrestling',  label:'레슬링' },
+        { id:'sp_hapkido',    label:'합기도' },
+        { id:'sp_muay',       label:'무에타이' },
+        { id:'sp_mma',        label:'MMA/종합격투기' },
+        { id:'sp_ssireum',    label:'씨름' },
+        { id:'sp_kumdo',      label:'검도' },
+        { id:'sp_jujitsu',    label:'주짓수' },
       ]},
-      activity:  { name: '대학활동', items: [
-        { id:'tkd_demo',     label:'대표시범단 출신' },
-        { id:'tkd_fight',    label:'겨루기선수단 출신' },
-        { id:'tkd_poomsae',  label:'품새선수단 출신' },
+      gugi: { name: '구기 종목', items: [
+        { id:'sp_soccer',     label:'축구/풋살' },
+        { id:'sp_baseball',   label:'야구/소프트볼' },
+        { id:'sp_volleyball', label:'배구' },
+        { id:'sp_basketball', label:'농구' },
+        { id:'sp_tabletennis',label:'탁구' },
+        { id:'sp_badminton',  label:'배드민턴' },
+        { id:'sp_handball',   label:'핸드볼' },
+        { id:'sp_rugby',      label:'럭비' },
+        { id:'sp_hockey',     label:'하키' },
       ]},
-      cert:      { name: '자격/단증', items: [
-        { id:'tkd_4dan',     label:'4단 이상' },
-        { id:'tkd_cert',     label:'사범자격증' },
-        { id:'tkd_sports2',  label:'생활체육 2급 이상' },
+      etc_sports: { name: '기타 체육', items: [
+        { id:'sp_swim',       label:'수영' },
+        { id:'sp_tennis',     label:'테니스' },
+        { id:'sp_gym',        label:'체조/기계체조' },
+        { id:'sp_track',      label:'육상' },
+        { id:'sp_golf',       label:'골프' },
+        { id:'sp_bowling',    label:'볼링' },
+        { id:'sp_climbing',   label:'클라이밍' },
+        { id:'sp_squash',     label:'스쿼시' },
+        { id:'sp_yoga',       label:'요가/필라테스' },
+        { id:'sp_crossfit',   label:'크로스핏/PT' },
       ]},
-      operation: { name: '운영 가능', items: [
-        { id:'tkd_sibeom',   label:'시범단 운영가능' },
-        { id:'tkd_poomsae2', label:'품새단 운영가능' },
-        { id:'tkd_fight2',   label:'겨루기 운영가능' },
-        { id:'tkd_assoc',    label:'협회심사 책임관리' },
-        { id:'tkd_team',     label:'시범단·선수단 운영' },
-      ]},
-      career:    { name: '경력', items: [
-        { id:'tkd_asst',     label:'보조사범' },
-        { id:'tkd_master',   label:'정사범' },
-        { id:'tkd_head',     label:'지도관장' },
-        { id:'tkd_long',     label:'2년 이상 장기계약 의향' },
-        { id:'tkd_takeover', label:'도장인수·책임관장' },
-      ]},
-      vehicle:   { name: '차량', items: [
-        { id:'tkd_car1',     label:'1종보통/스타렉스 운행' },
-        { id:'tkd_bus',      label:'대형면허/버스 운행' },
-        { id:'tkd_car_need', label:'차량지원 필요' },
-        { id:'tkd_gas_need', label:'기름값 지원 희망' },
-        { id:'tkd_car_own',  label:'본인 차량 있음' },
-        { id:'tkd_bus_ok',   label:'대중교통 출퇴근 가능' },
-      ]},
-      language:  { name: '언어', items: [
-        { id:'tkd_eng',      label:'영어 회화 가능' },
-        { id:'tkd_jpn',      label:'일본어 가능' },
-        { id:'tkd_chn',      label:'중국어 가능' },
-        { id:'tkd_lang',     label:'기타 언어' },
+      tkd_expert: { name: '태권도 전문 조건', items: [
+        { id:'tkd_degree4',   label:'4년제 태권도학과 전공자' },
+        { id:'tkd_4dan',      label:'4단 이상' },
+        { id:'tkd_cert',      label:'사범자격증' },
+        { id:'tkd_sports2',   label:'생활체육 2급 이상' },
+        { id:'tkd_demo',      label:'대표시범단 출신' },
+        { id:'tkd_sibeom',    label:'시범단 운영가능' },
+        { id:'tkd_poomsae2',  label:'품새단 운영가능' },
+        { id:'tkd_fight2',    label:'겨루기 운영가능' },
+        { id:'tkd_car1',      label:'1종보통/스타렉스 운행' },
+        { id:'tkd_bus',       label:'대형면허/버스 운행' },
+        { id:'tkd_car_need',  label:'차량지원 필요' },
+        { id:'tkd_car_own',   label:'본인 차량 있음' },
+        { id:'tkd_long',      label:'2년 이상 장기계약 의향' },
       ]},
     }
   },
