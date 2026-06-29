@@ -2555,6 +2555,17 @@ async function completeRegistration(uid, role) {
 /* ─── 로그인 후 기존가입자 여부 확인 → 분기 처리 ─── */
 async function checkExistingUser(u, session, role, displayName) {
   const uid = u.id;
+  _adminUid = uid;
+
+  // 슈퍼어드민 분기
+  if (uid === SUPER_ADMIN_ID) {
+    markAgreedLocally(uid);
+    saveSession(role, session.access_token, displayName);
+    currentUserRole = role;
+    showToast('어드민으로 로그인됐습니다 🛡️');
+    setTimeout(() => showAdminPage(), 400);
+    return;
+  }
 
   // 1차: localStorage 캐시 확인 (DB RLS와 무관하게 동작)
   if (isAgreedLocally(uid)) {
@@ -5130,6 +5141,156 @@ async function acceptTerms() {
     await _termsPendingCallback(_termsRole);
     _termsPendingCallback = null;
   }
+}
+</script>
+
+<!-- ══ 슈퍼어드민 페이지 ══ -->
+<section id="adminPage" class="page-section">
+  <div style="max-width:1100px;margin:0 auto;padding:24px 16px;">
+    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
+      <h1 style="font-size:1.4rem;font-weight:700;">🛡️ CLAVI 슈퍼어드민</h1>
+      <button class="terms-btn-reject" style="padding:8px 18px;" onclick="enterApp()">← 앱으로</button>
+    </div>
+    <div style="display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--border);">
+      <button class="admin-tab active" data-tab="users"       onclick="switchAdminTab('users')">👥 전체 유저</button>
+      <button class="admin-tab"        data-tab="instructors" onclick="switchAdminTab('instructors')">🎓 강사 목록</button>
+      <button class="admin-tab"        data-tab="academies"   onclick="switchAdminTab('academies')">🏫 학원/매칭</button>
+    </div>
+
+    <!-- 유저 탭 -->
+    <div id="adminTab-users" class="admin-tab-panel">
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <input class="form-input" style="max-width:260px;" placeholder="이메일 검색..." oninput="filterAdminTable('adminUserTable',this.value)">
+        <button class="primary-btn" style="padding:8px 16px;font-size:.85rem;" onclick="loadAdminUsers()">새로고침</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="admin-table" id="adminUserTable">
+          <thead><tr><th>이메일</th><th>역할</th><th>가입일</th><th>약관동의</th><th>제재</th></tr></thead>
+          <tbody id="adminUserBody"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);">로딩 중...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 강사 탭 -->
+    <div id="adminTab-instructors" class="admin-tab-panel" style="display:none;">
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <input class="form-input" style="max-width:260px;" placeholder="이름/분야 검색..." oninput="filterAdminTable('adminInstructorTable',this.value)">
+        <button class="primary-btn" style="padding:8px 16px;font-size:.85rem;" onclick="loadAdminInstructors()">새로고침</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="admin-table" id="adminInstructorTable">
+          <thead><tr><th>이름</th><th>이메일</th><th>전문분야</th><th>한줄소개</th><th>가입일</th></tr></thead>
+          <tbody id="adminInstructorBody"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);">로딩 중...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- 학원 탭 -->
+    <div id="adminTab-academies" class="admin-tab-panel" style="display:none;">
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <input class="form-input" style="max-width:260px;" placeholder="학원명 검색..." oninput="filterAdminTable('adminAcademyTable',this.value)">
+        <button class="primary-btn" style="padding:8px 16px;font-size:.85rem;" onclick="loadAdminAcademies()">새로고침</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="admin-table" id="adminAcademyTable">
+          <thead><tr><th>학원명</th><th>지역</th><th>이메일</th><th>등록 공고수</th></tr></thead>
+          <tbody id="adminAcademyBody"><tr><td colspan="4" style="text-align:center;color:var(--text-muted);">로딩 중...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+</section>
+
+<style>
+.admin-tab { padding:10px 22px;border:none;background:none;font-size:.9rem;color:var(--text-muted);cursor:pointer;border-bottom:3px solid transparent;font-family:var(--font);font-weight:500;transition:all .15s; }
+.admin-tab.active { color:var(--primary);border-bottom-color:var(--primary); }
+.admin-table { width:100%;border-collapse:collapse;font-size:.85rem; }
+.admin-table th { background:var(--bg-subtle,#f4f4f8);padding:10px 12px;text-align:left;font-weight:600;color:var(--text-muted);border-bottom:2px solid var(--border); }
+.admin-table td { padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top; }
+.admin-table tr:hover td { background:var(--primary-soft,#eef0ff); }
+.admin-ban-btn { padding:4px 10px;border-radius:6px;border:1px solid #f87171;background:#fff;color:#ef4444;font-size:.78rem;cursor:pointer;font-family:var(--font); }
+.admin-ban-btn:hover { background:#fef2f2; }
+</style>
+
+<script>
+const SUPER_ADMIN_ID = 'cd5c8e65-4c38-423d-80db-6029bf940c5b';
+let _adminUid = null;
+
+function switchAdminTab(tab) {
+  document.querySelectorAll('.admin-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
+  document.querySelectorAll('.admin-tab-panel').forEach(p => p.style.display = 'none');
+  document.getElementById('adminTab-' + tab).style.display = 'block';
+  if (tab === 'users')       loadAdminUsers();
+  if (tab === 'instructors') loadAdminInstructors();
+  if (tab === 'academies')   loadAdminAcademies();
+}
+
+function filterAdminTable(tableId, q) {
+  document.querySelectorAll(`#${tableId} tbody tr`).forEach(r => {
+    r.style.display = r.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
+  });
+}
+
+async function loadAdminUsers() {
+  const tbody = document.getElementById('adminUserBody');
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">로딩 중...</td></tr>';
+  const { data, error } = await _supabase.from('users').select('*').order('created_at', { ascending: false });
+  if (error) { tbody.innerHTML = `<tr><td colspan="5" style="color:red;">${error.message}</td></tr>`; return; }
+  tbody.innerHTML = data.map(u => `
+    <tr>
+      <td>${u.email || '-'}</td>
+      <td><span style="padding:2px 8px;border-radius:12px;font-size:.78rem;background:${u.role==='academy'?'#ede9fe':u.role==='banned'?'#fee2e2':'#dcfce7'};color:${u.role==='academy'?'#7c3aed':u.role==='banned'?'#dc2626':'#16a34a'};">${u.role||'-'}</span></td>
+      <td>${u.created_at ? new Date(u.created_at).toLocaleDateString('ko') : '-'}</td>
+      <td>${u.agreed_at ? '✅ ' + new Date(u.agreed_at).toLocaleDateString('ko') : '❌ 미동의'}</td>
+      <td>${u.id !== SUPER_ADMIN_ID ? `<button class="admin-ban-btn" onclick="banUser('${u.id}','${u.email||''}')">제재</button>` : '🛡️'}</td>
+    </tr>`).join('');
+}
+
+async function loadAdminInstructors() {
+  const tbody = document.getElementById('adminInstructorBody');
+  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">로딩 중...</td></tr>';
+  const { data, error } = await _supabase
+    .from('instructors').select('*, users(email, created_at)').order('created_at', { ascending: false });
+  if (error) { tbody.innerHTML = `<tr><td colspan="5" style="color:red;">${error.message}</td></tr>`; return; }
+  tbody.innerHTML = data.map(i => `
+    <tr>
+      <td><strong>${i.name || '-'}</strong></td>
+      <td>${i.users?.email || '-'}</td>
+      <td style="max-width:180px;word-break:break-all;font-size:.8rem;">${i.industry || '-'}</td>
+      <td style="max-width:200px;font-size:.8rem;">${i.intro || '-'}</td>
+      <td>${i.users?.created_at ? new Date(i.users.created_at).toLocaleDateString('ko') : '-'}</td>
+    </tr>`).join('');
+}
+
+async function loadAdminAcademies() {
+  const tbody = document.getElementById('adminAcademyBody');
+  tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">로딩 중...</td></tr>';
+  const { data, error } = await _supabase
+    .from('academies').select('*, users(email)').order('created_at', { ascending: false });
+  if (error) { tbody.innerHTML = `<tr><td colspan="4" style="color:red;">${error.message}</td></tr>`; return; }
+  const { data: conds } = await _supabase.from('academy_conditions').select('user_id');
+  const condMap = {};
+  (conds||[]).forEach(c => { condMap[c.user_id] = (condMap[c.user_id]||0)+1; });
+  tbody.innerHTML = data.map(a => `
+    <tr>
+      <td><strong>${a.name || '-'}</strong></td>
+      <td>${a.region || '-'}</td>
+      <td>${a.users?.email || '-'}</td>
+      <td>${condMap[a.user_id] || 0}건</td>
+    </tr>`).join('');
+}
+
+async function banUser(uid, email) {
+  if (!confirm(`${email} 회원을 제재(계정 정지)하시겠습니까?`)) return;
+  const { error } = await _supabase.from('users').update({ role: 'banned' }).eq('id', uid);
+  if (error) { showToast('제재 실패: ' + error.message); return; }
+  showToast(`${email} 계정이 정지됐습니다.`);
+  loadAdminUsers();
+}
+
+function showAdminPage() {
+  showPage('adminPage');
+  loadAdminUsers();
 }
 </script>
 </body>
