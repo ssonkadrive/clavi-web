@@ -2483,8 +2483,10 @@ const _supabase = supabase.createClient(
   if (params.get('naver_token')) {
     const token = params.get('naver_token');
     const role  = params.get('role') || 'instructor';
+    console.log('[CLAVI] naver_token 감지, verifyOtp 시작');
     window.history.replaceState({}, '', '/');
     const { data, error } = await _supabase.auth.verifyOtp({ token_hash: token, type: 'magiclink' });
+    console.log('[CLAVI] verifyOtp 결과 - error:', error?.message, 'session:', !!data?.session);
     if (error || !data?.session) {
       showToast('네이버 로그인 오류: ' + (error?.message || '다시 시도해주세요'));
       return;
