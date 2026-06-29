@@ -1918,10 +1918,10 @@
         <h2 class="card-title">🎯 원하는 강사 분야</h2>
         <p class="card-desc">대분류 선택 후 세부 조건을 고르세요.</p>
         <div class="match-chips" id="aSubjectChips">
-          <button class="match-chip-btn" id="a_chip_music"   onclick="openSkillModalFor('a','music')">🎵 음악<span class="chip-badge" id="a_badge_music"></span></button>
-          <button class="match-chip-btn" id="a_chip_art"     onclick="openSkillModalFor('a','art')">🎨 미술<span class="chip-badge" id="a_badge_art"></span></button>
-          <button class="match-chip-btn" id="a_chip_sports"  onclick="openSkillModalFor('a','sports')">⚽ 체육<span class="chip-badge" id="a_badge_sports"></span></button>
-          <button class="match-chip-btn" id="a_chip_etc"     onclick="openSkillModalFor('a','etc')">🤝 기타<span class="chip-badge" id="a_badge_etc"></span></button>
+          <button class="match-chip-btn" id="a_chip_music"   onclick="openSkillModalFor('a','music');  updateAPaySubjectOptions('music')">🎵 음악<span class="chip-badge" id="a_badge_music"></span></button>
+          <button class="match-chip-btn" id="a_chip_art"     onclick="openSkillModalFor('a','art');    updateAPaySubjectOptions('art')">🎨 미술<span class="chip-badge" id="a_badge_art"></span></button>
+          <button class="match-chip-btn" id="a_chip_sports"  onclick="openSkillModalFor('a','sports'); updateAPaySubjectOptions('sports')">⚽ 체육<span class="chip-badge" id="a_badge_sports"></span></button>
+          <button class="match-chip-btn" id="a_chip_etc"     onclick="openSkillModalFor('a','etc');    updateAPaySubjectOptions('etc')">🤝 기타<span class="chip-badge" id="a_badge_etc"></span></button>
         </div>
         <div id="aSubSkillPanel"></div>
         <button onclick="openSkillModalStep1('a')" style="margin-top:10px;padding:9px 18px;border:1.5px dashed var(--primary);border-radius:99px;background:transparent;color:var(--primary);font-family:var(--font);font-size:.85rem;cursor:pointer;">＋ 공통조건 · 세부역량 추가</button>
@@ -1934,14 +1934,12 @@
       <section class="card">
         <h2 class="card-title">💵 과목별 시급 설정</h2>
         <p class="card-desc">과목을 선택하고 해당 과목의 최대 시급을 입력하세요. 강사의 최소 희망 시급과 비교해 매칭합니다.</p>
-        <div class="ts-row" style="flex-wrap:wrap;gap:8px;margin-bottom:10px;">
+        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;align-items:center;">
           <select id="aPaySubjectPick" class="region-select" style="flex:1;min-width:140px;">
-            <option value="">과목 선택</option>
+            <option value="">위에서 대분류 선택 후 과목 선택</option>
           </select>
-          <div style="display:flex;align-items:center;gap:6px;flex:1;min-width:140px;">
-            <input type="number" id="aPaySubjectAmount" class="form-input" placeholder="시급 (원)" min="0" step="1000" style="flex:1;"/>
-            <span style="color:var(--text-muted);font-size:.82rem;white-space:nowrap;">원/h</span>
-          </div>
+          <input type="number" id="aPaySubjectAmount" class="region-select" placeholder="시급 입력" min="0" step="1000" style="flex:1;min-width:120px;"/>
+          <span style="color:var(--text-muted);font-size:.82rem;white-space:nowrap;flex-shrink:0;">원/h</span>
           <button type="button" class="region-add-btn" onclick="addAPaySubject()">+ 추가</button>
         </div>
         <div id="aPaySubjectErr" class="ts-err" style="margin-bottom:8px;"></div>
@@ -3338,16 +3336,14 @@ function timeOptions() {
 }
 
 /* ── 학원 과목별 시급 태그 ── */
-function initAPaySubjectSelect() {
+function initAPaySubjectSelect() { /* 대분류 클릭으로 대체 */ }
+
+function updateAPaySubjectOptions(catKey) {
   const el = document.getElementById('aPaySubjectPick');
-  if (!el || el.options.length > 1) return;
-  const allSubjects = [
-    ...(_setupCatSubjects.music  || []),
-    ...(_setupCatSubjects.art    || []),
-    ...(_setupCatSubjects.sports || []),
-    ...(_setupCatSubjects.etc    || []),
-  ];
-  allSubjects.forEach(s => {
+  if (!el) return;
+  const subjects = _setupCatSubjects[catKey] || [];
+  el.innerHTML = '<option value="">과목 선택</option>';
+  subjects.forEach(s => {
     const o = document.createElement('option');
     o.value = s; o.textContent = s;
     el.appendChild(o);
