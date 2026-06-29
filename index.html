@@ -2485,9 +2485,17 @@ const _supabase = supabase.createClient(
     const role  = params.get('role') || 'instructor';
     console.log('[CLAVI] naver_token 감지, verifyOtp 시작');
     window.history.replaceState({}, '', '/');
-    const { data, error } = await _supabase.auth.verifyOtp({ token_hash: token, type: 'magiclink' });
-    console.log('[CLAVI] verifyOtp 결과 - error:', error?.message, 'session:', !!data?.session);
+    let data, error;
+    try {
+      ({ data, error } = await _supabase.auth.verifyOtp({ token_hash: token, type: 'magiclink' }));
+      console.log('[CLAVI] verifyOtp 결과 - error:', error?.message, 'session:', !!data?.session);
+    } catch(e) {
+      console.log('[CLAVI] verifyOtp 예외:', e?.message);
+      showToast('네이버 로그인 오류: ' + e?.message);
+      return;
+    }
     if (error || !data?.session) {
+      console.log('[CLAVI] verifyOtp 실패:', error?.message);
       showToast('네이버 로그인 오류: ' + (error?.message || '다시 시도해주세요'));
       return;
     }
