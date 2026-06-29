@@ -1665,6 +1665,10 @@
           <label class="match-chip"><input type="checkbox" name="aSubject" value="일반/학습"   data-industry="general"   onchange="renderSubSkills('a','general',this)"/><span>📚 일반/학습</span></label>
         </div>
         <div id="aSubSkillPanel"></div>
+        <div id="aSubSkillDisplay" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+          <p style="font-size:.78rem;color:var(--text-muted);margin-bottom:8px;">✅ 선택된 세부 조건</p>
+          <div id="aSubSkillTags" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+        </div>
       </section>
 
       <section class="card">
@@ -1846,6 +1850,10 @@
           <label class="match-chip"><input type="checkbox" name="iSubject" value="일반/학습"   data-industry="general"   onchange="renderSubSkills('i','general',this)"/><span>📚 일반/학습</span></label>
         </div>
         <div id="iSubSkillPanel"></div>
+        <div id="iSubSkillDisplay" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
+          <p style="font-size:.78rem;color:var(--text-muted);margin-bottom:8px;">✅ 선택된 세부 조건</p>
+          <div id="iSubSkillTags" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+        </div>
       </section>
 
       <section class="card">
@@ -2419,26 +2427,32 @@ function confirmSubSkills() {
     panel.appendChild(hidden);
   });
 
-  // 대분류 칩 아래 선택 태그 표시
-  const chipLabel = cb.closest('label');
-  const existingTags = chipLabel.querySelector('.subskill-tags');
-  if (existingTags) existingTags.remove();
-
-  if (selected.length) {
-    const tagWrap = document.createElement('div');
-    tagWrap.className = 'subskill-tags';
-    tagWrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:4px;margin-top:6px;';
-    selected.forEach(el => {
-      const tag = document.createElement('span');
-      tag.style.cssText = 'font-size:.72rem;background:var(--primary-soft);color:var(--primary);padding:3px 8px;border-radius:99px;white-space:nowrap;';
-      tag.textContent = el.closest('label').querySelector('span').textContent;
-      tagWrap.appendChild(tag);
-    });
-    chipLabel.appendChild(tagWrap);
-  }
-
   closeSubSkillModal(null, true);
+
+  // 전체 선택된 세부 조건 재렌더 (모든 분야 합산)
+  refreshSubSkillDisplay(prefix);
   if (selected.length) showToast(`${selected.length}개 세부 조건 선택됨 ✅`);
+}
+
+function refreshSubSkillDisplay(prefix) {
+  const allHidden = [...document.querySelectorAll(`input[name="${prefix}Skill"]`)];
+  const display = document.getElementById(prefix + 'SubSkillDisplay');
+  const tagsEl  = document.getElementById(prefix + 'SubSkillTags');
+  if (!display || !tagsEl) return;
+
+  tagsEl.innerHTML = '';
+  if (!allHidden.length) { display.style.display = 'none'; return; }
+
+  display.style.display = 'block';
+  allHidden.forEach(h => {
+    const industry = h.dataset.industry;
+    const item = (SPECIAL_SKILLS[industry] || []).find(i => i.id === h.value);
+    const label = item ? item.label : h.value;
+    const span = document.createElement('span');
+    span.style.cssText = 'font-size:.78rem;background:var(--primary-soft);color:var(--primary);padding:4px 10px;border-radius:99px;white-space:nowrap;';
+    span.textContent = label;
+    tagsEl.appendChild(span);
+  });
 }
 
 function closeSubSkillModal(e, force) {
