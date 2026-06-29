@@ -938,14 +938,27 @@
       box-shadow:0 2px 6px rgba(91,108,255,.4);
     }
 
-    /* 과목 그룹 헤더 */
-    .sk-group-header {
-      font-size:.72rem;font-weight:700;color:var(--text-muted);
-      letter-spacing:.06em;text-transform:uppercase;
-      padding:10px 2px 4px;margin-top:4px;
-      border-bottom:1px solid var(--border);
+    /* 과목 그룹 아코디언 */
+    .sk-group-accordion {
+      border:1.5px solid var(--border);border-radius:12px;
+      overflow:hidden;margin-bottom:8px;
     }
-    .sk-group-header:first-child { margin-top:0; }
+    .sk-group-toggle {
+      display:flex;align-items:center;justify-content:space-between;
+      padding:11px 16px;cursor:pointer;background:var(--surface);
+      font-size:.88rem;font-weight:700;color:var(--text);
+      transition:background .15s;gap:8px;
+    }
+    .sk-group-toggle:hover { background:var(--primary-soft); }
+    .sk-group-toggle.open  { background:var(--primary-soft);color:var(--primary); }
+    .sk-group-toggle-left  { display:flex;align-items:center;gap:8px; }
+    .sk-group-icon         { font-size:1.1rem;line-height:1; }
+    .sk-group-cnt          { font-size:.72rem;font-weight:800;padding:1px 7px;border-radius:99px;
+                             background:var(--primary);color:#fff;display:none; }
+    .sk-group-cnt.visible  { display:inline; }
+    .sk-group-arrow        { font-size:.75rem;color:var(--text-muted);flex-shrink:0;transition:transform .2s; }
+    .sk-group-toggle.open .sk-group-arrow { transform:rotate(90deg); }
+    .sk-group-body         { padding:6px 10px 10px; }
 
     /* 세부스킬 인라인 패널 */
     .sk-subskill-panel {
@@ -2685,42 +2698,97 @@ function _홈화면HTML() {
   return html;
 }
 
-/* ══ 과목 목록 HTML (단계2 — 과목 + 인라인 세부역량) ══ */
+/* ══ 그룹 아이콘 맵 ══ */
+const _그룹아이콘 = {
+  '건반/피아노':'🎹', '보컬/성악':'🎤', '기타/베이스':'🎸',
+  '드럼/타악기':'🥁', '관현악':'🎻',   '국악/기타':'🪘',
+  '회화':'🖌️',       '디자인':'✏️',    '공예':'🏺',
+  '아동/취미':'🧒',   '서예':'✒️',      '미디어':'📸',
+  '격기':'🥋',        '구기':'⚽',       '기타 체육':'🏃',
+  '연기/뮤지컬':'🎭', '연기':'🎬',      '뮤지컬':'🎵',
+  '전문지도':'🏫',    '취미':'🎮',      '역량':'💡',
+};
+
+/* ══ 과목 목록 HTML (그룹 아코디언 + 인라인 세부역량) ══ */
 function _아이템목록HTML() {
   const p      = _팝업상태.prefix;
   const 저장소  = _역량저장소(p);
   const cat    = 카테고리데이터[_팝업상태.대분류키];
   if (!cat?.items?.length) return '<p style="color:var(--text-muted);padding:20px;">항목이 없습니다.</p>';
 
-  let html = '<div class="sk-item-list">';
-  let lastGroup = null;
+  // 그룹별로 묶기
+  const 그룹순서 = [];
+  const 그룹맵   = {};
   cat.items.forEach(item => {
-    if (item.group && item.group !== lastGroup) {
-      lastGroup = item.group;
-      html += `<div class="sk-group-header">${item.group}</div>`;
-    }
-    const key     = p + ':' + item.id;
-    const entry   = 저장소.세부역량[key];
-    const checked = !!entry;
-    html += `<div class="sk-item-label${checked ? ' checked' : ''}" onclick="아이템토글('${item.id}','${encodeURIComponent(item.name)}',this)">
-      <span class="sk-check">${checked ? '✓' : ''}</span>
-      <span style="font-size:.88rem;flex:1;">${item.name}</span>
-    </div>`;
-    if (item.skills?.length) {
-      const selSkills = entry?.skills || {};
-      html += `<div class="sk-subskill-panel" id="ssp_${key}" style="display:${checked ? 'flex' : 'none'};">`;
-      item.skills.forEach(skill => {
-        const sk  = p + ':' + skill.id;
-        const on  = !!selSkills[sk];
-        html += `<div class="sk-subskill-item${on ? ' on' : ''}" onclick="스킬토글('${item.id}','${skill.id}','${encodeURIComponent(skill.name)}',this)">
-          <span class="sk-sub-check">${on ? '✓' : ''}</span>
-          <span>${skill.name}</span>
-        </div>`;
-      });
-      html += '</div>';
-    }
+    const g = item.group || '기타';
+    if (!그룹맵[g]) { 그룹맵[g] = []; 그룹순서.push(g); }
+    그룹맵[g].push(item);
+  });
+
+  let html = '<div class="sk-item-list" style="padding:4px 0;">';
+  그룹순서.forEach((그룹명, idx) => {
+    const items     = 그룹맵[그룹명];
+    const groupId   = `grp_${p}_${그룹명.replace(/[\s/]/g,'_')}`;
+    const icon      = _그룹아이콘[그룹명] || '📌';
+    const selCnt    = items.filter(it => !!저장소.세부역량[p+':'+it.id]).length;
+    const isOpen    = selCnt > 0 || idx === 0;
+
+    html += `<div class="sk-group-accordion">
+      <div class="sk-group-toggle${isOpen?' open':''}" onclick="_그룹토글('${groupId}',this)">
+        <div class="sk-group-toggle-left">
+          <span class="sk-group-icon">${icon}</span>
+          <span>${그룹명}</span>
+          <span class="sk-group-cnt${selCnt?' visible':''}" id="gcnt_${groupId}">${selCnt||''}</span>
+        </div>
+        <span class="sk-group-arrow">›</span>
+      </div>
+      <div class="sk-group-body" id="${groupId}" style="display:${isOpen?'block':'none'};">`;
+
+    items.forEach(item => {
+      const key     = p + ':' + item.id;
+      const entry   = 저장소.세부역량[key];
+      const checked = !!entry;
+      html += `<div class="sk-item-label${checked?' checked':''}" onclick="아이템토글('${item.id}','${encodeURIComponent(item.name)}',this)" data-group="${groupId}">
+        <span class="sk-check">${checked?'✓':''}</span>
+        <span style="font-size:.88rem;flex:1;">${item.name}</span>
+      </div>`;
+      if (item.skills?.length) {
+        const sel = entry?.skills || {};
+        html += `<div class="sk-subskill-panel" id="ssp_${key}" style="display:${checked?'flex':'none'};">`;
+        item.skills.forEach(skill => {
+          const sk = p+':'+skill.id;
+          const on = !!sel[sk];
+          html += `<div class="sk-subskill-item${on?' on':''}" onclick="스킬토글('${item.id}','${skill.id}','${encodeURIComponent(skill.name)}',this)">
+            <span class="sk-sub-check">${on?'✓':''}</span>
+            <span>${skill.name}</span>
+          </div>`;
+        });
+        html += '</div>';
+      }
+    });
+    html += '</div></div>';
   });
   return html + '</div>';
+}
+
+/* ══ 그룹 아코디언 토글 ══ */
+function _그룹토글(groupId, headerEl) {
+  const body   = document.getElementById(groupId);
+  if (!body) return;
+  const isOpen = body.style.display !== 'none';
+  body.style.display = isOpen ? 'none' : 'block';
+  headerEl.classList.toggle('open', !isOpen);
+}
+
+/* ══ 아이템 체크 시 그룹 카운트 뱃지 갱신 ══ */
+function _그룹카운트갱신(groupId) {
+  const body = document.getElementById(groupId);
+  if (!body) return;
+  const checked = body.querySelectorAll('.sk-item-label.checked').length;
+  const badge   = document.getElementById('gcnt_' + groupId);
+  if (!badge) return;
+  badge.textContent = checked || '';
+  badge.classList.toggle('visible', checked > 0);
 }
 
 /* ══ 토글 함수들 ══ */
@@ -2752,6 +2820,8 @@ function 아이템토글(id, encodedName, el) {
     const panel = document.getElementById('ssp_' + key);
     if (panel) panel.style.display = 'flex';
   }
+  const groupId = el.dataset?.group;
+  if (groupId) _그룹카운트갱신(groupId);
   _태그영역갱신();
 }
 
