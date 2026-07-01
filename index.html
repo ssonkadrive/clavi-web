@@ -4190,7 +4190,17 @@ function getChecked(name) {
 /* ── 학원 조건 저장 ── */
 async function saveAcademyConditions() {
   const { data: { session } } = await _supabase.auth.getSession();
-  if (!session?.user) { showToast('로그인이 필요합니다.'); return; }
+  if (!session?.user) {
+    // 데모 모드(localStorage 임시 로그인) 처리
+    const ds = loadSession();
+    if (ds?.token === 'demo_token') {
+      showToast('조건이 저장되었습니다! 매칭을 시작합니다 🎉');
+      setTimeout(() => drawerGo('academy-match'), 800);
+    } else {
+      showToast('로그인이 필요합니다.');
+    }
+    return;
+  }
 
   // 드롭다운에 값이 있으면 자동으로 태그에 추가
   const _aSido = document.getElementById('aRegionSelector_sido')?.value;
@@ -4260,7 +4270,17 @@ async function saveAcademyConditions() {
 /* ── 강사 조건 저장 ── */
 async function saveInstructorConditions() {
   const { data: { session } } = await _supabase.auth.getSession();
-  if (!session?.user) { showToast('로그인이 필요합니다.'); return; }
+  if (!session?.user) {
+    // 데모 모드(localStorage 임시 로그인) 처리
+    const ds = loadSession();
+    if (ds?.token === 'demo_token') {
+      showToast('조건이 저장되었습니다! 매칭을 시작합니다 🎉');
+      setTimeout(() => drawerGo('instructor-match'), 800);
+    } else {
+      showToast('로그인이 필요합니다.');
+    }
+    return;
+  }
 
   // 드롭다운에 값이 있으면 자동으로 태그에 추가
   const _iSido = document.getElementById('iRegionSelector_sido')?.value;
