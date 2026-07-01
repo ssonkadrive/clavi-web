@@ -2047,46 +2047,8 @@
 
       <section class="card">
         <h2 class="card-title">🎯 원하는 강사 분야</h2>
-
-        <!-- STEP 1: 종목 -->
-        <div class="ap-step-row" style="margin-top:0;">
-          <span class="ap-step-num">1</span>
-          <span class="ap-step-title">종목 선택</span>
-        </div>
-        <div class="sp-cat-tab-row" id="apCatTabs"></div>
-
-        <!-- STEP 2: 수업 과목 & 필수 역량 -->
-        <div id="apStep2" style="display:none;">
-          <div class="ap-step-row">
-            <span class="ap-step-num">2</span>
-            <span class="ap-step-title">수업 과목 선택</span>
-          </div>
-          <div class="sp-mid-chips" id="apMidChips"></div>
-          <div id="apSkillCard" style="display:none;margin-top:10px;">
-            <p class="sp-mid-label" id="apSkillCardTitle">과목 선택</p>
-            <div class="sp-skill-list" id="apSkillList"></div>
-          </div>
-
-        </div>
-
-        <!-- STEP 3: 우대 및 부가 조건 -->
-        <div id="apStep3" style="display:none;">
-          <div class="ap-step-row">
-            <span class="ap-step-num ap-step-num--opt">3</span>
-            <span class="ap-step-title">우대 및 부가 조건 <small>선택</small></span>
-          </div>
-          <button type="button" class="sp-accordion-btn" onclick="apToggleAccordion()" style="margin-top:0;">
-            <span>조건 펼치기 <span id="apCommonBadge" style="display:none;margin-left:6px;background:var(--primary);color:#fff;font-size:.72rem;font-weight:700;padding:2px 7px;border-radius:99px;"></span></span>
-            <span id="apAccordionArrow" style="transition:transform .3s;display:inline-block;">▾</span>
-          </button>
-          <div id="apAccordionBody" style="overflow:hidden;max-height:0;transition:max-height .35s ease;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);margin-top:-1px;" data-open="0">
-            <div id="apCommonSkillList" style="padding:12px;display:flex;flex-direction:column;gap:6px;"></div>
-            <div style="padding:0 12px 14px;">
-              <button type="button" onclick="apToggleAccordion()" style="width:100%;padding:9px;border-radius:var(--radius);border:1.5px solid var(--primary);background:var(--primary);color:#fff;font-family:var(--font);font-size:.85rem;font-weight:600;cursor:pointer;">완료 ✓</button>
-            </div>
-          </div>
-        </div>
-
+        <p class="card-desc">분야를 탐색하며 교육 과목과 우대 조건을 선택하세요.</p>
+        <div id="apTreeNav"></div>
         <!-- 선택 결과 -->
         <div id="apResultPanel" style="margin-top:14px;">
           <div class="sp-result-empty">선택한 과목이 여기에 표시됩니다.</div>
@@ -2278,37 +2240,8 @@
 
       <section class="card">
         <h2 class="card-title">🎯 나의 전문 분야</h2>
-        <p class="card-desc">대분류 선택 후 세부 과목과 필수/우대를 설정하세요.</p>
-
-        <!-- 대분류 탭 -->
-        <div class="sp-cat-tab-row" id="ipCatTabs"></div>
-
-        <!-- 중분류 -->
-        <div id="ipMidCard" style="display:none;margin-top:12px;">
-          <p class="card-desc" style="margin-bottom:8px;">세부 분야를 선택하세요</p>
-          <div class="sp-mid-chips" id="ipMidChips"></div>
-        </div>
-
-        <!-- 소분류 + 필수/우대 -->
-        <div id="ipSkillCard" style="display:none;margin-top:12px;">
-          <p class="card-desc" style="margin-bottom:8px;"><strong id="ipSkillCardTitle"></strong> 과목</p>
-          <div class="sp-skill-list" id="ipSkillList"></div>
-        </div>
-
-        <!-- 일반 업무 아코디언 -->
-        <div style="margin-top:14px;border:1px solid var(--border);border-radius:var(--radius);">
-          <button type="button" onclick="ipToggleAccordion()" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:none;border:none;cursor:pointer;font-family:var(--font);font-size:.9rem;font-weight:600;color:var(--text);">
-            <span>🛠 일반 업무 역량 <span id="ipCommonBadge" style="display:none;margin-left:6px;background:var(--primary);color:#fff;font-size:.72rem;font-weight:700;padding:2px 7px;border-radius:99px;"></span></span>
-            <span id="ipAccordionArrow" style="transition:transform .3s;">▼</span>
-          </button>
-          <div id="ipAccordionBody" style="max-height:0;overflow:hidden;transition:max-height .35s ease;">
-            <div style="padding:0 12px 12px;" id="ipCommonSkillList"></div>
-            <div style="padding:0 12px 14px;">
-              <button type="button" onclick="ipToggleAccordion()" style="width:100%;padding:9px;border-radius:var(--radius);border:1.5px solid var(--primary);background:var(--primary);color:#fff;font-family:var(--font);font-size:.85rem;font-weight:600;cursor:pointer;">완료 ✓</button>
-            </div>
-          </div>
-        </div>
-
+        <p class="card-desc">분야를 탐색하며 가르칠 수 있는 과목과 역량을 선택하세요.</p>
+        <div id="ipTreeNav"></div>
         <!-- 결과 패널 -->
         <div id="ipResultPanel" style="margin-top:14px;">
           <div class="sp-result-empty">선택한 과목이 여기에 표시됩니다.</div>
@@ -2710,11 +2643,11 @@ function drawerGo(menu) {
                  'notifications','interview'];
   if (!ready.includes(menu)) { showToast('🚧 준비 중인 기능입니다'); return; }
   if (menu === 'academy-home')      { setActiveMenu('menuAcademyHome');      showPage('academyHome'); }
-  if (menu === 'academy-post')      { setActiveMenu('menuAcademyPost');      showPage('academyPage');           renderPayNow('aPayTypeGroup','aPayAmountFields','aPayType'); loadApSkillDef().then(() => apInitCats()); }
+  if (menu === 'academy-post')      { setActiveMenu('menuAcademyPost');      showPage('academyPage');           renderPayNow('aPayTypeGroup','aPayAmountFields','aPayType'); loadSkillTree().then(() => apInitTree()); }
   if (menu === 'academy-profile')   { setActiveMenu('menuAcademyProfile');   showPage('academyProfilePage');    initAcademyVerify(); initAcademyPhotoGrid(); }
   if (menu === 'academy-match')     { setActiveMenu('menuAcademyMatch');     showPage('academyMatchPage');      renderAcademyMatch(); }
   if (menu === 'instructor-home')   { setActiveMenu('menuInstructorHome');   showPage('instructorHome'); }
-  if (menu === 'instructor-post')   { setActiveMenu('menuInstructorPost');   showPage('instructorPage');        ipInitCats(); renderPayNow('iPayTypeGroup','iPayAmountFields','iPayType'); }
+  if (menu === 'instructor-post')   { setActiveMenu('menuInstructorPost');   showPage('instructorPage');        loadSkillTree().then(() => ipInitTree()); renderPayNow('iPayTypeGroup','iPayAmountFields','iPayType'); }
   if (menu === 'instructor-profile'){ setActiveMenu('menuInstructorProfile');showPage('instructorProfilePage'); initInstructorVerify(); initInstructorPhotoGrid(); }
   if (menu === 'instructor-match')  { setActiveMenu('menuInstructorMatch');  showPage('instructorMatchPage');   renderInstructorMatch(); }
   if (menu === 'instructor-resume') { setActiveMenu('menuInstructorResume'); showPage('instructorResumePage'); }
@@ -2945,53 +2878,45 @@ const SP_COMMON = {
   '기타': ['영어 소통 가능','아동 안전 교육 이수','입시 포트폴리오 디렉팅 가능']
 };
 
-/* ── 구인공고 종목별 우대 조건 (중분류 키별 오브젝트, 어드민 수정 가능) ── */
-const AP_SKILL_DEF = {
-  sports: { preferred: {
-    '태권도': ['차량 운행 가능 (통학버스)','사범 자격증 보유','아동 안전 교육 이수','협회 심사 동행 가능','전국 대회 인솔 가능','주말 행사 참여 가능','2년 이상 장기 계약 선호','스타렉스 운행 가능','아침 돌봄 가능','학부모 상담 가능','수업 일지 작성 가능']
-  }},
-  music: { preferred: {
-    '건반/피아노': ['콩쿠르 동행 가능','주말 레슨 가능','2년 이상 장기 계약 선호','전문연주 활동 병행 가능','학원 SNS 운영 가능','학부모 상담 가능','수업 일지 작성 가능'],
-    '관악':        ['콩쿠르 동행 가능','주말 레슨 가능','2년 이상 장기 계약 선호','학부모 상담 가능','수업 일지 작성 가능'],
-    '현악':        ['콩쿠르 동행 가능','주말 레슨 가능','2년 이상 장기 계약 선호','학부모 상담 가능','수업 일지 작성 가능'],
-    '타악':        ['콩쿠르 동행 가능','주말 레슨 가능','2년 이상 장기 계약 선호','학부모 상담 가능'],
-    '보컬/성악':   ['공연 동행 가능','주말 레슨 가능','2년 이상 장기 계약 선호','학부모 상담 가능','수업 일지 작성 가능']
-  }},
-  art: { preferred: {
-    '입시미술':        ['입시 지도 가능','포트폴리오 디렉팅 가능','실기 대회 인솔 가능','2년 이상 장기 계약 선호','주말 수업 가능','학원 SNS 운영 가능','학부모 상담 가능','수업 일지 작성 가능'],
-    '아동/초등미술':   ['아동 수업 가능','2년 이상 장기 계약 선호','주말 수업 가능','학부모 상담 가능','수업 일지 작성 가능'],
-    '취미/성인미술':   ['2년 이상 장기 계약 선호','주말 수업 가능','학부모 상담 가능'],
-    '웹툰/디지털드로잉':['2년 이상 장기 계약 선호','주말 수업 가능','학부모 상담 가능','수업 일지 작성 가능']
-  }},
-  etc: { preferred: {
-    '연기/뮤지컬': ['청소년독백대회 동행 가능','DIMF 동행 가능','입시 포트폴리오 디렉팅 가능','주말 행사 참여 가능','2년 이상 장기 계약 선호','학부모 상담 가능','수업 일지 작성 가능']
-  }}
+/* ══ SKILL_TREE — 무한 깊이 트리 (어드민 수정, 학원/강사 폼에서 사용) ══ */
+let SKILL_TREE = {
+  nodes: {
+    music:       { id:'music',       name:'🎵 음악',        children:['keyboard','wind','string','percussion','vocal'], skills:[], preferred:[] },
+    art:         { id:'art',         name:'🎨 미술',        children:['exam_art','kids_art','hobby_art','digital_art'],  skills:[], preferred:[] },
+    sports:      { id:'sports',      name:'⚽ 체육',        children:['taekwondo'],                                      skills:[], preferred:[] },
+    etc:         { id:'etc',         name:'🎭 기타',        children:['acting'],                                         skills:[], preferred:[] },
+    keyboard:    { id:'keyboard',    name:'건반/피아노',    children:[], skills:['피아노','전자키보드','오르간','하프시코드'],                                                             preferred:['콩쿠르 동행 가능','주말 레슨 가능','2년 이상 장기 계약 선호','학부모 상담 가능','수업 일지 작성 가능'] },
+    wind:        { id:'wind',        name:'관악',           children:[], skills:['플루트','클라리넷','색소폰(알토)','색소폰(테너)','오보에','바순','트럼펫','트롬본','호른','튜바'],    preferred:['콩쿠르 동행 가능','주말 레슨 가능','2년 이상 장기 계약 선호','학부모 상담 가능','수업 일지 작성 가능'] },
+    string:      { id:'string',      name:'현악',           children:[], skills:['바이올린','비올라','첼로','콘트라베이스','하프','클래식기타'],                                        preferred:['콩쿠르 동행 가능','주말 레슨 가능','2년 이상 장기 계약 선호','학부모 상담 가능','수업 일지 작성 가능'] },
+    percussion:  { id:'percussion',  name:'타악',           children:[], skills:['드럼','마림바','실로폰','팀파니','타악 퍼커션'],                                                      preferred:['콩쿠르 동행 가능','주말 레슨 가능','학부모 상담 가능'] },
+    vocal:       { id:'vocal',       name:'보컬/성악',      children:[], skills:['클래식 성악','실용 보컬','뮤지컬 보컬','합창 지도'],                                                  preferred:['공연 동행 가능','주말 레슨 가능','2년 이상 장기 계약 선호','학부모 상담 가능','수업 일지 작성 가능'] },
+    exam_art:    { id:'exam_art',    name:'입시미술',       children:[], skills:['소묘','수채화','수묵화','정물화','인물화','디자인 계열 입시'],                                        preferred:['입시 지도 가능','포트폴리오 디렉팅 가능','실기 대회 인솔 가능','2년 이상 장기 계약 선호','주말 수업 가능','학부모 상담 가능','수업 일지 작성 가능'] },
+    kids_art:    { id:'kids_art',    name:'아동/초등미술',  children:[], skills:['크래프트/만들기','수채화·아크릴','조소·클레이','아동 미술 치료'],                                    preferred:['아동 수업 가능','2년 이상 장기 계약 선호','주말 수업 가능','학부모 상담 가능','수업 일지 작성 가능'] },
+    hobby_art:   { id:'hobby_art',   name:'취미/성인미술',  children:[], skills:['수채화','유화','아크릴화','캘리그라피','풍경화'],                                                    preferred:['2년 이상 장기 계약 선호','주말 수업 가능','학부모 상담 가능'] },
+    digital_art: { id:'digital_art', name:'웹툰/디지털',    children:[], skills:['클립스튜디오','프로크리에이트','포토샵','일러스트레이터','웹툰 스토리'],                            preferred:['2년 이상 장기 계약 선호','주말 수업 가능','학부모 상담 가능','수업 일지 작성 가능'] },
+    taekwondo:   { id:'taekwondo',   name:'태권도',         children:[], skills:['시범단 지도','겨루기 지도','품새 지도','호신술','아동 체육 프로그램'],                               preferred:['차량 운행 가능 (통학버스)','사범 자격증 보유','아동 안전 교육 이수','협회 심사 동행 가능','전국 대회 인솔 가능','주말 행사 참여 가능','2년 이상 장기 계약 선호','스타렉스 운행 가능','아침 돌봄 가능','학부모 상담 가능','수업 일지 작성 가능'] },
+    acting:      { id:'acting',      name:'연기/뮤지컬',    children:[], skills:['입시연기','뮤지컬 보컬','움직임(현대무용)','움직임(한국무용)','움직임(발레)'],                       preferred:['청소년독백대회 동행 가능','DIMF 동행 가능','입시 포트폴리오 디렉팅 가능','주말 행사 참여 가능','2년 이상 장기 계약 선호','학부모 상담 가능','수업 일지 작성 가능'] },
+  },
+  rootIds: ['music','art','sports','etc']
 };
 
-let _platformConfigLoaded = false;
-async function loadApSkillDef() {
-  if (_platformConfigLoaded) return;
-  _platformConfigLoaded = true;
+let _skillTreeLoaded = false;
+async function loadSkillTree() {
+  if (_skillTreeLoaded) return;
+  _skillTreeLoaded = true;
   try {
-    const { data } = await _supabase.from('platform_config').select('key,value').in('key',['SP_CATS','AP_SKILL_DEF']);
-    if (!data) return;
-    data.forEach(row => {
-      if (row.key === 'SP_CATS')      Object.keys(row.value).forEach(k => { SP_CATS[k]      = row.value[k]; });
-      if (row.key === 'AP_SKILL_DEF') Object.keys(row.value).forEach(k => { AP_SKILL_DEF[k] = row.value[k]; });
-    });
+    const { data } = await _supabase.from('platform_config').select('value').eq('key','SKILL_TREE').maybeSingle();
+    if (data?.value?.nodes) {
+      Object.keys(data.value.nodes).forEach(k => { SKILL_TREE.nodes[k] = data.value.nodes[k]; });
+      if (data.value.rootIds?.length) SKILL_TREE.rootIds = data.value.rootIds;
+    }
   } catch(e) {}
 }
-async function saveApSkillDef() {
-  const ts = new Date().toISOString();
-  const results = await Promise.all([
-    _supabase.from('platform_config').upsert({ key:'SP_CATS',      value: SP_CATS,      updated_at: ts }),
-    _supabase.from('platform_config').upsert({ key:'AP_SKILL_DEF', value: AP_SKILL_DEF, updated_at: ts })
-  ]);
-  const err = results.find(r => r.error);
-  if (err) { showToast('저장 실패: ' + err.error.message); return false; }
-  // 모든 피커 탭 초기화 → 다음 진입 시 새 데이터로 렌더
-  ['spCatTabs','ipCatTabs','apCatTabs'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; });
-  showToast('저장 완료 ✓  학원/강사 화면에 바로 적용됩니다');
+async function saveSkillTree() {
+  const { error } = await _supabase.from('platform_config').upsert({ key:'SKILL_TREE', value: SKILL_TREE, updated_at: new Date().toISOString() });
+  if (error) { showToast('저장 실패: ' + error.message); return false; }
+  _skillTreeLoaded = false;
+  showToast('저장 완료 ✓  학원·강사 화면에 즉시 반영됩니다');
   return true;
 }
 
@@ -3155,283 +3080,80 @@ function spToggleAccordion() {
   }
 }
 
-/* ════════════════════════════════════════════════
-   instructorPage 4-level skill picker (ip*)
-════════════════════════════════════════════════ */
-let _ipCat = null, _ipMid = null;
-const _ipSel  = {};
-const _ipCsel = {};
+/* ── 강사 전문분야 트리 네비게이터 ── */
+let _ipTreePath = [];
+const _ipSkillSel = {};
+const _ipPrefSel  = {};
 
-function ipInitCats() {
-  const tabs = document.getElementById('ipCatTabs');
-  if (!tabs || tabs.childElementCount > 0) return;
-  Object.entries(SP_CATS).forEach(([key, cat]) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'sp-cat-tab';
-    btn.textContent = cat.label;
-    btn.onclick = () => ipSelectCat(key, btn);
-    tabs.appendChild(btn);
-  });
-  ipRenderCommonSkills();
-}
-
-function ipSelectCat(key, btn) {
-  _ipCat = key; _ipMid = null;
-  document.querySelectorAll('#ipCatTabs .sp-cat-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  const chips = document.getElementById('ipMidChips');
-  chips.innerHTML = '';
-  Object.keys(SP_CATS[key].subjects).forEach(subj => {
-    const c = document.createElement('button');
-    c.type = 'button';
-    c.className = 'sp-mid-chip';
-    c.textContent = subj;
-    c.onclick = () => ipSelectMid(subj, c);
-    chips.appendChild(c);
-  });
-  document.getElementById('ipMidCard').style.display = 'block';
-  document.getElementById('ipSkillCard').style.display = 'none';
-}
-
-function ipSelectMid(subj, btn) {
-  _ipMid = subj;
-  document.querySelectorAll('#ipMidChips .sp-mid-chip').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('ipSkillCardTitle').textContent = subj;
-  ipRenderSkills();
-  document.getElementById('ipSkillCard').style.display = 'block';
-}
-
-function ipRenderSkills() {
-  const list = document.getElementById('ipSkillList');
-  list.innerHTML = '';
-  (SP_CATS[_ipCat]?.subjects[_ipMid] || []).forEach(s => spMakeSkillItem(list, s, _ipSel, ipUpdateResult));
-}
-
-function ipRenderCommonSkills() {
-  const container = document.getElementById('ipCommonSkillList');
-  if (!container) return;
-  container.innerHTML = '';
-  Object.entries(SP_COMMON).forEach(([group, items]) => {
-    const title = document.createElement('div');
-    title.className = 'sp-common-group';
-    title.textContent = group;
-    container.appendChild(title);
-    const list = document.createElement('div');
-    list.className = 'sp-skill-list';
-    items.forEach(s => spMakeSkillItem(list, s, _ipCsel, ipUpdateResult));
-    container.appendChild(list);
-  });
+function ipInitTree() {
+  _ipTreePath = [];
+  Object.keys(_ipSkillSel).forEach(k => delete _ipSkillSel[k]);
+  Object.keys(_ipPrefSel).forEach(k => delete _ipPrefSel[k]);
+  _treeNav('ipTreeNav', _ipTreePath, _ipSkillSel, _ipPrefSel, ipUpdateResult);
+  ipUpdateResult();
 }
 
 function ipUpdateResult() {
   const panel = document.getElementById('ipResultPanel');
   if (!panel) return;
-  // 공통 뱃지 카운트
-  const cCount = Object.keys(_ipCsel).length;
-  const badge = document.getElementById('ipCommonBadge');
-  if (badge) { badge.textContent = cCount; badge.style.display = cCount ? '' : 'none'; }
-  const all = [...Object.entries(_ipSel), ...Object.entries(_ipCsel)];
-  if (!all.length) {
+  const skills = Object.keys(_ipSkillSel);
+  const prefs  = Object.keys(_ipPrefSel);
+  if (!skills.length && !prefs.length) {
     panel.innerHTML = '<div class="sp-result-empty">선택한 과목이 여기에 표시됩니다.</div>';
     return;
   }
-  const div = document.createElement('div');
-  div.className = 'sp-result-tags';
-  all.forEach(([s, t]) => {
-    const tag = document.createElement('span');
-    tag.className = 'rtag ' + (t === 'required' ? 'rtag-req' : 'rtag-pref');
-    tag.innerHTML = `${t === 'required' ? '🔵 필수' : '✅ 우대'} ${s} `;
-    const x = document.createElement('button');
-    x.type = 'button';
-    x.className = 'rtag-x';
-    x.textContent = '×';
-    x.onclick = () => ipRemoveSkill(s);
-    tag.appendChild(x);
-    div.appendChild(tag);
+  const div = document.createElement('div'); div.className = 'sp-result-tags';
+  skills.forEach(s => {
+    const tag = document.createElement('span'); tag.className = 'rtag rtag-req';
+    tag.innerHTML = `🔵 ${s} `; const x = document.createElement('button'); x.type='button'; x.className='rtag-x'; x.textContent='×'; x.onclick=()=>{ delete _ipSkillSel[s]; _treeNav('ipTreeNav',_ipTreePath,_ipSkillSel,_ipPrefSel,ipUpdateResult); ipUpdateResult(); }; tag.appendChild(x); div.appendChild(tag);
   });
-  panel.innerHTML = '';
-  panel.appendChild(div);
-}
-
-function ipRemoveSkill(skill) {
-  if (_ipSel[skill])  { delete _ipSel[skill];  ipRenderSkills(); }
-  if (_ipCsel[skill]) { delete _ipCsel[skill]; ipRenderCommonSkills(); }
-  ipUpdateResult();
-}
-
-function ipToggleAccordion() {
-  const body  = document.getElementById('ipAccordionBody');
-  const arrow = document.getElementById('ipAccordionArrow');
-  const isOpen = body.dataset.open === '1';
-  if (isOpen) {
-    body.style.maxHeight = body.scrollHeight + 'px';
-    requestAnimationFrame(() => { body.style.maxHeight = '0px'; });
-    arrow.style.transform = '';
-    body.dataset.open = '0';
-  } else {
-    body.style.maxHeight = body.scrollHeight + 'px';
-    arrow.style.transform = 'rotate(180deg)';
-    setTimeout(() => { body.style.maxHeight = 'none'; }, 360);
-    body.dataset.open = '1';
-  }
-}
-
-/* ════════════════════════════════════════════════
-   academyPage 4-level skill picker (ap*)
-════════════════════════════════════════════════ */
-let _apCat = null, _apMid = null;
-const _apSel  = {};
-const _apCsel = {};
-
-function apInitCats() {
-  const tabs = document.getElementById('apCatTabs');
-  if (!tabs || tabs.childElementCount > 0) return;
-  Object.entries(SP_CATS).forEach(([key, cat]) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    btn.className = 'sp-cat-tab';
-    btn.textContent = cat.label;
-    btn.onclick = () => apSelectCat(key, btn);
-    tabs.appendChild(btn);
+  prefs.forEach(p => {
+    const tag = document.createElement('span'); tag.className = 'rtag rtag-pref';
+    tag.innerHTML = `✅ ${p} `; const x = document.createElement('button'); x.type='button'; x.className='rtag-x'; x.textContent='×'; x.onclick=()=>{ delete _ipPrefSel[p]; _treeNav('ipTreeNav',_ipTreePath,_ipSkillSel,_ipPrefSel,ipUpdateResult); ipUpdateResult(); }; tag.appendChild(x); div.appendChild(tag);
   });
+  panel.innerHTML = ''; panel.appendChild(div);
 }
 
-function apSelectCat(key, btn) {
-  const isChange = _apCat && _apCat !== key;
-  _apCat = key; _apMid = null;
+/* ── 학원 공고 트리 네비게이터 ── */
+let _apTreePath = [];
+const _apSkillSel = {};
+const _apPrefSel  = {};
 
-  // 종목 변경 시 역량 선택만 초기화 (급여·지역 유지)
-  if (isChange) {
-    Object.keys(_apSel).forEach(k => delete _apSel[k]);
-    Object.keys(_apCsel).forEach(k => delete _apCsel[k]);
-    showToast(`${SP_CATS[key].label} 종목으로 변경 — 역량 조건이 초기화되었습니다`);
-  }
-
-  document.querySelectorAll('#apCatTabs .sp-cat-tab').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-
-  // 중분류 칩 렌더
-  const chips = document.getElementById('apMidChips');
-  chips.innerHTML = '';
-  const midKeys = Object.keys(SP_CATS[key].subjects);
-  midKeys.forEach(subj => {
-    const c = document.createElement('button');
-    c.type = 'button'; c.className = 'sp-mid-chip'; c.textContent = subj;
-    c.onclick = () => apSelectMid(subj, c);
-    chips.appendChild(c);
-  });
-
-  document.getElementById('apSkillCard').style.display = 'none';
-  document.getElementById('apStep2').style.display = 'block';
-  document.getElementById('apStep3').style.display = 'block';
-
-  apRenderPreferred(key, null);
-
-  // aPaySubjectPick 채우기
-  const el = document.getElementById('aPaySubjectPick');
-  if (el) {
-    const subjects = Object.values(SP_CATS[key].subjects).flat();
-    el.innerHTML = '<option value="">과목 선택</option>';
-    subjects.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; el.appendChild(o); });
-  }
+function apInitTree() {
+  _apTreePath = [];
+  Object.keys(_apSkillSel).forEach(k => delete _apSkillSel[k]);
+  Object.keys(_apPrefSel).forEach(k => delete _apPrefSel[k]);
+  _treeNav('apTreeNav', _apTreePath, _apSkillSel, _apPrefSel, apUpdateResult);
   apUpdateResult();
-}
-
-function apSelectMid(subj, btn) {
-  _apMid = subj;
-  document.querySelectorAll('#apMidChips .sp-mid-chip').forEach(b => b.classList.remove('active'));
-  btn.classList.add('active');
-  document.getElementById('apSkillCardTitle').textContent = '필수 역량';
-  apRenderSkills();
-  document.getElementById('apSkillCard').style.display = 'block';
-  apRenderPreferred(_apCat, subj);
-}
-
-function apRenderSkills() {
-  const list = document.getElementById('apSkillList');
-  list.innerHTML = '';
-  (SP_CATS[_apCat]?.subjects[_apMid] || []).forEach(s => spMakeSkillItem(list, s, _apSel, apUpdateResult));
-}
-
-function apMakeCheckItem(container, label, stateObj, type, onchange) {
-  const wrap = document.createElement('label');
-  wrap.className = 'ap-req-check';
-  const cb = document.createElement('input');
-  cb.type = 'checkbox';
-  cb.checked = !!stateObj[label];
-  cb.onchange = () => {
-    if (cb.checked) stateObj[label] = type;
-    else delete stateObj[label];
-    if (onchange) onchange();
-  };
-  const sp = document.createElement('span');
-  sp.textContent = label;
-  wrap.appendChild(cb); wrap.appendChild(sp);
-  container.appendChild(wrap);
-}
-
-function apRenderPreferred(key, mid) {
-  const def = AP_SKILL_DEF[key];
-  const container = document.getElementById('apCommonSkillList');
-  if (!container || !def) return;
-  container.innerHTML = '';
-  const pref = def.preferred || {};
-  const items = (mid && pref[mid])
-    ? pref[mid]
-    : [...new Set(Object.values(pref).flat())];
-  items.forEach(item => apMakeCheckItem(container, item, _apCsel, 'preferred', apUpdateResult));
 }
 
 function apUpdateResult() {
   const panel = document.getElementById('apResultPanel');
   if (!panel) return;
-  const cCount = Object.keys(_apCsel).length;
-  const badge = document.getElementById('apCommonBadge');
-  if (badge) { badge.textContent = cCount; badge.style.display = cCount ? '' : 'none'; }
-  const all = [...Object.entries(_apSel), ...Object.entries(_apCsel)];
-  if (!all.length) {
+  const skills = Object.keys(_apSkillSel);
+  const prefs  = Object.keys(_apPrefSel);
+  if (!skills.length && !prefs.length) {
     panel.innerHTML = '<div class="sp-result-empty">선택한 과목이 여기에 표시됩니다.</div>';
     return;
   }
-  const div = document.createElement('div');
-  div.className = 'sp-result-tags';
-  all.forEach(([s, t]) => {
-    const tag = document.createElement('span');
-    tag.className = 'rtag ' + (t === 'required' ? 'rtag-req' : 'rtag-pref');
-    tag.innerHTML = `${t === 'required' ? '🔵 필수' : '✅ 우대'} ${s} `;
-    const x = document.createElement('button');
-    x.type = 'button'; x.className = 'rtag-x'; x.textContent = '×';
-    x.onclick = () => apRemoveSkill(s);
-    tag.appendChild(x);
-    div.appendChild(tag);
+  const div = document.createElement('div'); div.className = 'sp-result-tags';
+  skills.forEach(s => {
+    const tag = document.createElement('span'); tag.className = 'rtag rtag-req';
+    tag.innerHTML = `🔵 ${s} `; const x = document.createElement('button'); x.type='button'; x.className='rtag-x'; x.textContent='×'; x.onclick=()=>{ delete _apSkillSel[s]; _treeNav('apTreeNav',_apTreePath,_apSkillSel,_apPrefSel,apUpdateResult); apUpdateResult(); }; tag.appendChild(x); div.appendChild(tag);
   });
-  panel.innerHTML = '';
-  panel.appendChild(div);
+  prefs.forEach(p => {
+    const tag = document.createElement('span'); tag.className = 'rtag rtag-pref';
+    tag.innerHTML = `✅ ${p} `; const x = document.createElement('button'); x.type='button'; x.className='rtag-x'; x.textContent='×'; x.onclick=()=>{ delete _apPrefSel[p]; _treeNav('apTreeNav',_apTreePath,_apSkillSel,_apPrefSel,apUpdateResult); apUpdateResult(); }; tag.appendChild(x); div.appendChild(tag);
+  });
+  panel.innerHTML = ''; panel.appendChild(div);
 }
 
-function apRemoveSkill(skill) {
-  if (_apSel[skill])  { delete _apSel[skill];  apRenderSkills(); }
-  if (_apCsel[skill]) { delete _apCsel[skill]; apRenderPreferred(_apCat, _apMid); }
-  apUpdateResult();
-}
-
-function apToggleAccordion() {
-  const body  = document.getElementById('apAccordionBody');
-  const arrow = document.getElementById('apAccordionArrow');
-  const isOpen = body.dataset.open === '1';
-  if (isOpen) {
-    body.style.maxHeight = body.scrollHeight + 'px';
-    requestAnimationFrame(() => { body.style.maxHeight = '0px'; });
-    arrow.style.transform = '';
-    body.dataset.open = '0';
-  } else {
-    body.style.maxHeight = body.scrollHeight + 'px';
-    arrow.style.transform = 'rotate(180deg)';
-    setTimeout(() => { body.style.maxHeight = 'none'; }, 360);
-    body.dataset.open = '1';
-  }
+/* ── [구버전 ap* stub — 페이 관련 함수는 아래 apPayMethodChange 등에서 유지] ── */
+function apInitCats() { apInitTree(); }
+function _apDummy() { // unused legacy vars kept to avoid reference errors
+  const _apCat = null, _apMid = null;
+  const _apSel = {}, _apCsel = {};
+  void(_apCat); void(_apMid); void(_apSel); void(_apCsel);
 }
 
 async function saveProfileSetup() {
@@ -4432,8 +4154,10 @@ async function saveAcademyConditions() {
   const { data: { session } } = await _supabase.auth.getSession();
   if (!session?.user) { showToast('로그인이 필요합니다.'); return; }
 
-  const subjects     = getChecked('aSubject');
-  const regions      = getRegionSelectorValues('aRegionSelector');
+  const selected_skills    = Object.keys(_apSkillSel);
+  const selected_preferred = Object.keys(_apPrefSel);
+  const subjects           = selected_skills;
+  const regions            = getRegionSelectorValues('aRegionSelector');
   const weekdays     = getChecked('aWeekday');
   const employ_types = getChecked('aEmploy');
   const pay_max      = parseInt(document.getElementById('aPayMax').value) || 0;
@@ -4442,7 +4166,7 @@ async function saveAcademyConditions() {
   const weekday_nego = document.querySelector('input[name="aWeekday"][value="협의"]')?.checked || false;
   const fulltime_only = document.getElementById('aFulltime').checked;
 
-  if (!subjects.length) { showToast('분야를 하나 이상 선택해 주세요.'); return; }
+  if (!selected_skills.length) { showToast('교육 과목을 하나 이상 선택해 주세요.'); return; }
   if (!regions.length)  { showToast('지역을 하나 이상 선택해 주세요.'); return; }
   if (!weekday_nego && !schedules.length) { showToast('수업 요일/시간을 하나 이상 추가하거나 협의를 선택해 주세요.'); return; }
 
@@ -4452,13 +4176,23 @@ async function saveAcademyConditions() {
   const { error } = await _supabase.from('academy_conditions').upsert({
     user_id: session.user.id,
     academy_name,
-    subjects, regions, employ_types, pay_max, intro,
+    subjects, selected_skills, selected_preferred,
+    regions, employ_types, pay_max, intro,
     subject_pays: getAPaySubjects(),
     schedules, weekday_nego, fulltime_only,
     updated_at: new Date().toISOString()
   }, { onConflict: 'user_id' });
 
   if (error) { showToast('저장 오류: ' + error.message); return; }
+
+  try {
+    const { data: ics } = await _supabase.from('instructor_conditions').select('user_id,selected_skills');
+    if (ics) {
+      const cnt = ics.filter(ic => (ic.selected_skills||[]).some(s => selected_skills.includes(s))).length;
+      if (cnt) showToast(`🎉 ${cnt}명의 강사와 매칭! 매칭 탭에서 확인하세요.`);
+    }
+  } catch(e) {}
+
   showToast('조건이 저장되었습니다! 매칭을 시작합니다 🎉');
   setTimeout(() => drawerGo('academy-match'), 800);
 }
@@ -4468,15 +4202,11 @@ async function saveInstructorConditions() {
   const { data: { session } } = await _supabase.auth.getSession();
   if (!session?.user) { showToast('로그인이 필요합니다.'); return; }
 
-  const required_skills  = [
-    ...Object.entries(_ipSel).filter(([,t]) => t === 'required').map(([s]) => s),
-    ...Object.entries(_ipCsel).filter(([,t]) => t === 'required').map(([s]) => s)
-  ];
-  const preferred_skills = [
-    ...Object.entries(_ipSel).filter(([,t]) => t === 'preferred').map(([s]) => s),
-    ...Object.entries(_ipCsel).filter(([,t]) => t === 'preferred').map(([s]) => s)
-  ];
-  const subjects     = [...required_skills, ...preferred_skills];
+  const selected_skills    = Object.keys(_ipSkillSel);
+  const selected_preferred = Object.keys(_ipPrefSel);
+  const required_skills    = selected_skills;
+  const preferred_skills   = selected_preferred;
+  const subjects           = selected_skills;
   const regions      = getRegionSelectorValues('iRegionSelector');
   const weekdays     = getChecked('iWeekday');
   const employ_types = getChecked('iEmploy');
@@ -4489,19 +4219,29 @@ async function saveInstructorConditions() {
   const weekday_nego = weekdays.includes('협의');
   const weekday_any  = weekdays.includes('요일무관');
 
-  if (!subjects.length) { showToast('전문 분야를 하나 이상 선택해 주세요.'); return; }
+  if (!selected_skills.length) { showToast('전문 과목을 하나 이상 선택해 주세요.'); return; }
   if (!regions.length)  { showToast('출강 가능 지역을 하나 이상 선택해 주세요.'); return; }
   if (!time_nego && time_start && time_end && time_start >= time_end) { showToast('종료 시간은 시작 시간보다 늦어야 합니다.'); return; }
 
   const { error } = await _supabase.from('instructor_conditions').upsert({
     user_id: session.user.id,
-    subjects, required_skills, preferred_skills,
+    subjects, selected_skills, selected_preferred,
+    required_skills, preferred_skills,
     regions, weekdays, employ_types, pay_min, intro,
     time_start, time_end, time_nego, fulltime_only, weekday_nego, weekday_any,
     updated_at: new Date().toISOString()
   }, { onConflict: 'user_id' });
 
   if (error) { showToast('저장 오류: ' + error.message); return; }
+
+  try {
+    const { data: acs } = await _supabase.from('academy_conditions').select('user_id,selected_skills');
+    if (acs) {
+      const cnt = acs.filter(ac => (ac.selected_skills||[]).some(s => selected_skills.includes(s))).length;
+      if (cnt) showToast(`🎉 ${cnt}개 학원과 매칭! 매칭 탭에서 확인하세요.`);
+    }
+  } catch(e) {}
+
   showToast('조건이 저장되었습니다! 매칭을 시작합니다 🎉');
   setTimeout(() => drawerGo('instructor-match'), 800);
 }
@@ -6060,7 +5800,7 @@ document.addEventListener('DOMContentLoaded', () => {
   renderRegionSelector('iRegionSelector', 5);
   initAPaySubjectSelect();
   spInitCats(); // 강사 회원가입 스킬 피커 초기화
-  ipInitCats(); // 강사 조건 페이지 스킬 피커 초기화
+  // ipInitTree는 loadSkillTree 완료 후 drawerGo에서 호출됨
 
   const timeHtml = timeOptions();
   ['aTimeStartPick','aTimeEndPick','iTimeStart','iTimeEnd'].forEach(id => {
@@ -6483,31 +6223,8 @@ async function acceptTerms() {
 
     <!-- ── 공고 설정 탭 ── -->
     <div id="adminTab-skilldef" class="admin-tab-panel" style="display:none;">
-      <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:16px;">대분류 → 중분류 → 세부스킬·우대조건 순으로 클릭해서 관리하세요. <strong>저장하기</strong>를 누르면 학원/강사 화면에 즉시 반영됩니다.</p>
-
-      <!-- 3패널 레이아웃 -->
-      <div style="display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:14px;align-items:start;">
-
-        <!-- 패널1: 대분류 -->
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;">
-          <p style="font-size:.82rem;font-weight:700;color:var(--text-muted);margin-bottom:10px;">① 대분류</p>
-          <div id="adeCatList" style="display:flex;flex-direction:column;gap:6px;"></div>
-        </div>
-
-        <!-- 패널2: 중분류 -->
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;">
-          <div id="adeMidList" style="display:flex;flex-direction:column;gap:0;">
-            <p style="color:var(--text-muted);font-size:.85rem;">← 대분류를 먼저 선택하세요</p>
-          </div>
-        </div>
-
-        <!-- 패널3: 세부 스킬 + 우대 조건 -->
-        <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;">
-          <div id="adeDetail">
-            <p style="color:var(--text-muted);font-size:.85rem;">← 중분류를 선택하면 세부 항목을 편집할 수 있어요</p>
-          </div>
-        </div>
-      </div>
+      <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:16px;">분류를 클릭해 탐색하고 항목을 추가·수정·삭제하세요. 어디서든 <strong>하위 분류</strong>를 무한 추가할 수 있습니다.</p>
+      <div id="skillTreeAdmin"></div>
 
       <div style="margin-top:18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
         <button class="submit-btn" style="padding:12px 32px;" onclick="adminSaveSkillDef()">💾 저장하기</button>
@@ -6589,233 +6306,256 @@ function switchAdminTab(tab) {
   if (tab === 'instructors') loadAdminInstructors();
   if (tab === 'academies')   loadAdminAcademies();
   if (tab === 'logs')        loadAdminLogs();
-  if (tab === 'skilldef')    { _platformConfigLoaded = false; loadApSkillDef().then(() => renderAdminSkillDef()); }
+  if (tab === 'skilldef')    { _skillTreeLoaded = false; loadSkillTree().then(() => renderAdminSkillDef()); }
 }
 
-/* ── 공고 설정 탭 — 3단계 트리 에디터 ── */
-let _ade = { cat: null, mid: null }; // admin editor state
+/* ══ 공유 트리 네비게이터 (학원·강사 폼용) ══ */
+function _treeNav(containerId, path, skillSel, prefSel, onUpdate) {
+  const nav = document.getElementById(containerId);
+  if (!nav) return;
+  nav.innerHTML = '';
+  const nodes = SKILL_TREE.nodes;
+  const currentId = path.length ? path[path.length - 1] : null;
+  const items = currentId
+    ? (nodes[currentId]?.children || []).map(id => nodes[id]).filter(Boolean)
+    : SKILL_TREE.rootIds.map(id => nodes[id]).filter(Boolean);
+  const isLeaf = currentId !== null && !items.length;
+
+  if (path.length) {
+    const bc = document.createElement('div');
+    bc.style.cssText = 'display:flex;align-items:center;gap:5px;margin-bottom:12px;font-size:.8rem;color:var(--text-muted);flex-wrap:wrap;';
+    const home = document.createElement('span');
+    home.textContent = '← 처음'; home.style.cssText = 'cursor:pointer;color:var(--primary);font-weight:600;';
+    home.onclick = () => { path.length = 0; _treeNav(containerId, path, skillSel, prefSel, onUpdate); };
+    bc.appendChild(home);
+    path.forEach((id, i) => {
+      const sep = document.createElement('span'); sep.textContent = ' › '; bc.appendChild(sep);
+      const n = nodes[id];
+      const span = document.createElement('span');
+      span.textContent = n?.name || id;
+      const isLast = i === path.length - 1;
+      span.style.cssText = isLast ? 'color:var(--text);font-weight:700;' : 'cursor:pointer;color:var(--primary);';
+      if (!isLast) span.onclick = () => { path.splice(i + 1); _treeNav(containerId, path, skillSel, prefSel, onUpdate); };
+      bc.appendChild(span);
+    });
+    nav.appendChild(bc);
+  }
+
+  if (!isLeaf) {
+    const wrap = document.createElement('div');
+    wrap.style.cssText = 'display:flex;flex-wrap:wrap;gap:8px;';
+    items.forEach(node => {
+      const btn = document.createElement('button');
+      btn.type = 'button';
+      const isRoot = !path.length;
+      btn.style.cssText = `padding:${isRoot?'10px 18px':'7px 14px'};border-radius:99px;border:1.5px solid var(--border);background:var(--bg);color:var(--text);font-size:${isRoot?'.9rem':'.85rem'};font-weight:${isRoot?'700':'400'};cursor:pointer;font-family:var(--font);white-space:nowrap;`;
+      btn.textContent = node.name;
+      btn.onclick = () => { path.push(node.id); _treeNav(containerId, path, skillSel, prefSel, onUpdate); };
+      wrap.appendChild(btn);
+    });
+    nav.appendChild(wrap);
+  } else {
+    const currentNode = nodes[currentId];
+    if (currentNode?.skills?.length) {
+      const h = document.createElement('p'); h.style.cssText = 'font-size:.85rem;font-weight:700;margin:4px 0 8px;color:var(--text);'; h.textContent = '📚 교육 과목';
+      nav.appendChild(h);
+      const list = document.createElement('div'); list.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-bottom:14px;';
+      currentNode.skills.forEach(skill => {
+        const label = document.createElement('label');
+        label.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;background:var(--bg);';
+        const chk = document.createElement('input'); chk.type = 'checkbox'; chk.checked = !!skillSel[skill];
+        chk.onchange = () => { if (chk.checked) skillSel[skill] = true; else delete skillSel[skill]; onUpdate(); };
+        const span = document.createElement('span'); span.textContent = skill; span.style.cssText = 'font-size:.88rem;color:var(--text);';
+        label.appendChild(chk); label.appendChild(span); list.appendChild(label);
+      });
+      nav.appendChild(list);
+    }
+    if (currentNode?.preferred?.length) {
+      const h = document.createElement('p'); h.style.cssText = 'font-size:.85rem;font-weight:700;margin-bottom:8px;color:var(--text);'; h.textContent = '⭐ 우대 조건';
+      nav.appendChild(h);
+      const list = document.createElement('div'); list.style.cssText = 'display:flex;flex-direction:column;gap:6px;';
+      currentNode.preferred.forEach(pref => {
+        const label = document.createElement('label');
+        label.style.cssText = 'display:flex;align-items:center;gap:10px;padding:10px 12px;border:1px solid var(--border);border-radius:8px;cursor:pointer;background:var(--bg);';
+        const chk = document.createElement('input'); chk.type = 'checkbox'; chk.checked = !!prefSel[pref];
+        chk.onchange = () => { if (chk.checked) prefSel[pref] = true; else delete prefSel[pref]; onUpdate(); };
+        const span = document.createElement('span'); span.textContent = pref; span.style.cssText = 'font-size:.88rem;color:var(--text);';
+        label.appendChild(chk); label.appendChild(span); list.appendChild(label);
+      });
+      nav.appendChild(list);
+    }
+  }
+
+  if (path.length) {
+    const back = document.createElement('button');
+    back.type = 'button';
+    back.style.cssText = 'margin-top:14px;padding:8px 16px;border:1px solid var(--border);border-radius:8px;background:var(--bg);color:var(--text-muted);font-size:.83rem;cursor:pointer;font-family:var(--font);';
+    back.textContent = '← 이전';
+    back.onclick = () => { path.pop(); _treeNav(containerId, path, skillSel, prefSel, onUpdate); };
+    nav.appendChild(back);
+  }
+}
+
+/* ══ 어드민 스킬트리 에디터 ══ */
+let _stPath = [];
 
 function renderAdminSkillDef() {
-  _renderAdeCats();
-  _renderAdeMids();
-  _renderAdeDetail();
+  _stPath = [];
+  _stRender();
 }
 
-function _adeTag(txt, onDel, onEdit) {
-  const row = document.createElement('div');
-  row.style.cssText = 'display:flex;align-items:center;gap:5px;';
-  row.draggable = true;
+function _stRender() {
+  const tree = document.getElementById('skillTreeAdmin');
+  if (!tree) return;
+  tree.innerHTML = '';
+  const nodes = SKILL_TREE.nodes;
 
-  // 드래그 핸들
-  const handle = document.createElement('span');
-  handle.textContent = '⠿';
-  handle.style.cssText = 'color:var(--text-muted);font-size:1rem;cursor:grab;padding:0 4px;flex-shrink:0;user-select:none;';
-  handle.title = '드래그해서 순서 변경';
-
-  const sp = document.createElement('span');
-  sp.style.cssText = 'flex:1;font-size:.85rem;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);';
-  sp.textContent = txt;
-
-  const inp = document.createElement('input');
-  inp.type = 'text'; inp.value = txt;
-  inp.style.cssText = 'flex:1;font-size:.85rem;padding:6px 10px;border:1.5px solid var(--primary);border-radius:6px;font-family:var(--font);background:var(--bg);color:var(--text);display:none;';
-
-  const editBtn = document.createElement('button');
-  editBtn.type = 'button';
-  editBtn.style.cssText = 'padding:4px 10px;border:none;background:#e0e7ff;color:#4338ca;border-radius:6px;font-size:.78rem;cursor:pointer;white-space:nowrap;flex-shrink:0;';
-  editBtn.textContent = '수정';
-
-  const saveBtn = document.createElement('button');
-  saveBtn.type = 'button';
-  saveBtn.style.cssText = 'padding:4px 10px;border:none;background:#dcfce7;color:#16a34a;border-radius:6px;font-size:.78rem;cursor:pointer;white-space:nowrap;flex-shrink:0;display:none;';
-  saveBtn.textContent = '저장';
-
-  const del = document.createElement('button');
-  del.type = 'button';
-  del.style.cssText = 'padding:4px 10px;border:none;background:#fee2e2;color:#dc2626;border-radius:6px;font-size:.78rem;cursor:pointer;white-space:nowrap;flex-shrink:0;';
-  del.textContent = '삭제';
-
-  editBtn.onclick = () => {
-    sp.style.display = 'none'; inp.style.display = '';
-    editBtn.style.display = 'none'; saveBtn.style.display = '';
-    inp.focus(); inp.select();
-  };
-  const doSave = () => {
-    const v = inp.value.trim(); if (!v) return;
-    onEdit(v);
-    sp.textContent = v; inp.value = v;
-    sp.style.display = ''; inp.style.display = 'none';
-    editBtn.style.display = ''; saveBtn.style.display = 'none';
-  };
-  saveBtn.onclick = doSave;
-  inp.addEventListener('keydown', e => { if (e.key === 'Enter') doSave(); if (e.key === 'Escape') editBtn.click(); });
-  del.onclick = onDel;
-
-  row.appendChild(handle); row.appendChild(sp); row.appendChild(inp);
-  row.appendChild(editBtn); row.appendChild(saveBtn); row.appendChild(del);
-  return row;
-}
-
-function _adeAddRow(placeholder, onAdd) {
-  const row = document.createElement('div');
-  row.style.cssText = 'display:flex;gap:6px;margin-top:4px;';
-  const inp = document.createElement('input');
-  inp.type = 'text'; inp.placeholder = placeholder;
-  inp.style.cssText = 'flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;font-family:var(--font);background:var(--bg);color:var(--text);';
-  const btn = document.createElement('button');
-  btn.type = 'button';
-  btn.style.cssText = 'padding:7px 14px;border:none;background:var(--primary);color:#fff;border-radius:6px;font-size:.82rem;font-weight:600;cursor:pointer;white-space:nowrap;';
-  btn.textContent = '+ 추가';
-  const go = () => { const v = inp.value.trim(); if (!v) return; onAdd(v); inp.value = ''; };
-  btn.onclick = go;
-  inp.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
-  row.appendChild(inp); row.appendChild(btn);
-  return row;
-}
-
-function _renderAdeCats() {
-  const wrap = document.getElementById('adeCatList');
-  if (!wrap) return;
-  wrap.innerHTML = '';
-  Object.entries(SP_CATS).forEach(([catKey, cat]) => {
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    const isActive = _ade.cat === catKey;
-    btn.style.cssText = `padding:8px 16px;border-radius:8px;border:2px solid ${isActive?'var(--primary)':'var(--border)'};background:${isActive?'var(--primary)':'var(--bg)'};color:${isActive?'#fff':'var(--text)'};font-size:.88rem;font-weight:600;cursor:pointer;white-space:nowrap;font-family:var(--font);`;
-    btn.textContent = cat.label;
-    btn.onclick = () => { _ade.cat = catKey; _ade.mid = null; _renderAdeCats(); _renderAdeMids(); _renderAdeDetail(); };
-    wrap.appendChild(btn);
+  const bc = document.createElement('div');
+  bc.style.cssText = 'display:flex;align-items:center;gap:5px;margin-bottom:12px;font-size:.82rem;color:var(--text-muted);flex-wrap:wrap;';
+  const homeSpan = document.createElement('span'); homeSpan.textContent = '전체'; homeSpan.style.cssText = 'cursor:pointer;color:var(--primary);font-weight:600;';
+  homeSpan.onclick = () => { _stPath = []; _stRender(); };
+  bc.appendChild(homeSpan);
+  _stPath.forEach((id, i) => {
+    const sep = document.createElement('span'); sep.textContent = ' › '; bc.appendChild(sep);
+    const n = nodes[id];
+    const span = document.createElement('span'); span.textContent = n?.name || id;
+    const isLast = i === _stPath.length - 1;
+    span.style.cssText = isLast ? 'color:var(--text);font-weight:700;' : 'cursor:pointer;color:var(--primary);';
+    if (!isLast) span.onclick = () => { _stPath = _stPath.slice(0, i + 1); _stRender(); };
+    bc.appendChild(span);
   });
-  // + 대분류 추가
-  wrap.appendChild(_adeAddRow('새 대분류 이름 (예: 🤸 체조)', v => {
-    const key = 'cat_' + Date.now();
-    SP_CATS[key] = { label: v, subjects: {} };
-    AP_SKILL_DEF[key] = { preferred: {} };
-    _ade.cat = key; _ade.mid = null;
-    renderAdminSkillDef();
-  }));
-}
+  tree.appendChild(bc);
 
-function _renderAdeMids() {
-  const wrap = document.getElementById('adeMidList');
-  if (!wrap) return;
-  wrap.innerHTML = '';
-  if (!_ade.cat) { wrap.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem;">← 대분류를 먼저 선택하세요</p>'; return; }
-  const cat = SP_CATS[_ade.cat];
-  const label = document.createElement('p');
-  label.style.cssText = 'font-size:.82rem;font-weight:700;color:var(--text-muted);margin-bottom:8px;';
-  label.textContent = cat.label + ' — 중분류';
-  wrap.appendChild(label);
-  Object.keys(cat.subjects).forEach(mid => {
-    const row = document.createElement('div');
-    row.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:6px;';
-    const btn = document.createElement('button');
-    btn.type = 'button';
-    const isActive = _ade.mid === mid;
-    btn.style.cssText = `flex:1;text-align:left;padding:8px 12px;border-radius:8px;border:2px solid ${isActive?'var(--primary)':'var(--border)'};background:${isActive?'#ede9fe':'var(--bg)'};color:${isActive?'var(--primary)':'var(--text)'};font-size:.85rem;font-weight:600;cursor:pointer;font-family:var(--font);`;
-    btn.textContent = mid;
-    btn.onclick = () => { _ade.mid = mid; _renderAdeMids(); _renderAdeDetail(); };
-    const del = document.createElement('button');
-    del.type = 'button';
-    del.style.cssText = 'padding:5px 10px;border:none;background:#fee2e2;color:#dc2626;border-radius:6px;font-size:.78rem;cursor:pointer;flex-shrink:0;';
-    del.textContent = '삭제';
-    del.onclick = () => {
-      if (!confirm(`"${mid}" 중분류와 하위 항목을 삭제할까요?`)) return;
-      delete cat.subjects[mid];
-      const pref = AP_SKILL_DEF[_ade.cat]?.preferred;
-      if (pref && pref[mid]) delete pref[mid];
-      if (_ade.mid === mid) _ade.mid = null;
-      _renderAdeMids(); _renderAdeDetail();
+  const colsWrap = document.createElement('div');
+  colsWrap.style.cssText = 'display:flex;gap:10px;overflow-x:auto;padding-bottom:8px;';
+
+  const colDefs = [{ pid: '__root__', items: SKILL_TREE.rootIds.map(id => nodes[id]).filter(Boolean), depth: 0 }];
+  _stPath.forEach((id, i) => {
+    const children = (nodes[id]?.children || []).map(cid => nodes[cid]).filter(Boolean);
+    colDefs.push({ pid: id, items: children, depth: i + 1 });
+  });
+
+  colDefs.forEach(({ pid, items, depth }) => {
+    const selId = _stPath[depth];
+    const col = document.createElement('div');
+    col.style.cssText = 'min-width:152px;width:152px;flex-shrink:0;border:1px solid var(--border);border-radius:10px;overflow:hidden;display:flex;flex-direction:column;background:var(--surface);';
+    const labels = ['대분류','중분류','세부분류','4단계','5단계','6단계'];
+    const hdr = document.createElement('div'); hdr.style.cssText = 'padding:7px 12px;font-size:.78rem;font-weight:700;color:var(--text-muted);border-bottom:1px solid var(--border);background:var(--bg);'; hdr.textContent = labels[depth] || depth+'단계';
+    col.appendChild(hdr);
+    const body = document.createElement('div'); body.style.cssText = 'flex:1;padding:4px;overflow-y:auto;max-height:300px;';
+    if (!items.length && depth > 0) body.innerHTML = '<div style="padding:14px 8px;text-align:center;font-size:.78rem;color:var(--text-muted);">하위 없음</div>';
+    items.forEach(node => {
+      const isSelected = node.id === selId;
+      const hasKids = (node.children || []).length > 0;
+      const row = document.createElement('div');
+      row.style.cssText = `display:flex;align-items:center;gap:4px;padding:6px 8px;border-radius:6px;cursor:pointer;${isSelected?'background:var(--primary-soft);color:var(--primary);font-weight:700;':'color:var(--text);'}`;
+      const nameEl = document.createElement('span'); nameEl.textContent = node.name; nameEl.style.cssText = 'flex:1;font-size:.82rem;white-space:nowrap;overflow:hidden;text-overflow:ellipsis;';
+      const acts = document.createElement('div'); acts.style.cssText = 'display:none;gap:2px;flex-shrink:0;';
+      row.addEventListener('mouseenter', () => acts.style.display = 'flex');
+      row.addEventListener('mouseleave', () => acts.style.display = 'none');
+      const editB = document.createElement('button'); editB.type='button'; editB.title='수정'; editB.textContent='✏'; editB.style.cssText='background:none;border:none;cursor:pointer;font-size:.7rem;padding:2px 3px;border-radius:3px;'; editB.onclick = e => { e.stopPropagation(); _stEditName(node.id, nameEl); };
+      const delB  = document.createElement('button'); delB.type='button'; delB.title='삭제'; delB.textContent='🗑'; delB.style.cssText='background:none;border:none;cursor:pointer;font-size:.7rem;padding:2px 3px;border-radius:3px;'; delB.onclick = e => { e.stopPropagation(); _stDelete(node.id, pid); };
+      acts.appendChild(editB); acts.appendChild(delB);
+      row.appendChild(nameEl); row.appendChild(acts);
+      if (hasKids) { const arr = document.createElement('span'); arr.textContent = '›'; arr.style.cssText = 'font-size:.78rem;opacity:.5;flex-shrink:0;'; row.appendChild(arr); }
+      row.onclick = () => { _stPath = _stPath.slice(0, depth).concat([node.id]); _stRender(); };
+      body.appendChild(row);
+    });
+    col.appendChild(body);
+    const foot = document.createElement('div'); foot.style.cssText = 'padding:6px;border-top:1px solid var(--border);'; foot.id = 'stFoot-' + (pid === '__root__' ? 'ROOT' : pid);
+    const addB = document.createElement('button'); addB.type='button'; addB.style.cssText='width:100%;padding:5px;border:1px dashed var(--border);border-radius:6px;background:none;color:var(--text-muted);font-size:.78rem;cursor:pointer;'; addB.textContent='+ 추가';
+    addB.onclick = () => _stShowAdd(pid === '__root__' ? 'ROOT' : pid, foot);
+    foot.appendChild(addB); col.appendChild(foot);
+    colsWrap.appendChild(col);
+  });
+  tree.appendChild(colsWrap);
+
+  const deepId = _stPath[_stPath.length - 1];
+  if (deepId) {
+    const node = nodes[deepId];
+    const panel = document.createElement('div');
+    panel.style.cssText = 'margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;';
+    const mkSec = (title, items, placeholder, onDel, onAdd) => {
+      const sec = document.createElement('div'); sec.style.cssText = 'border:1px solid var(--border);border-radius:10px;padding:12px;background:var(--surface);';
+      const h = document.createElement('p'); h.style.cssText = 'font-size:.83rem;font-weight:700;margin-bottom:8px;'; h.textContent = title; sec.appendChild(h);
+      const list = document.createElement('div'); list.style.cssText = 'display:flex;flex-direction:column;gap:4px;margin-bottom:8px;max-height:180px;overflow-y:auto;';
+      let dragSrc = null;
+      const rebuild = () => {
+        list.innerHTML = '';
+        items.forEach((item, idx) => {
+          const row = document.createElement('div'); row.style.cssText = 'display:flex;align-items:center;gap:4px;'; row.draggable = true;
+          const handle = document.createElement('span'); handle.textContent = '⠿'; handle.style.cssText = 'color:var(--text-muted);cursor:grab;font-size:.9rem;flex-shrink:0;user-select:none;';
+          const sp = document.createElement('span'); sp.style.cssText = 'flex:1;font-size:.8rem;padding:4px 7px;background:var(--bg);border:1px solid var(--border);border-radius:5px;'; sp.textContent = item;
+          const inp = document.createElement('input'); inp.type='text'; inp.value=item; inp.style.cssText='flex:1;font-size:.8rem;padding:4px 7px;border:1.5px solid var(--primary);border-radius:5px;font-family:var(--font);background:var(--bg);color:var(--text);display:none;';
+          const eBtn = document.createElement('button'); eBtn.type='button'; eBtn.textContent='수정'; eBtn.style.cssText='padding:2px 7px;border:none;background:#e0e7ff;color:#4338ca;border-radius:4px;font-size:.72rem;cursor:pointer;flex-shrink:0;';
+          const sBtn = document.createElement('button'); sBtn.type='button'; sBtn.textContent='저장'; sBtn.style.cssText='padding:2px 7px;border:none;background:#dcfce7;color:#16a34a;border-radius:4px;font-size:.72rem;cursor:pointer;flex-shrink:0;display:none;';
+          const dBtn = document.createElement('button'); dBtn.type='button'; dBtn.textContent='삭제'; dBtn.style.cssText='padding:2px 7px;border:none;background:#fee2e2;color:#dc2626;border-radius:4px;font-size:.72rem;cursor:pointer;flex-shrink:0;';
+          eBtn.onclick = () => { sp.style.display='none'; inp.style.display=''; eBtn.style.display='none'; sBtn.style.display=''; inp.focus(); inp.select(); };
+          const doSave = () => { const v=inp.value.trim(); if(!v)return; items[idx]=v; sp.textContent=v; sp.style.display=''; inp.style.display='none'; eBtn.style.display=''; sBtn.style.display='none'; };
+          sBtn.onclick = doSave; inp.addEventListener('keydown', e => { if(e.key==='Enter')doSave(); if(e.key==='Escape')eBtn.click(); });
+          dBtn.onclick = () => { onDel(idx); rebuild(); };
+          row.addEventListener('dragstart', e => { dragSrc=idx; row.style.opacity='.4'; e.dataTransfer.effectAllowed='move'; });
+          row.addEventListener('dragend', () => { row.style.opacity=''; });
+          row.addEventListener('dragover', e => { e.preventDefault(); row.style.outline='2px solid var(--primary)'; });
+          row.addEventListener('dragleave', () => { row.style.outline=''; });
+          row.addEventListener('drop', e => { e.preventDefault(); row.style.outline=''; if(dragSrc===null||dragSrc===idx)return; const[m]=items.splice(dragSrc,1); items.splice(idx,0,m); dragSrc=null; rebuild(); });
+          row.appendChild(handle); row.appendChild(sp); row.appendChild(inp); row.appendChild(eBtn); row.appendChild(sBtn); row.appendChild(dBtn);
+          list.appendChild(row);
+        });
+      };
+      rebuild(); sec.appendChild(list);
+      const addRow = document.createElement('div'); addRow.style.cssText = 'display:flex;gap:5px;';
+      const addInp = document.createElement('input'); addInp.type='text'; addInp.placeholder=placeholder; addInp.style.cssText='flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:.78rem;font-family:var(--font);background:var(--bg);color:var(--text);';
+      const addOk = document.createElement('button'); addOk.type='button'; addOk.textContent='+ 추가'; addOk.style.cssText='padding:5px 9px;border:none;background:var(--primary);color:#fff;border-radius:5px;font-size:.75rem;cursor:pointer;white-space:nowrap;';
+      const doAdd = () => { const v=addInp.value.trim(); if(!v)return; onAdd(v); addInp.value=''; rebuild(); };
+      addOk.onclick=doAdd; addInp.addEventListener('keydown', e => { if(e.key==='Enter')doAdd(); });
+      addRow.appendChild(addInp); addRow.appendChild(addOk); sec.appendChild(addRow);
+      return sec;
     };
-    row.appendChild(btn); row.appendChild(del);
-    wrap.appendChild(row);
-  });
-  wrap.appendChild(_adeAddRow('새 중분류 (예: 태권도)', v => {
-    cat.subjects[v] = [];
-    if (!AP_SKILL_DEF[_ade.cat]) AP_SKILL_DEF[_ade.cat] = { preferred: {} };
-    if (!AP_SKILL_DEF[_ade.cat].preferred) AP_SKILL_DEF[_ade.cat].preferred = {};
-    AP_SKILL_DEF[_ade.cat].preferred[v] = [];
-    _ade.mid = v; _renderAdeMids(); _renderAdeDetail();
-  }));
-}
-
-function _renderAdeDetail() {
-  const wrap = document.getElementById('adeDetail');
-  if (!wrap) return;
-  wrap.innerHTML = '';
-  if (!_ade.cat || !_ade.mid) {
-    wrap.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem;">← 중분류를 선택하면 세부 항목을 편집할 수 있어요</p>';
-    return;
+    panel.appendChild(mkSec('📚 교육 과목', node.skills, '새 과목 (예: 플루트)', idx => node.skills.splice(idx,1), v => node.skills.push(v)));
+    panel.appendChild(mkSec('⭐ 우대 조건', node.preferred, '새 우대 조건 (예: 콩쿠르 동행 가능)', idx => node.preferred.splice(idx,1), v => node.preferred.push(v)));
+    tree.appendChild(panel);
   }
-  const cat = SP_CATS[_ade.cat];
-  const skills = cat.subjects[_ade.mid] || [];
-  const pref = (AP_SKILL_DEF[_ade.cat]?.preferred || {})[_ade.mid] || [];
-
-  const makeSection = (title, items, onDel, addPlaceholder, onAdd) => {
-    const sec = document.createElement('div');
-    sec.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;';
-    const h = document.createElement('p');
-    h.style.cssText = 'font-size:.85rem;font-weight:700;margin-bottom:10px;color:var(--text);';
-    h.textContent = title;
-    sec.appendChild(h);
-    const list = document.createElement('div');
-    list.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-bottom:8px;';
-
-    let dragSrc = null;
-    const rebuildList = () => {
-      list.innerHTML = '';
-      items.forEach((item, idx) => {
-        const row = _adeTag(item, () => { onDel(idx); _renderAdeDetail(); }, v => { items[idx] = v; });
-        row.dataset.idx = idx;
-        row.addEventListener('dragstart', e => {
-          dragSrc = idx;
-          row.style.opacity = '.4';
-          e.dataTransfer.effectAllowed = 'move';
-        });
-        row.addEventListener('dragend', () => { row.style.opacity = ''; });
-        row.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; row.style.outline = '2px solid var(--primary)'; });
-        row.addEventListener('dragleave', () => { row.style.outline = ''; });
-        row.addEventListener('drop', e => {
-          e.preventDefault(); row.style.outline = '';
-          if (dragSrc === null || dragSrc === idx) return;
-          const [moved] = items.splice(dragSrc, 1);
-          items.splice(idx, 0, moved);
-          dragSrc = null;
-          rebuildList();
-        });
-        list.appendChild(row);
-      });
-    };
-    rebuildList();
-
-    sec.appendChild(list);
-    sec.appendChild(_adeAddRow(addPlaceholder, v => { onAdd(v); rebuildList(); }));
-    return sec;
-  };
-
-  const title = document.createElement('p');
-  title.style.cssText = 'font-size:.9rem;font-weight:700;margin-bottom:12px;color:var(--primary);';
-  title.textContent = `${cat.label} > ${_ade.mid}`;
-  wrap.appendChild(title);
-
-  wrap.appendChild(makeSection(
-    '📚 세부 스킬 (강사 프로필·공고 과목 선택에 표시)',
-    skills,
-    idx => skills.splice(idx, 1),
-    '새 스킬 (예: 품새 지도)',
-    v => skills.push(v)
-  ));
-
-  wrap.appendChild(makeSection(
-    '✅ 우대 조건 (학원 공고 등록 시 체크리스트)',
-    pref,
-    idx => pref.splice(idx, 1),
-    '새 우대 조건 (예: 협회 심사 동행 가능)',
-    v => { if (!AP_SKILL_DEF[_ade.cat]) AP_SKILL_DEF[_ade.cat] = { preferred: {} }; if (!AP_SKILL_DEF[_ade.cat].preferred[_ade.mid]) AP_SKILL_DEF[_ade.cat].preferred[_ade.mid] = []; AP_SKILL_DEF[_ade.cat].preferred[_ade.mid].push(v); }
-  ));
 }
 
-async function adminSaveSkillDef() { await saveApSkillDef(); }
+function _stEditName(nodeId, nameEl) {
+  const old = nameEl.textContent;
+  const inp = document.createElement('input'); inp.value = old;
+  inp.style.cssText = 'flex:1;font-size:.82rem;padding:2px 4px;border:1.5px solid var(--primary);border-radius:4px;background:var(--bg);color:var(--text);max-width:110px;';
+  nameEl.replaceWith(inp); inp.focus(); inp.select();
+  const save = () => { SKILL_TREE.nodes[nodeId].name = inp.value.trim() || old; _stRender(); };
+  inp.onblur = save;
+  inp.addEventListener('keydown', e => { if(e.key==='Enter')save(); if(e.key==='Escape'){SKILL_TREE.nodes[nodeId].name=old;_stRender();} });
+}
+
+function _stDelete(nodeId, pid) {
+  if (pid === '__root__') { SKILL_TREE.rootIds = SKILL_TREE.rootIds.filter(id => id !== nodeId); }
+  else if (SKILL_TREE.nodes[pid]) { SKILL_TREE.nodes[pid].children = SKILL_TREE.nodes[pid].children.filter(c => c !== nodeId); }
+  const idx = _stPath.indexOf(nodeId); if (idx !== -1) _stPath = _stPath.slice(0, idx);
+  delete SKILL_TREE.nodes[nodeId]; _stRender();
+}
+
+function _stShowAdd(pid, footEl) {
+  footEl.innerHTML = '';
+  const row = document.createElement('div'); row.style.cssText = 'display:flex;gap:4px;';
+  const inp = document.createElement('input'); inp.type='text'; inp.placeholder='이름';
+  inp.style.cssText='flex:1;height:26px;font-size:.78rem;padding:0 6px;border:1px solid var(--primary);border-radius:5px;background:var(--bg);color:var(--text);min-width:0;';
+  const btn = document.createElement('button'); btn.type='button'; btn.textContent='추가';
+  btn.style.cssText='height:26px;padding:0 8px;font-size:.75rem;border:none;border-radius:5px;background:var(--primary);color:#fff;cursor:pointer;flex-shrink:0;';
+  const doAdd = () => {
+    const v = inp.value.trim(); if (!v) return;
+    const id = 'node_' + Date.now();
+    SKILL_TREE.nodes[id] = { id, name: v, children: [], skills: [], preferred: [] };
+    if (pid === 'ROOT') { SKILL_TREE.rootIds.push(id); }
+    else if (SKILL_TREE.nodes[pid]) { SKILL_TREE.nodes[pid].children.push(id); }
+    _stRender();
+  };
+  btn.onclick = doAdd; inp.addEventListener('keydown', e => { if(e.key==='Enter')doAdd(); if(e.key==='Escape')_stRender(); });
+  row.appendChild(inp); row.appendChild(btn); footEl.appendChild(row);
+  setTimeout(() => inp.focus(), 30);
+}
+
+async function adminSaveSkillDef() { await saveSkillTree(); }
 function adminShowSql() { const box = document.getElementById('adminSqlBox'); box.style.display = box.style.display === 'none' ? 'block' : 'none'; }
 
 /* ── 클라이언트사이드 필터 (강사/학원 탭용) ── */
