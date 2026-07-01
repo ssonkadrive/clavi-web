@@ -2755,9 +2755,23 @@ async function checkExistingUser(u, session, role, displayName) {
     return;
   }
 
+  // 이메일 계정 인증 확인 (OAuth는 provider가 보장하므로 email provider만 체크)
+  if (u.app_metadata?.provider === 'email' && !u.email_confirmed_at) {
+    showToast('이메일 인증이 필요합니다. 메일함을 확인해 주세요. 📧');
+    await _supabase.auth.signOut();
+    return;
+  }
+
   // 2차: DB 확인
   const { data: existing } = await _supabase
-    .from('users').select('role, agreed_at').eq('id', uid).maybeSingle();
+    .from('users').select('role, agreed_at, banned_at').eq('id', uid).maybeSingle();
+
+  // 제재 계정 차단
+  if (existing?.banned_at) {
+    showToast('이 계정은 이용이 제한되었습니다. 문의: clavi@support.kr');
+    await _supabase.auth.signOut();
+    return;
+  }
 
   if (existing?.agreed_at) {
     // DB에 있으면 로컬 캐시에도 기록해 두고 입장
@@ -5938,149 +5952,342 @@ async function acceptTerms() {
 
 <!-- ══ 슈퍼어드민 페이지 ══ -->
 <section id="adminPage" class="page-section">
-  <div style="max-width:1100px;margin:0 auto;padding:24px 16px;">
-    <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:24px;">
-      <h1 style="font-size:1.4rem;font-weight:700;">🛡️ CLAVI 슈퍼어드민</h1>
+  <div class="admin-wrap">
+    <div class="admin-header">
+      <h1>🛡️ CLAVI 슈퍼어드민</h1>
       <button class="terms-btn-reject" style="padding:8px 18px;" onclick="enterApp()">← 앱으로</button>
     </div>
-    <div style="display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--border);">
-      <button class="admin-tab active" data-tab="users"       onclick="switchAdminTab('users')">👥 전체 유저</button>
-      <button class="admin-tab"        data-tab="instructors" onclick="switchAdminTab('instructors')">🎓 강사 목록</button>
-      <button class="admin-tab"        data-tab="academies"   onclick="switchAdminTab('academies')">🏫 학원/매칭</button>
+
+    <div class="admin-tabs-row">
+      <button class="admin-tab active" data-tab="users"       onclick="switchAdminTab('users')">👥 회원 관리</button>
+      <button class="admin-tab"        data-tab="instructors" onclick="switchAdminTab('instructors')">🎓 강사</button>
+      <button class="admin-tab"        data-tab="academies"   onclick="switchAdminTab('academies')">🏫 학원</button>
+      <button class="admin-tab"        data-tab="logs"        onclick="switchAdminTab('logs')">📋 활동 로그</button>
     </div>
 
-    <!-- 유저 탭 -->
+    <!-- ── 회원 탭 ── -->
     <div id="adminTab-users" class="admin-tab-panel">
-      <div style="display:flex;gap:8px;margin-bottom:12px;">
-        <input class="form-input" style="max-width:260px;" placeholder="이메일 검색..." oninput="filterAdminTable('adminUserTable',this.value)">
-        <button class="primary-btn" style="padding:8px 16px;font-size:.85rem;" onclick="loadAdminUsers()">새로고침</button>
+      <div class="admin-filter-bar">
+        <input  class="form-input" id="adminSearchEmail"    placeholder="이메일 검색..." style="flex:1;min-width:160px;">
+        <select class="region-select" id="adminFilterRole" style="min-width:110px;">
+          <option value="">전체 역할</option>
+          <option value="academy">학원</option>
+          <option value="instructor">강사</option>
+          <option value="banned">제재됨</option>
+        </select>
+        <select class="region-select" id="adminFilterVerified" style="min-width:110px;">
+          <option value="">인증 전체</option>
+          <option value="true">인증 완료</option>
+          <option value="false">미인증</option>
+        </select>
+        <input type="date" class="region-select" id="adminFilterDateFrom" style="min-width:130px;">
+        <span style="color:var(--text-muted);">~</span>
+        <input type="date" class="region-select" id="adminFilterDateTo"   style="min-width:130px;">
+        <button class="primary-btn" style="padding:8px 14px;font-size:.85rem;white-space:nowrap;" onclick="loadAdminUsers(0)">🔍 검색</button>
+        <button class="terms-btn-reject" style="padding:8px 14px;font-size:.85rem;white-space:nowrap;" onclick="resetAdminFilters()">초기화</button>
       </div>
       <div style="overflow-x:auto;">
         <table class="admin-table" id="adminUserTable">
-          <thead><tr><th>이메일</th><th>역할</th><th>가입일</th><th>약관동의</th><th>제재</th></tr></thead>
-          <tbody id="adminUserBody"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);">로딩 중...</td></tr></tbody>
+          <thead><tr><th>이메일</th><th>역할</th><th>이메일인증</th><th>Provider</th><th>가입일</th><th>약관동의</th><th>제재</th></tr></thead>
+          <tbody id="adminUserBody"><tr><td colspan="7" class="admin-loading">로딩 중...</td></tr></tbody>
         </table>
+      </div>
+      <div class="admin-pagination" id="adminUserPagination">
+        <button class="admin-page-btn" id="adminPrevBtn" onclick="loadAdminUsers(_adminPs.page-1)">◀ 이전</button>
+        <span   class="admin-page-info" id="adminPageInfo">-</span>
+        <button class="admin-page-btn" id="adminNextBtn" onclick="loadAdminUsers(_adminPs.page+1)">다음 ▶</button>
       </div>
     </div>
 
-    <!-- 강사 탭 -->
+    <!-- ── 강사 탭 ── -->
     <div id="adminTab-instructors" class="admin-tab-panel" style="display:none;">
-      <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
         <input class="form-input" style="max-width:260px;" placeholder="이름/분야 검색..." oninput="filterAdminTable('adminInstructorTable',this.value)">
         <button class="primary-btn" style="padding:8px 16px;font-size:.85rem;" onclick="loadAdminInstructors()">새로고침</button>
       </div>
       <div style="overflow-x:auto;">
         <table class="admin-table" id="adminInstructorTable">
-          <thead><tr><th>이름</th><th>이메일</th><th>전문분야</th><th>한줄소개</th><th>가입일</th></tr></thead>
-          <tbody id="adminInstructorBody"><tr><td colspan="5" style="text-align:center;color:var(--text-muted);">로딩 중...</td></tr></tbody>
+          <thead><tr><th>이름</th><th>이메일</th><th>전문분야</th><th>학력인증</th><th>가입일</th></tr></thead>
+          <tbody id="adminInstructorBody"><tr><td colspan="5" class="admin-loading">로딩 중...</td></tr></tbody>
         </table>
       </div>
     </div>
 
-    <!-- 학원 탭 -->
+    <!-- ── 학원 탭 ── -->
     <div id="adminTab-academies" class="admin-tab-panel" style="display:none;">
-      <div style="display:flex;gap:8px;margin-bottom:12px;">
+      <div style="display:flex;gap:8px;margin-bottom:12px;flex-wrap:wrap;">
         <input class="form-input" style="max-width:260px;" placeholder="학원명 검색..." oninput="filterAdminTable('adminAcademyTable',this.value)">
         <button class="primary-btn" style="padding:8px 16px;font-size:.85rem;" onclick="loadAdminAcademies()">새로고침</button>
       </div>
       <div style="overflow-x:auto;">
         <table class="admin-table" id="adminAcademyTable">
           <thead><tr><th>학원명</th><th>지역</th><th>이메일</th><th>등록 공고수</th></tr></thead>
-          <tbody id="adminAcademyBody"><tr><td colspan="4" style="text-align:center;color:var(--text-muted);">로딩 중...</td></tr></tbody>
+          <tbody id="adminAcademyBody"><tr><td colspan="4" class="admin-loading">로딩 중...</td></tr></tbody>
         </table>
+      </div>
+    </div>
+
+    <!-- ── 활동 로그 탭 ── -->
+    <div id="adminTab-logs" class="admin-tab-panel" style="display:none;">
+      <div style="display:flex;gap:8px;margin-bottom:12px;">
+        <button class="primary-btn" style="padding:8px 16px;font-size:.85rem;" onclick="loadAdminLogs()">새로고침</button>
+      </div>
+      <div style="overflow-x:auto;">
+        <table class="admin-table" id="adminLogTable">
+          <thead><tr><th>시간</th><th>대상 이메일</th><th>액션</th><th>사유</th><th>원래 역할</th></tr></thead>
+          <tbody id="adminLogBody"><tr><td colspan="5" class="admin-loading">로딩 중...</td></tr></tbody>
+        </table>
+      </div>
+    </div>
+  </div>
+
+  <!-- ── 제재 모달 ── -->
+  <div id="adminBanOverlay" style="display:none;position:fixed;inset:0;background:rgba(0,0,0,.5);z-index:4000;display:none;align-items:center;justify-content:center;padding:20px;">
+    <div style="background:var(--surface);border-radius:16px;padding:28px;max-width:400px;width:100%;box-shadow:0 20px 60px rgba(0,0,0,.3);">
+      <h3 style="margin:0 0 8px;font-size:1.1rem;">⚠️ 회원 제재</h3>
+      <p id="adminBanTargetLabel" style="font-size:.9rem;color:var(--text-muted);margin-bottom:16px;"></p>
+      <textarea id="adminBanReasonInput" class="form-input" rows="3" placeholder="제재 사유를 입력하세요 (필수)" style="width:100%;resize:vertical;margin-bottom:16px;"></textarea>
+      <div style="display:flex;gap:10px;">
+        <button class="submit-btn" style="flex:1;padding:12px;" onclick="confirmBanUser()">제재 확정</button>
+        <button class="terms-btn-reject" style="flex:1;padding:12px;" onclick="closeBanModal()">취소</button>
       </div>
     </div>
   </div>
 </section>
 
 <style>
-.admin-tab { padding:10px 22px;border:none;background:none;font-size:.9rem;color:var(--text-muted);cursor:pointer;border-bottom:3px solid transparent;font-family:var(--font);font-weight:500;transition:all .15s; }
+.admin-wrap       { max-width:1100px;margin:0 auto;padding:24px 16px; }
+.admin-header     { display:flex;align-items:center;justify-content:space-between;margin-bottom:24px; }
+.admin-header h1  { font-size:1.4rem;font-weight:700;margin:0; }
+.admin-tabs-row   { display:flex;gap:0;margin-bottom:20px;border-bottom:2px solid var(--border);overflow-x:auto; }
+.admin-tab        { padding:10px 22px;border:none;background:none;font-size:.9rem;color:var(--text-muted);cursor:pointer;border-bottom:3px solid transparent;font-family:var(--font);font-weight:500;transition:all .15s;white-space:nowrap; }
 .admin-tab.active { color:var(--primary);border-bottom-color:var(--primary); }
-.admin-table { width:100%;border-collapse:collapse;font-size:.85rem; }
-.admin-table th { background:var(--bg-subtle,#f4f4f8);padding:10px 12px;text-align:left;font-weight:600;color:var(--text-muted);border-bottom:2px solid var(--border); }
-.admin-table td { padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:top; }
+
+.admin-filter-bar { display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:14px;padding:14px;background:var(--bg-subtle,#f4f4f8);border-radius:var(--radius); }
+
+.admin-table          { width:100%;border-collapse:collapse;font-size:.85rem; }
+.admin-table th       { background:var(--bg-subtle,#f4f4f8);padding:10px 12px;text-align:left;font-weight:600;color:var(--text-muted);border-bottom:2px solid var(--border);white-space:nowrap; }
+.admin-table td       { padding:10px 12px;border-bottom:1px solid var(--border);vertical-align:middle; }
 .admin-table tr:hover td { background:var(--primary-soft,#eef0ff); }
-.admin-ban-btn { padding:4px 10px;border-radius:6px;border:1px solid #f87171;background:#fff;color:#ef4444;font-size:.78rem;cursor:pointer;font-family:var(--font); }
-.admin-ban-btn:hover { background:#fef2f2; }
+.admin-loading        { text-align:center;color:var(--text-muted);padding:24px!important; }
+
+.admin-role-badge     { display:inline-block;padding:2px 9px;border-radius:99px;font-size:.75rem;font-weight:600; }
+.arb-academy          { background:#ede9fe;color:#7c3aed; }
+.arb-instructor       { background:#dcfce7;color:#16a34a; }
+.arb-banned           { background:#fee2e2;color:#dc2626; }
+
+.admin-pagination     { display:flex;align-items:center;justify-content:center;gap:16px;padding:16px 0; }
+.admin-page-btn       { padding:7px 18px;border:1px solid var(--border);border-radius:8px;background:var(--surface);font-family:var(--font);font-size:.85rem;cursor:pointer; }
+.admin-page-btn:disabled { opacity:.4;cursor:not-allowed; }
+.admin-page-info      { font-size:.88rem;color:var(--text-muted); }
+
+.admin-ban-btn        { padding:4px 10px;border-radius:6px;border:1px solid #f87171;background:#fff;color:#ef4444;font-size:.78rem;cursor:pointer;font-family:var(--font); }
+.admin-ban-btn:hover  { background:#fef2f2; }
+.admin-unban-btn      { padding:4px 10px;border-radius:6px;border:1px solid #34d399;background:#fff;color:#059669;font-size:.78rem;cursor:pointer;font-family:var(--font); }
+.admin-unban-btn:hover{ background:#f0fdf4; }
 </style>
 
 <script>
+/* ════════════════════════════════════════════════
+   어드민 — 상태
+════════════════════════════════════════════════ */
+const _adminPs = { page: 0, pageSize: 20, total: 0 };
+let   _adminBanTarget = null; // { uid, email }
+
+const SUPABASE_FUNCTIONS_URL = `https://nbngaaskwekhtzbmcyjo.supabase.co/functions/v1`;
+
+/* ── 탭 전환 ── */
 function switchAdminTab(tab) {
   document.querySelectorAll('.admin-tab').forEach(b => b.classList.toggle('active', b.dataset.tab === tab));
   document.querySelectorAll('.admin-tab-panel').forEach(p => p.style.display = 'none');
   document.getElementById('adminTab-' + tab).style.display = 'block';
-  if (tab === 'users')       loadAdminUsers();
+  if (tab === 'users')       loadAdminUsers(0);
   if (tab === 'instructors') loadAdminInstructors();
   if (tab === 'academies')   loadAdminAcademies();
+  if (tab === 'logs')        loadAdminLogs();
 }
 
+/* ── 클라이언트사이드 필터 (강사/학원 탭용) ── */
 function filterAdminTable(tableId, q) {
   document.querySelectorAll(`#${tableId} tbody tr`).forEach(r => {
     r.style.display = r.textContent.toLowerCase().includes(q.toLowerCase()) ? '' : 'none';
   });
 }
 
-async function loadAdminUsers() {
-  const tbody = document.getElementById('adminUserBody');
-  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">로딩 중...</td></tr>';
-  const { data, error } = await _supabase.from('users').select('*').order('created_at', { ascending: false });
-  if (error) { tbody.innerHTML = `<tr><td colspan="5" style="color:red;">${error.message}</td></tr>`; return; }
-  tbody.innerHTML = data.map(u => `
-    <tr>
-      <td>${u.email || '-'}</td>
-      <td><span style="padding:2px 8px;border-radius:12px;font-size:.78rem;background:${u.role==='academy'?'#ede9fe':u.role==='banned'?'#fee2e2':'#dcfce7'};color:${u.role==='academy'?'#7c3aed':u.role==='banned'?'#dc2626':'#16a34a'};">${u.role||'-'}</span></td>
-      <td>${u.created_at ? new Date(u.created_at).toLocaleDateString('ko') : '-'}</td>
-      <td>${u.agreed_at ? '✅ ' + new Date(u.agreed_at).toLocaleDateString('ko') : '❌ 미동의'}</td>
-      <td>${u.id !== SUPER_ADMIN_ID ? `<button class="admin-ban-btn" onclick="banUser('${u.id}','${u.email||''}')">제재</button>` : '🛡️'}</td>
-    </tr>`).join('');
+/* ── 필터 초기화 ── */
+function resetAdminFilters() {
+  document.getElementById('adminSearchEmail').value    = '';
+  document.getElementById('adminFilterRole').value     = '';
+  document.getElementById('adminFilterVerified').value = '';
+  document.getElementById('adminFilterDateFrom').value = '';
+  document.getElementById('adminFilterDateTo').value   = '';
+  loadAdminUsers(0);
 }
 
+/* ── 회원 목록 (서버사이드 페이지네이션 + 필터) ── */
+async function loadAdminUsers(page = 0) {
+  if (page < 0) return;
+  const tbody = document.getElementById('adminUserBody');
+  tbody.innerHTML = `<tr><td colspan="7" class="admin-loading">로딩 중...</td></tr>`;
+
+  const search    = document.getElementById('adminSearchEmail')?.value.trim()    || null;
+  const role      = document.getElementById('adminFilterRole')?.value             || null;
+  const verified  = document.getElementById('adminFilterVerified')?.value;
+  const dateFrom  = document.getElementById('adminFilterDateFrom')?.value         || null;
+  const dateTo    = document.getElementById('adminFilterDateTo')?.value           || null;
+  const verifiedBool = verified === 'true' ? true : verified === 'false' ? false : null;
+
+  const { data, error } = await _supabase.rpc('admin_list_users', {
+    p_search:    search,
+    p_role:      role,
+    p_verified:  verifiedBool,
+    p_date_from: dateFrom,
+    p_date_to:   dateTo,
+    p_page:      page,
+    p_page_size: _adminPs.pageSize,
+  });
+
+  if (error) {
+    tbody.innerHTML = `<tr><td colspan="7" style="color:red;text-align:center;">${error.message}</td></tr>`;
+    return;
+  }
+
+  const total = data?.[0]?.total_count ?? 0;
+  _adminPs.page  = page;
+  _adminPs.total = Number(total);
+
+  if (!data?.length) {
+    tbody.innerHTML = `<tr><td colspan="7" class="admin-loading">검색 결과가 없습니다.</td></tr>`;
+  } else {
+    tbody.innerHTML = data.map(u => {
+      const roleClass = u.role === 'academy' ? 'arb-academy' : u.role === 'banned' ? 'arb-banned' : 'arb-instructor';
+      const providers = (u.auth_providers || []).join(', ') || '-';
+      const banBtn = u.id !== SUPER_ADMIN_ID
+        ? (u.role === 'banned'
+            ? `<button class="admin-unban-btn" onclick="openBanModal('${u.id}','${u.email||''}','unban')">해제</button>`
+            : `<button class="admin-ban-btn"   onclick="openBanModal('${u.id}','${u.email||''}','ban')">제재</button>`)
+        : '🛡️';
+      return `<tr>
+        <td>${u.email || '-'}</td>
+        <td><span class="admin-role-badge ${roleClass}">${u.role || '-'}</span></td>
+        <td>${u.email_verified ? '✅ 인증' : '❌ 미인증'}</td>
+        <td style="font-size:.78rem;color:var(--text-muted);">${providers}</td>
+        <td>${u.created_at ? new Date(u.created_at).toLocaleDateString('ko') : '-'}</td>
+        <td>${u.agreed_at  ? '✅ ' + new Date(u.agreed_at).toLocaleDateString('ko') : '❌'}</td>
+        <td>${banBtn}</td>
+      </tr>`;
+    }).join('');
+  }
+
+  // 페이지네이션 업데이트
+  const totalPages = Math.max(1, Math.ceil(_adminPs.total / _adminPs.pageSize));
+  document.getElementById('adminPageInfo').textContent =
+    `${page + 1} / ${totalPages} (총 ${_adminPs.total.toLocaleString()}명)`;
+  document.getElementById('adminPrevBtn').disabled = page <= 0;
+  document.getElementById('adminNextBtn').disabled = page >= totalPages - 1;
+}
+
+/* ── 강사 목록 ── */
 async function loadAdminInstructors() {
   const tbody = document.getElementById('adminInstructorBody');
-  tbody.innerHTML = '<tr><td colspan="5" style="text-align:center;">로딩 중...</td></tr>';
+  tbody.innerHTML = `<tr><td colspan="5" class="admin-loading">로딩 중...</td></tr>`;
   const { data, error } = await _supabase
-    .from('instructors').select('*, users(email, created_at)').order('created_at', { ascending: false });
+    .from('instructors')
+    .select('*, users(email, created_at)')
+    .order('created_at', { ascending: false })
+    .limit(200);
   if (error) { tbody.innerHTML = `<tr><td colspan="5" style="color:red;">${error.message}</td></tr>`; return; }
-  tbody.innerHTML = data.map(i => `
-    <tr>
-      <td><strong>${i.name || '-'}</strong></td>
-      <td>${i.users?.email || '-'}</td>
-      <td style="max-width:180px;word-break:break-all;font-size:.8rem;">${i.industry || '-'}</td>
-      <td style="max-width:200px;font-size:.8rem;">${i.intro || '-'}</td>
-      <td>${i.users?.created_at ? new Date(i.users.created_at).toLocaleDateString('ko') : '-'}</td>
-    </tr>`).join('');
+  tbody.innerHTML = data.map(i => `<tr>
+    <td><strong>${i.name || '-'}</strong></td>
+    <td>${i.users?.email || '-'}</td>
+    <td style="font-size:.8rem;">${i.industry || '-'}</td>
+    <td>${i.edu_verified_at ? '🎓 ' + (i.edu_school || '') : '-'}</td>
+    <td>${i.users?.created_at ? new Date(i.users.created_at).toLocaleDateString('ko') : '-'}</td>
+  </tr>`).join('');
 }
 
+/* ── 학원 목록 ── */
 async function loadAdminAcademies() {
   const tbody = document.getElementById('adminAcademyBody');
-  tbody.innerHTML = '<tr><td colspan="4" style="text-align:center;">로딩 중...</td></tr>';
+  tbody.innerHTML = `<tr><td colspan="4" class="admin-loading">로딩 중...</td></tr>`;
   const { data, error } = await _supabase
-    .from('academies').select('*, users(email)').order('created_at', { ascending: false });
+    .from('academies').select('*, users(email)').order('created_at', { ascending: false }).limit(200);
   if (error) { tbody.innerHTML = `<tr><td colspan="4" style="color:red;">${error.message}</td></tr>`; return; }
   const { data: conds } = await _supabase.from('academy_conditions').select('user_id');
   const condMap = {};
-  (conds||[]).forEach(c => { condMap[c.user_id] = (condMap[c.user_id]||0)+1; });
-  tbody.innerHTML = data.map(a => `
-    <tr>
-      <td><strong>${a.name || '-'}</strong></td>
-      <td>${a.region || '-'}</td>
-      <td>${a.users?.email || '-'}</td>
-      <td>${condMap[a.user_id] || 0}건</td>
-    </tr>`).join('');
+  (conds || []).forEach(c => { condMap[c.user_id] = (condMap[c.user_id] || 0) + 1; });
+  tbody.innerHTML = data.map(a => `<tr>
+    <td><strong>${a.name || '-'}</strong></td>
+    <td>${a.region || '-'}</td>
+    <td>${a.users?.email || '-'}</td>
+    <td>${condMap[a.user_id] || 0}건</td>
+  </tr>`).join('');
 }
 
-async function banUser(uid, email) {
-  if (!confirm(`${email} 회원을 제재(계정 정지)하시겠습니까?`)) return;
-  const { error } = await _supabase.from('users').update({ role: 'banned' }).eq('id', uid);
-  if (error) { showToast('제재 실패: ' + error.message); return; }
-  showToast(`${email} 계정이 정지됐습니다.`);
-  loadAdminUsers();
+/* ── 활동 로그 ── */
+async function loadAdminLogs() {
+  const tbody = document.getElementById('adminLogBody');
+  tbody.innerHTML = `<tr><td colspan="5" class="admin-loading">로딩 중...</td></tr>`;
+  const { data, error } = await _supabase
+    .from('admin_action_logs')
+    .select('*')
+    .order('created_at', { ascending: false })
+    .limit(100);
+  if (error) { tbody.innerHTML = `<tr><td colspan="5" style="color:red;">${error.message}</td></tr>`; return; }
+  if (!data?.length) { tbody.innerHTML = `<tr><td colspan="5" class="admin-loading">활동 로그 없음</td></tr>`; return; }
+  const actionLabel = { ban: '🔴 제재', unban: '🟢 해제', role_change: '🔵 역할변경', note: '📝 메모' };
+  tbody.innerHTML = data.map(l => `<tr>
+    <td style="white-space:nowrap;font-size:.8rem;">${new Date(l.created_at).toLocaleString('ko')}</td>
+    <td>${l.target_email || l.target_uid}</td>
+    <td>${actionLabel[l.action] || l.action}</td>
+    <td style="max-width:200px;font-size:.82rem;">${l.reason || '-'}</td>
+    <td style="font-size:.8rem;color:var(--text-muted);">${l.meta?.original_role || '-'}</td>
+  </tr>`).join('');
 }
 
+/* ── 제재 모달 ── */
+function openBanModal(uid, email, action) {
+  _adminBanTarget = { uid, email, action };
+  const label = action === 'ban'
+    ? `<strong>${email}</strong> 계정을 제재합니다.`
+    : `<strong>${email}</strong> 계정 제재를 해제합니다.`;
+  document.getElementById('adminBanTargetLabel').innerHTML = label;
+  document.getElementById('adminBanReasonInput').value = '';
+  const overlay = document.getElementById('adminBanOverlay');
+  overlay.style.display = 'flex';
+}
+function closeBanModal() {
+  document.getElementById('adminBanOverlay').style.display = 'none';
+  _adminBanTarget = null;
+}
+
+async function confirmBanUser() {
+  if (!_adminBanTarget) return;
+  const reason = document.getElementById('adminBanReasonInput').value.trim();
+  if (!reason) { showToast('제재 사유를 입력해 주세요.'); return; }
+
+  const { data: { session } } = await _supabase.auth.getSession();
+  const token = session?.access_token;
+  if (!token) { showToast('세션 만료. 다시 로그인해 주세요.'); return; }
+
+  const res = await fetch(`${SUPABASE_FUNCTIONS_URL}/admin-ban-user`, {
+    method:  'POST',
+    headers: { 'Content-Type': 'application/json', Authorization: `Bearer ${token}` },
+    body:    JSON.stringify({ target_uid: _adminBanTarget.uid, action: _adminBanTarget.action, reason }),
+  });
+  const json = await res.json();
+
+  if (!res.ok) { showToast('처리 실패: ' + (json.error || res.status)); return; }
+  showToast(_adminBanTarget.action === 'ban' ? `${_adminBanTarget.email} 제재 완료` : `${_adminBanTarget.email} 제재 해제 완료`);
+  closeBanModal();
+  loadAdminUsers(_adminPs.page);
+}
+
+/* ── 어드민 페이지 진입 ── */
 function showAdminPage() {
   document.getElementById('adminDrawerBtn').style.display = 'block';
   showPage('adminPage');
-  loadAdminUsers();
+  loadAdminUsers(0);
 }
 </script>
 </body>
