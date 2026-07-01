@@ -2072,7 +2072,7 @@
       <section class="card">
         <h2 class="card-title">💼 고용형태</h2>
 
-        <p class="sp-mid-label" style="margin-bottom:8px;">급여 방식</p>
+        <p class="sp-mid-label" style="margin-bottom:8px;">급여 방식 <span style="color:var(--text-muted);font-size:.78rem;font-weight:400;">(세전)</span></p>
         <div class="match-chips" id="aPayMethodChips">
           <label class="match-chip"><input type="checkbox" name="aPayMethod" value="월급" onchange="apPayMethodChange()"/><span>월급</span></label>
           <label class="match-chip"><input type="checkbox" name="aPayMethod" value="시급" onchange="apPayMethodChange()"/><span>시급</span></label>
@@ -2543,6 +2543,20 @@
 </section>
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+<!-- 급여 확인 팝업 -->
+<div id="payConfirmModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:20px;">
+  <div style="background:var(--bg);border-radius:14px;padding:28px 24px;max-width:340px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18);text-align:center;">
+    <p style="font-size:.78rem;color:var(--text-muted);margin-bottom:6px;" id="payConfirmLabel">최대 월급</p>
+    <p style="font-size:1.5rem;font-weight:700;color:var(--text);margin-bottom:2px;" id="payConfirmNum"></p>
+    <p style="font-size:.88rem;color:var(--primary);margin-bottom:20px;" id="payConfirmKr"></p>
+    <p style="font-size:.85rem;color:var(--text);margin-bottom:20px;">이 금액으로 등록할까요?</p>
+    <div style="display:flex;gap:10px;">
+      <button type="button" onclick="payConfirmCancel()" style="flex:1;padding:11px;border-radius:var(--radius);border:1.5px solid var(--border);background:var(--surface);color:var(--text-muted);font-size:.88rem;cursor:pointer;">다시 입력</button>
+      <button type="button" onclick="payConfirmOk()" style="flex:1;padding:11px;border-radius:var(--radius);border:none;background:var(--primary);color:#fff;font-size:.88rem;font-weight:600;cursor:pointer;">확인, 등록할게요</button>
+    </div>
+  </div>
+</div>
 
 <!-- ══════════════════════════════════════════════
   계약서 모달
@@ -3941,6 +3955,62 @@ function timeOptions() {
 /* ── 학원 과목별 시급 태그 ── */
 function initAPaySubjectSelect() { /* 대분류 클릭으로 대체 */ }
 
+/* ── 급여 확인 팝업 ── */
+function toKorean(n) {
+  if (!n || isNaN(n)) return '';
+  const units = ['', '만', '억', '조'];
+  const nums = ['영','일','이','삼','사','오','육','칠','팔','구'];
+  let result = '', num = Math.abs(Math.floor(n));
+  if (num === 0) return '영';
+  const chunks = [];
+  while (num > 0) { chunks.push(num % 10000); num = Math.floor(num / 10000); }
+  for (let i = chunks.length - 1; i >= 0; i--) {
+    const c = chunks[i];
+    if (!c) continue;
+    const thousands = Math.floor(c / 1000);
+    const hundreds  = Math.floor((c % 1000) / 100);
+    const tens      = Math.floor((c % 100) / 10);
+    const ones      = c % 10;
+    let part = '';
+    if (thousands) part += (thousands > 1 ? nums[thousands] : '') + '천';
+    if (hundreds)  part += (hundreds  > 1 ? nums[hundreds]  : '') + '백';
+    if (tens)      part += (tens      > 1 ? nums[tens]      : '') + '십';
+    if (ones)      part += nums[ones];
+    result += part + units[i];
+  }
+  return result;
+}
+
+function formatPayInput(el) {
+  const raw = el.value.replace(/[^0-9]/g, '');
+  el.value = raw ? Number(raw).toLocaleString('ko-KR') : '';
+  el.dataset.raw = raw;
+}
+
+let _payConfirmCallback = null;
+function confirmPayInput(el, label, unit) {
+  const raw = Number((el.dataset.raw || el.value.replace(/[^0-9]/g, '')) || 0);
+  if (!raw) return;
+  const modal = document.getElementById('payConfirmModal');
+  document.getElementById('payConfirmLabel').textContent = label;
+  document.getElementById('payConfirmNum').textContent = raw.toLocaleString('ko-KR') + ' ' + unit;
+  document.getElementById('payConfirmKr').textContent = toKorean(raw) + (unit === '%' ? '퍼센트' : '원');
+  _payConfirmCallback = () => {};
+  modal.style.display = 'flex';
+  modal.dataset.target = el.id;
+}
+function payConfirmOk() {
+  document.getElementById('payConfirmModal').style.display = 'none';
+  _payConfirmCallback = null;
+}
+function payConfirmCancel() {
+  const id = document.getElementById('payConfirmModal').dataset.target;
+  const el = document.getElementById(id);
+  if (el) { el.value = ''; el.dataset.raw = ''; }
+  document.getElementById('payConfirmModal').style.display = 'none';
+  _payConfirmCallback = null;
+}
+
 /* ── 고용형태: 급여방식 동적 입력 ── */
 function apPayMethodChange() {
   const checked = [...document.querySelectorAll('input[name="aPayMethod"]:checked')].map(el => el.value);
@@ -3948,9 +4018,9 @@ function apPayMethodChange() {
   if (!checked.length) { area.style.display = 'none'; area.innerHTML = ''; return; }
   area.style.display = 'flex';
   area.innerHTML = checked.map(m => {
-    if (m === '월급') return `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:.82rem;color:var(--text-muted);min-width:76px;">최대 월급</span><input type="number" id="aPayMax_월급" class="region-select" placeholder="예) 2500000" min="0" step="10000" style="flex:1;"/><span style="font-size:.82rem;color:var(--text-muted);white-space:nowrap;">원/월</span></div>`;
-    if (m === '시급') return `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:.82rem;color:var(--text-muted);min-width:76px;">최대 시급</span><input type="number" id="aPayMax_시급" class="region-select" placeholder="예) 30000" min="0" step="1000" style="flex:1;"/><span style="font-size:.82rem;color:var(--text-muted);white-space:nowrap;">원/h</span></div>`;
-    if (m === '비율제') return `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:.82rem;color:var(--text-muted);min-width:76px;">강사 최대 %</span><input type="number" id="aPayMax_비율제" class="region-select" placeholder="예) 60" min="0" max="100" step="5" style="flex:1;"/><span style="font-size:.82rem;color:var(--text-muted);white-space:nowrap;">%</span></div>`;
+    if (m === '월급') return `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:.82rem;color:var(--text-muted);min-width:76px;">최대 월급</span><input type="text" inputmode="numeric" id="aPayMax_월급" class="region-select" placeholder="예) 2,500,000" style="flex:1;" oninput="formatPayInput(this)" onblur="confirmPayInput(this,'최대 월급','원/월')"/><span style="font-size:.82rem;color:var(--text-muted);white-space:nowrap;">원/월</span></div>`;
+    if (m === '시급') return `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:.82rem;color:var(--text-muted);min-width:76px;">최대 시급</span><input type="text" inputmode="numeric" id="aPayMax_시급" class="region-select" placeholder="예) 30,000" style="flex:1;" oninput="formatPayInput(this)" onblur="confirmPayInput(this,'최대 시급','원/h')"/><span style="font-size:.82rem;color:var(--text-muted);white-space:nowrap;">원/h</span></div>`;
+    if (m === '비율제') return `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:.82rem;color:var(--text-muted);min-width:76px;">강사 최대 %</span><input type="text" inputmode="numeric" id="aPayMax_비율제" class="region-select" placeholder="예) 60" style="flex:1;" oninput="formatPayInput(this)" onblur="confirmPayInput(this,'강사 최대 비율','%')"/><span style="font-size:.82rem;color:var(--text-muted);white-space:nowrap;">%</span></div>`;
     return '';
   }).join('');
 }
