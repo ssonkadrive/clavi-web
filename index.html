@@ -1803,19 +1803,19 @@
 
     <!-- 스탯 -->
     <div class="stat-row">
-      <div class="stat-card" style="cursor:pointer;" onclick="showPage('academyPage')">
+      <div class="stat-card" style="cursor:pointer;" onclick="drawerGo('academy-post')">
         <span class="stat-icon">📋</span>
-        <span class="stat-num">2</span>
+        <span class="stat-num" id="aStatPost">-</span>
         <span class="stat-label">등록 공고</span>
       </div>
-      <div class="stat-card" style="cursor:pointer;" onclick="showPage('notificationsPage')">
+      <div class="stat-card" style="cursor:pointer;" onclick="drawerGo('academy-match')">
         <span class="stat-icon">⚡</span>
-        <span class="stat-num">7</span>
+        <span class="stat-num" id="aStatWait">-</span>
         <span class="stat-label">매칭 대기 강사</span>
       </div>
-      <div class="stat-card" style="cursor:pointer;" onclick="showPage('academyMatchPage')">
+      <div class="stat-card" style="cursor:pointer;" onclick="drawerGo('academy-match')">
         <span class="stat-icon">✅</span>
-        <span class="stat-num">1</span>
+        <span class="stat-num" id="aStatHired">0</span>
         <span class="stat-label">채용 완료</span>
       </div>
     </div>
@@ -1834,33 +1834,10 @@
     <!-- 최근 알림 -->
     <div class="home-section-title">
       최근 매칭 알림
-      <span class="see-all" onclick="showToast('🚧 준비 중인 기능입니다')">전체보기</span>
+      <span class="see-all" onclick="drawerGo('academy-match')">전체보기</span>
     </div>
-    <div class="noti-list">
-      <div class="noti-card">
-        <span class="noti-dot blue"></span>
-        <div class="noti-body">
-          <div class="noti-title">김민지 강사님이 연기/뮤지컬 공고에 지원했습니다</div>
-          <div class="noti-time">방금 전</div>
-        </div>
-        <span class="noti-tag">신규</span>
-      </div>
-      <div class="noti-card">
-        <span class="noti-dot green"></span>
-        <div class="noti-body">
-          <div class="noti-title">이지수 강사님 학력 인증이 완료되었습니다</div>
-          <div class="noti-time">1시간 전</div>
-        </div>
-        <span class="noti-tag">인증</span>
-      </div>
-      <div class="noti-card">
-        <span class="noti-dot pink"></span>
-        <div class="noti-body">
-          <div class="noti-title">박서준 강사님이 면접을 수락했습니다</div>
-          <div class="noti-time">어제</div>
-        </div>
-        <span class="noti-tag">면접</span>
-      </div>
+    <div class="noti-list" id="aHomeNotiList">
+      <div style="text-align:center;color:var(--text-muted);padding:24px 0;font-size:.9rem;">로딩 중...</div>
     </div>
 
     <!-- 채용 완료 -->
@@ -1899,19 +1876,19 @@
 
     <!-- 스탯 -->
     <div class="stat-row">
-      <div class="stat-card" style="cursor:pointer;" onclick="showPage('jobListPage')">
+      <div class="stat-card" style="cursor:pointer;" onclick="drawerGo('instructor-match')">
         <span class="stat-icon">📄</span>
-        <span class="stat-num">3</span>
-        <span class="stat-label">지원 공고</span>
+        <span class="stat-num" id="iStatApply">-</span>
+        <span class="stat-label">매칭 학원</span>
       </div>
-      <div class="stat-card" style="cursor:pointer;" onclick="showPage('interviewPage')">
+      <div class="stat-card" style="cursor:pointer;" onclick="drawerGo('instructor-match')">
         <span class="stat-icon">📅</span>
-        <span class="stat-num">1</span>
+        <span class="stat-num" id="iStatInterview">0</span>
         <span class="stat-label">면접 일정</span>
       </div>
-      <div class="stat-card" style="cursor:pointer;" onclick="showPage('notificationsPage')">
+      <div class="stat-card" style="cursor:pointer;" onclick="drawerGo('instructor-match')">
         <span class="stat-icon">✅</span>
-        <span class="stat-num">0</span>
+        <span class="stat-num" id="iStatMatch">0</span>
         <span class="stat-label">매칭 완료</span>
       </div>
     </div>
@@ -2600,6 +2577,7 @@ function enterApp() {
     showPage('academyHome');
     initAcademyForm();
     initNotifications();
+    renderAcademyHome();
   } else {
     document.getElementById('drawerRoleLabel').textContent = '강사 계정';
     document.getElementById('drawerAvatar').textContent = '🎓';
@@ -2612,6 +2590,7 @@ function enterApp() {
     initInstructorForm();
     initNotifications();
     renderRecJobs();
+    renderInstructorHome();
   }
 }
 
@@ -5441,13 +5420,87 @@ let notifications = [];
 
 function initNotifications() {
   const saved = localStorage.getItem('CLAVI_NOTI_' + currentUserRole);
-  if (saved) {
-    notifications = JSON.parse(saved);
-  } else {
-    notifications = JSON.parse(JSON.stringify(DEMO_NOTIFICATIONS[currentUserRole] || []));
-    saveNotifications();
-  }
+  notifications = saved ? JSON.parse(saved) : [];
   updateNotiBadge();
+}
+
+async function renderAcademyHome() {
+  const { data: { session } } = await _supabase.auth.getSession();
+  if (!session?.user) return;
+
+  // 내 조건 확인
+  const { data: mine } = await _supabase.from('academy_conditions')
+    .select('selected_skills').eq('user_id', session.user.id).maybeSingle();
+  const mySkills = mine?.selected_skills || [];
+
+  // 스탯 업데이트
+  const postEl = document.getElementById('aStatPost');
+  const waitEl = document.getElementById('aStatWait');
+  if (postEl) postEl.textContent = mySkills.length ? '1' : '0';
+
+  if (mySkills.length) {
+    const { data: instructors } = await _supabase.from('instructor_conditions').select('selected_skills');
+    const cnt = (instructors || []).filter(ic => (ic.selected_skills || []).some(s => mySkills.includes(s))).length;
+    if (waitEl) waitEl.textContent = cnt;
+
+    // 최근 알림: 매칭 강사 최대 3명 표시
+    const notiEl = document.getElementById('aHomeNotiList');
+    if (notiEl) {
+      const { data: top3 } = await _supabase.from('instructor_conditions')
+        .select('user_id, subjects, selected_skills, regions, updated_at')
+        .order('updated_at', { ascending: false }).limit(20);
+      const matched = (top3 || []).filter(ic => (ic.selected_skills || []).some(s => mySkills.includes(s))).slice(0, 3);
+      if (!matched.length) {
+        notiEl.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:.9rem;">아직 매칭된 강사가 없습니다</div>';
+      } else {
+        notiEl.innerHTML = matched.map(ic => {
+          const common = (ic.selected_skills || []).filter(s => mySkills.includes(s));
+          const region = (ic.regions || []).join(', ') || '지역 미지정';
+          const ago = ic.updated_at ? _timeAgo(ic.updated_at) : '';
+          return `<div class="noti-card" onclick="drawerGo('academy-match')" style="cursor:pointer;">
+            <span class="noti-dot blue"></span>
+            <div class="noti-body">
+              <div class="noti-title">강사님이 <strong>${common.slice(0,2).join(', ')}</strong> 분야로 매칭됩니다</div>
+              <div class="noti-time">${region}${ago ? ' · ' + ago : ''}</div>
+            </div>
+            <span class="noti-tag">신규</span>
+          </div>`;
+        }).join('');
+      }
+    }
+  } else {
+    if (waitEl) waitEl.textContent = '0';
+    const notiEl = document.getElementById('aHomeNotiList');
+    if (notiEl) notiEl.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:20px;font-size:.9rem;">원하는 강사 분야를 먼저 등록해 주세요</div>';
+  }
+}
+
+async function renderInstructorHome() {
+  const { data: { session } } = await _supabase.auth.getSession();
+  if (!session?.user) return;
+
+  const { data: mine } = await _supabase.from('instructor_conditions')
+    .select('selected_skills').eq('user_id', session.user.id).maybeSingle();
+  const mySkills = mine?.selected_skills || [];
+
+  const applyEl = document.getElementById('iStatApply');
+  if (mySkills.length) {
+    const { data: academies } = await _supabase.from('academy_conditions').select('selected_skills');
+    const cnt = (academies || []).filter(ac => (ac.selected_skills || []).some(s => mySkills.includes(s))).length;
+    if (applyEl) applyEl.textContent = cnt;
+  } else {
+    if (applyEl) applyEl.textContent = '0';
+  }
+}
+
+function _timeAgo(iso) {
+  const diff = Date.now() - new Date(iso).getTime();
+  const m = Math.floor(diff / 60000);
+  if (m < 1) return '방금 전';
+  if (m < 60) return `${m}분 전`;
+  const h = Math.floor(m / 60);
+  if (h < 24) return `${h}시간 전`;
+  return `${Math.floor(h / 24)}일 전`;
 }
 
 function saveNotifications() {
@@ -5505,28 +5558,49 @@ function onNotiClick(id) {
 }
 
 /* ── 원장 매칭 현황 ─────── */
-function renderAcademyMatch() {
+async function renderAcademyMatch() {
   const el = document.getElementById('academyMatchList');
   if (!el) return;
-  const matches = notifications.filter(n => ['match_request','match_accepted','hire_done','match_rejected'].includes(n.type));
-  if (!matches.length) {
-    el.innerHTML = '<div class="match-card"><div style="text-align:center;color:var(--text-muted);padding:20px;">아직 지원한 강사가 없습니다</div></div>';
+  el.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:24px;">로딩 중...</div>';
+
+  const { data: { session } } = await _supabase.auth.getSession();
+  if (!session?.user) { el.innerHTML = '<div class="match-card"><div style="text-align:center;color:var(--text-muted);padding:20px;">로그인이 필요합니다</div></div>'; return; }
+
+  // 내 조건 가져오기
+  const { data: mine } = await _supabase.from('academy_conditions').select('selected_skills').eq('user_id', session.user.id).maybeSingle();
+  const mySkills = mine?.selected_skills || [];
+
+  if (!mySkills.length) {
+    el.innerHTML = '<div class="match-card"><div style="text-align:center;color:var(--text-muted);padding:20px;">먼저 <strong>원하는 강사 분야</strong>를 등록해 주세요</div></div>';
     return;
   }
-  el.innerHTML = matches.map(n => {
-    const st = n.type === 'match_request' ? 'new' : n.type === 'match_accepted' ? 'ok' : n.type === 'hire_done' ? 'done' : 'no';
-    const labelMap = { new:'신규 지원', ok:'면접 일정 수신', done:'채용 완료', no:'거절' };
-    return `<div class="match-card ${st==='new'?'new-match':st==='ok'?'accepted':''}">
+
+  // 겹치는 강사 찾기
+  const { data: instructors } = await _supabase.from('instructor_conditions').select('user_id, subjects, selected_skills, selected_preferred, regions, pay_min, time_start, time_end, weekdays, intro, updated_at');
+  const matched = (instructors || []).filter(ic => (ic.selected_skills || []).some(s => mySkills.includes(s)));
+
+  if (!matched.length) {
+    el.innerHTML = '<div class="match-card"><div style="text-align:center;color:var(--text-muted);padding:20px;">아직 매칭되는 강사가 없습니다<br><small>강사가 가입하면 자동으로 표시됩니다</small></div></div>';
+    return;
+  }
+
+  el.innerHTML = matched.map(ic => {
+    const common = (ic.selected_skills || []).filter(s => mySkills.includes(s));
+    const region = (ic.regions || []).join(', ') || '지역 미지정';
+    const pay = ic.pay_min ? `월 ${ic.pay_min.toLocaleString()}원 이상` : '급여 협의';
+    const time = (ic.time_start && ic.time_end) ? `${ic.time_start}~${ic.time_end}` : '시간 협의';
+    return `<div class="match-card new-match">
       <div class="match-card-head">
-        <span class="match-academy">👤 ${n.instructorName} 강사</span>
-        <span class="match-label ${st}">${labelMap[st]}</span>
+        <span class="match-academy">👤 강사 매칭</span>
+        <span class="match-label new">매칭</span>
       </div>
-      <div class="match-meta"><span>🎯 ${n.industry}</span><span>🕐 ${n.time}</span></div>
-      <div class="match-actions">
-        ${st==='new' ? `<button class="match-btn accept" onclick="academyAcceptMatch('${n.id}')">✅ 면접 제안</button><button class="match-btn reject" onclick="academyRejectMatch('${n.id}')">❌ 거절</button>` : ''}
-        ${st==='ok'  ? `<button class="match-btn schedule" onclick="showToast('면접 일정이 수신되었습니다 📅')">📅 일정 확인</button>` : ''}
-        ${st==='done'? `<button class="match-btn accept" onclick="onHireClick('academy')">📄 계약서 보기</button>` : ''}
+      <div class="match-meta">
+        <span>🎯 ${common.slice(0,3).join(', ')}${common.length>3?` 외 ${common.length-3}개`:''}</span>
+        <span>📍 ${region}</span>
+        <span>💰 ${pay}</span>
+        <span>🕐 ${time}</span>
       </div>
+      ${ic.intro ? `<div style="font-size:.85rem;color:var(--text-muted);margin-top:6px;padding:0 2px;">${ic.intro.slice(0,60)}${ic.intro.length>60?'…':''}</div>` : ''}
     </div>`;
   }).join('');
 }
@@ -5543,33 +5617,48 @@ function academyRejectMatch(id) {
 }
 
 /* ── 강사 매칭 알림 ─────── */
-function renderInstructorMatch() {
+async function renderInstructorMatch() {
   const el = document.getElementById('instructorMatchList');
   if (!el) return;
-  const matches = notifications.filter(n => ['match_offer','interview_confirm','match_rejected'].includes(n.type));
-  if (!matches.length) {
-    el.innerHTML = '<div class="match-card"><div style="text-align:center;color:var(--text-muted);padding:20px;">아직 매칭 제안이 없습니다</div></div>';
+  el.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:24px;">로딩 중...</div>';
+
+  const { data: { session } } = await _supabase.auth.getSession();
+  if (!session?.user) { el.innerHTML = '<div class="match-card"><div style="text-align:center;color:var(--text-muted);padding:20px;">로그인이 필요합니다</div></div>'; return; }
+
+  const { data: mine } = await _supabase.from('instructor_conditions').select('selected_skills').eq('user_id', session.user.id).maybeSingle();
+  const mySkills = mine?.selected_skills || [];
+
+  if (!mySkills.length) {
+    el.innerHTML = '<div class="match-card"><div style="text-align:center;color:var(--text-muted);padding:20px;">먼저 <strong>나의 전문 분야</strong>를 등록해 주세요</div></div>';
     return;
   }
-  el.innerHTML = matches.map(n => {
-    const isNew  = n.type === 'match_offer';
-    const isConf = n.type === 'interview_confirm';
-    const isNo   = n.type === 'match_rejected';
-    return `<div class="match-card ${isNew?'new-match':isConf?'accepted':''}">
+
+  const { data: academies } = await _supabase.from('academy_conditions').select('user_id, academy_name, subjects, selected_skills, regions, pay_max, employ_types, time_start, time_end, weekdays, intro, updated_at');
+  const matched = (academies || []).filter(ac => (ac.selected_skills || []).some(s => mySkills.includes(s)));
+
+  if (!matched.length) {
+    el.innerHTML = '<div class="match-card"><div style="text-align:center;color:var(--text-muted);padding:20px;">아직 매칭되는 학원이 없습니다<br><small>학원이 등록되면 자동으로 표시됩니다</small></div></div>';
+    return;
+  }
+
+  el.innerHTML = matched.map(ac => {
+    const common = (ac.selected_skills || []).filter(s => mySkills.includes(s));
+    const region = (ac.regions || []).join(', ') || '지역 미지정';
+    const pay = ac.pay_max ? `월 최대 ${ac.pay_max.toLocaleString()}원` : '급여 협의';
+    const time = (ac.time_start && ac.time_end) ? `${ac.time_start}~${ac.time_end}` : '시간 협의';
+    const name = ac.academy_name || '학원';
+    return `<div class="match-card new-match">
       <div class="match-card-head">
-        <span class="match-academy">🏫 ${n.academyName}</span>
-        <span class="match-label ${isNew?'new':isConf?'ok':'no'}">${isNew?'새 제안':isConf?'면접 확정':'거절됨'}</span>
+        <span class="match-academy">🏫 ${name}</span>
+        <span class="match-label new">매칭</span>
       </div>
       <div class="match-meta">
-        <span>🎯 ${n.industry}</span>
-        ${n.pay?`<span>💰 ${n.pay}</span>`:''}
-        ${n.location?`<span>📍 ${n.location}</span>`:''}
-        <span>🕐 ${n.time}</span>
+        <span>🎯 ${common.slice(0,3).join(', ')}${common.length>3?` 외 ${common.length-3}개`:''}</span>
+        <span>📍 ${region}</span>
+        <span>💰 ${pay}</span>
+        <span>🕐 ${time}</span>
       </div>
-      <div class="match-actions">
-        ${isNew  ? `<button class="match-btn accept" onclick="instructorAccept('${n.id}')">✅ 수락 & 일정 선택</button><button class="match-btn reject" onclick="instructorReject('${n.id}')">❌ 거절</button>` : ''}
-        ${isConf ? `<button class="match-btn schedule" onclick="showToast('면접 정보가 저장되어 있습니다 📅')">📅 면접 정보 확인</button>` : ''}
-      </div>
+      ${ac.intro ? `<div style="font-size:.85rem;color:var(--text-muted);margin-top:6px;padding:0 2px;">${ac.intro.slice(0,60)}${ac.intro.length>60?'…':''}</div>` : ''}
     </div>`;
   }).join('');
 }
