@@ -2018,18 +2018,35 @@
 
       <section class="card">
         <h2 class="card-title">🎯 원하는 강사 분야</h2>
-        <p class="card-desc">대분류 선택 후 세부 조건을 고르세요.</p>
-        <div class="match-chips" id="aSubjectChips">
-          <button class="match-chip-btn" id="a_chip_music"   onclick="openSkillModalFor('a','music');  updateAPaySubjectOptions('music')">🎵 음악<span class="chip-badge" id="a_badge_music"></span></button>
-          <button class="match-chip-btn" id="a_chip_art"     onclick="openSkillModalFor('a','art');    updateAPaySubjectOptions('art')">🎨 미술<span class="chip-badge" id="a_badge_art"></span></button>
-          <button class="match-chip-btn" id="a_chip_sports"  onclick="openSkillModalFor('a','sports'); updateAPaySubjectOptions('sports')">⚽ 체육<span class="chip-badge" id="a_badge_sports"></span></button>
-          <button class="match-chip-btn" id="a_chip_etc"     onclick="openSkillModalFor('a','etc');    updateAPaySubjectOptions('etc')">🤝 기타<span class="chip-badge" id="a_badge_etc"></span></button>
+        <p class="card-desc">대분류 선택 후 세부 과목과 필수/우대를 설정하세요.</p>
+
+        <!-- 대분류 탭 -->
+        <div class="sp-cat-tab-row" id="apCatTabs"></div>
+
+        <!-- 중분류 -->
+        <div id="apMidCard" style="display:none;margin-top:12px;">
+          <p class="sp-mid-label">세부 분야</p>
+          <div class="sp-mid-chips" id="apMidChips"></div>
         </div>
-        <div id="aSubSkillPanel"></div>
-        <button onclick="openSkillModalStep1('a')" style="margin-top:10px;padding:9px 18px;border:1.5px dashed var(--primary);border-radius:99px;background:transparent;color:var(--primary);font-family:var(--font);font-size:.85rem;cursor:pointer;">＋ 공통조건 · 세부역량 추가</button>
-        <div id="aSubSkillDisplay" style="display:none;margin-top:14px;padding-top:14px;border-top:1px solid var(--border);">
-          <p style="font-size:.78rem;color:var(--text-muted);margin-bottom:8px;">✅ 선택된 조건</p>
-          <div id="aSubSkillTags" style="display:flex;flex-wrap:wrap;gap:6px;"></div>
+
+        <!-- 소분류 스킬 -->
+        <div id="apSkillCard" style="display:none;margin-top:12px;">
+          <p class="sp-mid-label" id="apSkillCardTitle">과목 선택</p>
+          <div class="sp-skill-list" id="apSkillList"></div>
+        </div>
+
+        <!-- 공통 업무 아코디언 -->
+        <button type="button" class="sp-accordion-btn" onclick="apToggleAccordion()" style="margin-top:12px;">
+          <span>＋ 공통조건 · 세부역량 추가</span>
+          <span id="apAccordionArrow" style="transition:transform .3s;display:inline-block;">▾</span>
+        </button>
+        <div id="apAccordionBody" style="overflow:hidden;max-height:0;transition:max-height .35s ease;">
+          <div id="apCommonSkillList" style="padding-top:10px;"></div>
+        </div>
+
+        <!-- 선택 결과 -->
+        <div id="apResultPanel" style="margin-top:14px;">
+          <div class="sp-result-empty">선택한 과목이 여기에 표시됩니다.</div>
         </div>
       </section>
 
@@ -2626,7 +2643,7 @@ function drawerGo(menu) {
                  'notifications','interview'];
   if (!ready.includes(menu)) { showToast('🚧 준비 중인 기능입니다'); return; }
   if (menu === 'academy-home')      { setActiveMenu('menuAcademyHome');      showPage('academyHome'); }
-  if (menu === 'academy-post')      { setActiveMenu('menuAcademyPost');      showPage('academyPage');           renderAcademySkillsNow(); renderPayNow('aPayTypeGroup','aPayAmountFields','aPayType'); }
+  if (menu === 'academy-post')      { setActiveMenu('menuAcademyPost');      showPage('academyPage');           apInitCats(); renderPayNow('aPayTypeGroup','aPayAmountFields','aPayType'); }
   if (menu === 'academy-profile')   { setActiveMenu('menuAcademyProfile');   showPage('academyProfilePage');    initAcademyVerify(); initAcademyPhotoGrid(); }
   if (menu === 'academy-match')     { setActiveMenu('menuAcademyMatch');     showPage('academyMatchPage');      renderAcademyMatch(); }
   if (menu === 'instructor-home')   { setActiveMenu('menuInstructorHome');   showPage('instructorHome'); }
@@ -3126,6 +3143,134 @@ function ipRemoveSkill(skill) {
 function ipToggleAccordion() {
   const body  = document.getElementById('ipAccordionBody');
   const arrow = document.getElementById('ipAccordionArrow');
+  const isOpen = body.style.maxHeight !== '0px' && body.style.maxHeight !== '';
+  if (isOpen) {
+    body.style.maxHeight = body.scrollHeight + 'px';
+    requestAnimationFrame(() => { body.style.maxHeight = '0'; });
+    arrow.style.transform = '';
+  } else {
+    body.style.maxHeight = body.scrollHeight + 'px';
+    arrow.style.transform = 'rotate(180deg)';
+    setTimeout(() => { body.style.maxHeight = 'none'; }, 360);
+  }
+}
+
+/* ════════════════════════════════════════════════
+   academyPage 4-level skill picker (ap*)
+════════════════════════════════════════════════ */
+let _apCat = null, _apMid = null;
+const _apSel  = {};
+const _apCsel = {};
+
+function apInitCats() {
+  const tabs = document.getElementById('apCatTabs');
+  if (!tabs || tabs.childElementCount > 0) return;
+  Object.entries(SP_CATS).forEach(([key, cat]) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    btn.className = 'sp-cat-tab';
+    btn.textContent = cat.label;
+    btn.onclick = () => apSelectCat(key, btn);
+    tabs.appendChild(btn);
+  });
+  apRenderCommonSkills();
+}
+
+function apSelectCat(key, btn) {
+  _apCat = key; _apMid = null;
+  document.querySelectorAll('#apCatTabs .sp-cat-tab').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  const chips = document.getElementById('apMidChips');
+  chips.innerHTML = '';
+  Object.keys(SP_CATS[key].subjects).forEach(subj => {
+    const c = document.createElement('button');
+    c.type = 'button';
+    c.className = 'sp-mid-chip';
+    c.textContent = subj;
+    c.onclick = () => apSelectMid(subj, c);
+    chips.appendChild(c);
+  });
+  document.getElementById('apMidCard').style.display = 'block';
+  document.getElementById('apSkillCard').style.display = 'none';
+  // 과목별 시급 드롭다운에 해당 대분류 과목 채우기
+  const el = document.getElementById('aPaySubjectPick');
+  if (el) {
+    const subjects = Object.values(SP_CATS[key].subjects).flat();
+    el.innerHTML = '<option value="">과목 선택</option>';
+    subjects.forEach(s => {
+      const o = document.createElement('option');
+      o.value = s; o.textContent = s;
+      el.appendChild(o);
+    });
+  }
+}
+
+function apSelectMid(subj, btn) {
+  _apMid = subj;
+  document.querySelectorAll('#apMidChips .sp-mid-chip').forEach(b => b.classList.remove('active'));
+  btn.classList.add('active');
+  document.getElementById('apSkillCardTitle').textContent = subj;
+  apRenderSkills();
+  document.getElementById('apSkillCard').style.display = 'block';
+}
+
+function apRenderSkills() {
+  const list = document.getElementById('apSkillList');
+  list.innerHTML = '';
+  (SP_CATS[_apCat]?.subjects[_apMid] || []).forEach(s => spMakeSkillItem(list, s, _apSel, apUpdateResult));
+}
+
+function apRenderCommonSkills() {
+  const container = document.getElementById('apCommonSkillList');
+  if (!container) return;
+  container.innerHTML = '';
+  Object.entries(SP_COMMON).forEach(([group, items]) => {
+    const title = document.createElement('div');
+    title.className = 'sp-common-group';
+    title.textContent = group;
+    container.appendChild(title);
+    const list = document.createElement('div');
+    list.className = 'sp-skill-list';
+    items.forEach(s => spMakeSkillItem(list, s, _apCsel, apUpdateResult));
+    container.appendChild(list);
+  });
+}
+
+function apUpdateResult() {
+  const panel = document.getElementById('apResultPanel');
+  if (!panel) return;
+  const all = [...Object.entries(_apSel), ...Object.entries(_apCsel)];
+  if (!all.length) {
+    panel.innerHTML = '<div class="sp-result-empty">선택한 과목이 여기에 표시됩니다.</div>';
+    return;
+  }
+  const div = document.createElement('div');
+  div.className = 'sp-result-tags';
+  all.forEach(([s, t]) => {
+    const tag = document.createElement('span');
+    tag.className = 'rtag ' + (t === 'required' ? 'rtag-req' : 'rtag-pref');
+    tag.innerHTML = `${t === 'required' ? '🔵 필수' : '✅ 우대'} ${s} `;
+    const x = document.createElement('button');
+    x.type = 'button';
+    x.className = 'rtag-x';
+    x.textContent = '×';
+    x.onclick = () => apRemoveSkill(s);
+    tag.appendChild(x);
+    div.appendChild(tag);
+  });
+  panel.innerHTML = '';
+  panel.appendChild(div);
+}
+
+function apRemoveSkill(skill) {
+  if (_apSel[skill])  { delete _apSel[skill];  apRenderSkills(); }
+  if (_apCsel[skill]) { delete _apCsel[skill]; apRenderCommonSkills(); }
+  apUpdateResult();
+}
+
+function apToggleAccordion() {
+  const body  = document.getElementById('apAccordionBody');
+  const arrow = document.getElementById('apAccordionArrow');
   const isOpen = body.style.maxHeight !== '0px' && body.style.maxHeight !== '';
   if (isOpen) {
     body.style.maxHeight = body.scrollHeight + 'px';
@@ -3757,8 +3902,8 @@ function initAPaySubjectSelect() { /* 대분류 클릭으로 대체 */ }
 
 function updateAPaySubjectOptions(catKey) {
   const el = document.getElementById('aPaySubjectPick');
-  if (!el) return;
-  const subjects = _setupCatSubjects[catKey] || [];
+  if (!el || !SP_CATS[catKey]) return;
+  const subjects = Object.values(SP_CATS[catKey].subjects).flat();
   el.innerHTML = '<option value="">과목 선택</option>';
   subjects.forEach(s => {
     const o = document.createElement('option');
