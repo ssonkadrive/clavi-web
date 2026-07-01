@@ -2045,11 +2045,14 @@
 
         <!-- 공통 업무 아코디언 -->
         <button type="button" class="sp-accordion-btn" onclick="apToggleAccordion()" style="margin-top:12px;">
-          <span>＋ 공통조건 · 세부역량 추가</span>
+          <span>＋ 공통조건 · 세부역량 추가 <span id="apCommonBadge" style="display:none;margin-left:6px;background:var(--primary);color:#fff;font-size:.72rem;font-weight:700;padding:2px 7px;border-radius:99px;"></span></span>
           <span id="apAccordionArrow" style="transition:transform .3s;display:inline-block;">▾</span>
         </button>
-        <div id="apAccordionBody" style="overflow:hidden;max-height:0;transition:max-height .35s ease;">
-          <div id="apCommonSkillList" style="padding-top:10px;"></div>
+        <div id="apAccordionBody" style="overflow:hidden;max-height:0;transition:max-height .35s ease;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);margin-top:-1px;">
+          <div id="apCommonSkillList" style="padding:12px;"></div>
+          <div style="padding:0 12px 14px;">
+            <button type="button" onclick="apToggleAccordion()" style="width:100%;padding:9px;border-radius:var(--radius);border:1.5px solid var(--primary);background:var(--primary);color:#fff;font-family:var(--font);font-size:.85rem;font-weight:600;cursor:pointer;">완료 ✓</button>
+          </div>
         </div>
 
         <!-- 선택 결과 -->
@@ -2263,11 +2266,14 @@
         <!-- 일반 업무 아코디언 -->
         <div style="margin-top:14px;border:1px solid var(--border);border-radius:var(--radius);">
           <button type="button" onclick="ipToggleAccordion()" style="width:100%;display:flex;align-items:center;justify-content:space-between;padding:12px 16px;background:none;border:none;cursor:pointer;font-family:var(--font);font-size:.9rem;font-weight:600;color:var(--text);">
-            <span>🛠 일반 업무 역량</span>
+            <span>🛠 일반 업무 역량 <span id="ipCommonBadge" style="display:none;margin-left:6px;background:var(--primary);color:#fff;font-size:.72rem;font-weight:700;padding:2px 7px;border-radius:99px;"></span></span>
             <span id="ipAccordionArrow" style="transition:transform .3s;">▼</span>
           </button>
           <div id="ipAccordionBody" style="max-height:0;overflow:hidden;transition:max-height .35s ease;">
             <div style="padding:0 12px 12px;" id="ipCommonSkillList"></div>
+            <div style="padding:0 12px 14px;">
+              <button type="button" onclick="ipToggleAccordion()" style="width:100%;padding:9px;border-radius:var(--radius);border:1.5px solid var(--primary);background:var(--primary);color:#fff;font-family:var(--font);font-size:.85rem;font-weight:600;cursor:pointer;">완료 ✓</button>
+            </div>
           </div>
         </div>
 
@@ -3119,6 +3125,10 @@ function ipRenderCommonSkills() {
 function ipUpdateResult() {
   const panel = document.getElementById('ipResultPanel');
   if (!panel) return;
+  // 공통 뱃지 카운트
+  const cCount = Object.keys(_ipCsel).length;
+  const badge = document.getElementById('ipCommonBadge');
+  if (badge) { badge.textContent = cCount; badge.style.display = cCount ? '' : 'none'; }
   const all = [...Object.entries(_ipSel), ...Object.entries(_ipCsel)];
   if (!all.length) {
     panel.innerHTML = '<div class="sp-result-empty">선택한 과목이 여기에 표시됩니다.</div>';
@@ -3249,6 +3259,10 @@ function apRenderCommonSkills() {
 function apUpdateResult() {
   const panel = document.getElementById('apResultPanel');
   if (!panel) return;
+  // 공통 뱃지 카운트
+  const cCount = Object.keys(_apCsel).length;
+  const badge = document.getElementById('apCommonBadge');
+  if (badge) { badge.textContent = cCount; badge.style.display = cCount ? '' : 'none'; }
   const all = [...Object.entries(_apSel), ...Object.entries(_apCsel)];
   if (!all.length) {
     panel.innerHTML = '<div class="sp-result-empty">선택한 과목이 여기에 표시됩니다.</div>';
