@@ -4012,17 +4012,35 @@ function payConfirmCancel() {
 }
 
 /* ── 고용형태: 급여방식 동적 입력 ── */
+const _apPayRowDef = {
+  '월급':  { id: 'aPayMax_월급',  label: '최대 월급',    ph: '예) 2,500,000', unit: '원/월', blurLabel: '최대 월급',    blurUnit: '원/월' },
+  '시급':  { id: 'aPayMax_시급',  label: '최대 시급',    ph: '예) 30,000',    unit: '원/h',  blurLabel: '최대 시급',    blurUnit: '원/h'  },
+  '비율제':{ id: 'aPayMax_비율제', label: '강사 최대 %', ph: '예) 60',        unit: '%',     blurLabel: '강사 최대 비율', blurUnit: '%'    },
+};
+const _apPayOrder = ['월급', '시급', '비율제'];
 function apPayMethodChange() {
-  const checked = [...document.querySelectorAll('input[name="aPayMethod"]:checked')].map(el => el.value);
+  const checked = new Set([...document.querySelectorAll('input[name="aPayMethod"]:checked')].map(el => el.value));
   const area = document.getElementById('aPayAmountArea');
-  if (!checked.length) { area.style.display = 'none'; area.innerHTML = ''; return; }
+  if (!checked.size) { area.style.display = 'none'; area.innerHTML = ''; return; }
   area.style.display = 'flex';
-  area.innerHTML = checked.map(m => {
-    if (m === '월급') return `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:.82rem;color:var(--text-muted);min-width:76px;">최대 월급</span><input type="text" inputmode="numeric" id="aPayMax_월급" class="region-select" placeholder="예) 2,500,000" style="flex:1;" oninput="formatPayInput(this)" onblur="confirmPayInput(this,'최대 월급','원/월')"/><span style="font-size:.82rem;color:var(--text-muted);white-space:nowrap;">원/월</span></div>`;
-    if (m === '시급') return `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:.82rem;color:var(--text-muted);min-width:76px;">최대 시급</span><input type="text" inputmode="numeric" id="aPayMax_시급" class="region-select" placeholder="예) 30,000" style="flex:1;" oninput="formatPayInput(this)" onblur="confirmPayInput(this,'최대 시급','원/h')"/><span style="font-size:.82rem;color:var(--text-muted);white-space:nowrap;">원/h</span></div>`;
-    if (m === '비율제') return `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:.82rem;color:var(--text-muted);min-width:76px;">강사 최대 %</span><input type="text" inputmode="numeric" id="aPayMax_비율제" class="region-select" placeholder="예) 60" style="flex:1;" oninput="formatPayInput(this)" onblur="confirmPayInput(this,'강사 최대 비율','%')"/><span style="font-size:.82rem;color:var(--text-muted);white-space:nowrap;">%</span></div>`;
-    return '';
-  }).join('');
+  // 체크 해제된 행 제거
+  area.querySelectorAll('[data-pay-row]').forEach(row => {
+    if (!checked.has(row.dataset.payRow)) row.remove();
+  });
+  // 체크된 행 순서대로 추가 (없을 때만)
+  _apPayOrder.forEach(m => {
+    if (!checked.has(m)) return;
+    if (area.querySelector(`[data-pay-row="${m}"]`)) return; // 이미 있으면 skip
+    const d = _apPayRowDef[m];
+    const div = document.createElement('div');
+    div.dataset.payRow = m;
+    div.style.cssText = 'display:flex;align-items:center;gap:8px;';
+    div.innerHTML = `<span style="font-size:.82rem;color:var(--text-muted);min-width:76px;">${d.label}</span><input type="text" inputmode="numeric" id="${d.id}" class="region-select" placeholder="${d.ph}" style="flex:1;" oninput="formatPayInput(this)" onblur="confirmPayInput(this,'${d.blurLabel}','${d.blurUnit}')"/><span style="font-size:.82rem;color:var(--text-muted);white-space:nowrap;">${d.unit}</span>`;
+    // 순서 맞추기: _apPayOrder 기준으로 삽입 위치 결정
+    const nextM = _apPayOrder.slice(_apPayOrder.indexOf(m) + 1).find(k => area.querySelector(`[data-pay-row="${k}"]`));
+    const ref = nextM ? area.querySelector(`[data-pay-row="${nextM}"]`) : null;
+    area.insertBefore(div, ref);
+  });
 }
 
 /* ── 고용형태: 계약형태 ⓘ 팝업 ── */
