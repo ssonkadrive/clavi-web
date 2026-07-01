@@ -1028,6 +1028,14 @@
       cursor:pointer;transition:border-color .15s,color .15s;
     }
     .sp-accordion-btn:hover { border-color:var(--primary);color:var(--primary); }
+    .info-btn {
+      width:20px;height:20px;border-radius:50%;
+      border:1.5px solid var(--border);background:var(--surface);
+      color:var(--text-muted);font-size:.7rem;font-weight:700;font-style:italic;
+      cursor:pointer;flex-shrink:0;padding:0;line-height:1;
+      transition:border-color .15s,color .15s;
+    }
+    .info-btn:hover { border-color:var(--primary);color:var(--primary); }
     .sp-common-group {
       font-size:.74rem;color:var(--text-muted);text-transform:uppercase;
       letter-spacing:.05em;margin:16px 0 7px;padding-bottom:4px;
@@ -2062,18 +2070,35 @@
       </section>
 
       <section class="card">
-        <h2 class="card-title">💵 과목별 시급 설정</h2>
-        <p class="card-desc">과목을 선택하고 해당 과목의 최대 시급을 입력하세요. 강사의 최소 희망 시급과 비교해 매칭합니다.</p>
-        <div style="display:flex;flex-wrap:wrap;gap:8px;margin-bottom:10px;align-items:center;">
-          <select id="aPaySubjectPick" class="region-select" style="flex:1;min-width:140px;">
-            <option value="">위에서 대분류 선택 후 과목 선택</option>
-          </select>
-          <input type="number" id="aPaySubjectAmount" class="region-select" placeholder="시급 입력" min="0" step="1000" style="flex:1;min-width:120px;"/>
-          <span style="color:var(--text-muted);font-size:.82rem;white-space:nowrap;flex-shrink:0;">원/h</span>
-          <button type="button" class="region-add-btn" onclick="addAPaySubject()">+ 추가</button>
+        <h2 class="card-title">💼 고용형태</h2>
+
+        <p class="sp-mid-label" style="margin-bottom:8px;">급여 방식</p>
+        <div class="match-chips" id="aPayMethodChips">
+          <label class="match-chip"><input type="checkbox" name="aPayMethod" value="월급" onchange="apPayMethodChange()"/><span>월급</span></label>
+          <label class="match-chip"><input type="checkbox" name="aPayMethod" value="시급" onchange="apPayMethodChange()"/><span>시급</span></label>
+          <label class="match-chip"><input type="checkbox" name="aPayMethod" value="비율제" onchange="apPayMethodChange()"/><span>비율제</span></label>
         </div>
-        <div id="aPaySubjectErr" class="ts-err" style="margin-bottom:8px;"></div>
-        <div id="aPaySubjectTags" style="display:flex;flex-wrap:wrap;gap:7px;min-height:10px;"></div>
+        <div id="aPayAmountArea" style="display:none;margin-top:10px;display:flex;flex-direction:column;gap:8px;"></div>
+
+        <p class="sp-mid-label" style="margin-top:16px;margin-bottom:10px;">계약 형태</p>
+        <div style="display:flex;flex-direction:column;gap:8px;">
+          <div style="display:flex;align-items:center;gap:8px;">
+            <label class="match-chip"><input type="checkbox" name="aEmploy" value="4대보험"/><span>4대보험</span></label>
+            <button type="button" class="info-btn" onclick="showEmployInfo('4대보험', this)">i</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <label class="match-chip"><input type="checkbox" name="aEmploy" value="3.3% 프리랜서"/><span>3.3% 프리랜서</span></label>
+            <button type="button" class="info-btn" onclick="showEmployInfo('3.3', this)">i</button>
+          </div>
+          <div style="display:flex;align-items:center;gap:8px;">
+            <label class="match-chip"><input type="checkbox" name="aEmploy" value="협의 가능"/><span>협의 가능</span></label>
+            <button type="button" class="info-btn" onclick="showEmployInfo('협의', this)">i</button>
+          </div>
+        </div>
+        <div id="employInfoPopup" style="display:none;margin-top:10px;padding:12px 14px;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);">
+          <div id="employInfoContent" style="font-size:.82rem;line-height:1.65;color:var(--text);"></div>
+          <button type="button" onclick="document.getElementById('employInfoPopup').style.display='none'" style="margin-top:8px;font-size:.78rem;color:var(--text-muted);background:none;border:none;cursor:pointer;padding:0;">닫기 ✕</button>
+        </div>
       </section>
 
       <section class="card">
@@ -2117,30 +2142,6 @@
         </label>
       </section>
 
-      <section class="card">
-        <h2 class="card-title">💼 고용형태</h2>
-        <p class="sp-mid-label" style="margin-bottom:8px;">급여 방식</p>
-        <div class="match-chips" id="aPayMethodChips">
-          <label class="match-chip"><input type="checkbox" name="aPayMethod" value="월급"/><span>월급</span></label>
-          <label class="match-chip"><input type="checkbox" name="aPayMethod" value="시급"/><span>시급</span></label>
-          <label class="match-chip"><input type="checkbox" name="aPayMethod" value="비율제"/><span>비율제</span></label>
-        </div>
-        <p class="sp-mid-label" style="margin-top:14px;margin-bottom:8px;">계약 형태</p>
-        <div class="match-chips" id="aEmployChips">
-          <label class="match-chip"><input type="checkbox" name="aEmploy" value="4대보험"/><span>4대보험</span></label>
-          <label class="match-chip"><input type="checkbox" name="aEmploy" value="3.3% 프리랜서"/><span>3.3% 프리랜서</span></label>
-          <label class="match-chip"><input type="checkbox" name="aEmploy" value="협의 가능"/><span>협의 가능</span></label>
-        </div>
-      </section>
-
-      <section class="card">
-        <h2 class="card-title">💰 최대 제시 시급</h2>
-        <p class="card-desc">이 금액 이상 원하는 강사는 매칭에서 제외됩니다.</p>
-        <div style="display:flex;align-items:center;gap:10px;">
-          <input type="number" id="aPayMax" class="form-input" placeholder="예) 40000" min="0" step="1000" style="flex:1;"/>
-          <span style="color:var(--text-muted);font-size:.85rem;white-space:nowrap;">원/시간 이하</span>
-        </div>
-      </section>
 
       <section class="card">
         <h2 class="card-title">📝 학원 소개 (선택)</h2>
@@ -3939,6 +3940,54 @@ function timeOptions() {
 
 /* ── 학원 과목별 시급 태그 ── */
 function initAPaySubjectSelect() { /* 대분류 클릭으로 대체 */ }
+
+/* ── 고용형태: 급여방식 동적 입력 ── */
+function apPayMethodChange() {
+  const checked = [...document.querySelectorAll('input[name="aPayMethod"]:checked')].map(el => el.value);
+  const area = document.getElementById('aPayAmountArea');
+  if (!checked.length) { area.style.display = 'none'; area.innerHTML = ''; return; }
+  area.style.display = 'flex';
+  area.innerHTML = checked.map(m => {
+    if (m === '월급') return `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:.82rem;color:var(--text-muted);min-width:76px;">최대 월급</span><input type="number" id="aPayMax_월급" class="region-select" placeholder="예) 2500000" min="0" step="10000" style="flex:1;"/><span style="font-size:.82rem;color:var(--text-muted);white-space:nowrap;">원/월</span></div>`;
+    if (m === '시급') return `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:.82rem;color:var(--text-muted);min-width:76px;">최대 시급</span><input type="number" id="aPayMax_시급" class="region-select" placeholder="예) 30000" min="0" step="1000" style="flex:1;"/><span style="font-size:.82rem;color:var(--text-muted);white-space:nowrap;">원/h</span></div>`;
+    if (m === '비율제') return `<div style="display:flex;align-items:center;gap:8px;"><span style="font-size:.82rem;color:var(--text-muted);min-width:76px;">강사 최대 %</span><input type="number" id="aPayMax_비율제" class="region-select" placeholder="예) 60" min="0" max="100" step="5" style="flex:1;"/><span style="font-size:.82rem;color:var(--text-muted);white-space:nowrap;">%</span></div>`;
+    return '';
+  }).join('');
+}
+
+/* ── 고용형태: 계약형태 ⓘ 팝업 ── */
+const _employInfo = {
+  '4대보험': {
+    title: '4대보험',
+    pros: ['고용·국민연금·건강·산재보험 4가지 보장', '실업급여 수령 가능', '안정적 고용관계 형성'],
+    cons: ['원장·강사 각 보험료 부담 (약 9~12%)', '가입 신청 등 행정 절차 필요']
+  },
+  '3.3': {
+    title: '3.3% 프리랜서',
+    pros: ['단기·파트타임 계약에 유연', '세금 3.3%만 원천징수', '고용 절차 간단'],
+    cons: ['고용보험 미적용 (실업급여 불가)', '산재보험 미적용', '근로기준법 일부 미적용']
+  },
+  '협의': {
+    title: '협의 가능',
+    pros: ['강사 상황에 맞게 유연하게 결정', '공고 노출 범위 확장 (더 많은 강사 유입)'],
+    cons: ['조건 불명확으로 지원율 낮아질 수 있음', '협의 과정에서 시간 소요']
+  }
+};
+function showEmployInfo(key, triggerBtn) {
+  const info = _employInfo[key];
+  if (!info) return;
+  const popup = document.getElementById('employInfoPopup');
+  const isShowing = popup.style.display !== 'none' && popup.dataset.key === key;
+  if (isShowing) { popup.style.display = 'none'; return; }
+  popup.dataset.key = key;
+  document.getElementById('employInfoContent').innerHTML = `
+    <strong style="font-size:.86rem;color:var(--text);">${info.title}</strong>
+    <p style="margin:8px 0 3px;color:var(--primary);font-size:.8rem;font-weight:600;">👍 장점</p>
+    <ul style="margin:0 0 8px;padding-left:16px;font-size:.8rem;">${info.pros.map(p=>`<li>${p}</li>`).join('')}</ul>
+    <p style="margin:0 0 3px;color:#e53935;font-size:.8rem;font-weight:600;">👎 단점</p>
+    <ul style="margin:0;padding-left:16px;font-size:.8rem;">${info.cons.map(c=>`<li>${c}</li>`).join('')}</ul>`;
+  popup.style.display = '';
+}
 
 function updateAPaySubjectOptions(catKey) {
   const el = document.getElementById('aPaySubjectPick');
