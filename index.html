@@ -1748,16 +1748,13 @@
             <label class="section-label" for="regEmail">이메일<span class="required">*</span></label>
             <div style="display:flex;gap:8px;align-items:flex-start;">
               <input type="email" id="regEmail" placeholder="example@clavi.kr" autocomplete="email" style="flex:1;" />
-              <button type="button" id="regSendOtpBtn" class="outline-btn" style="white-space:nowrap;padding:11px 14px;flex-shrink:0;" onclick="regSendOtp()">인증번호 발송</button>
+              <button type="button" id="regSendOtpBtn" class="outline-btn" style="white-space:nowrap;padding:11px 14px;flex-shrink:0;" onclick="regSendMagicLink()">인증 메일 발송</button>
             </div>
           </div>
-          <div class="field" id="regOtpField" style="display:none;">
-            <label class="section-label" for="regOtpCode">인증번호 <span id="regOtpTimer" style="font-size:.82rem;font-weight:400;color:var(--primary);"></span></label>
-            <div style="display:flex;gap:8px;align-items:flex-start;">
-              <input type="text" id="regOtpCode" placeholder="6자리 코드 입력" maxlength="6" inputmode="numeric" style="flex:1;letter-spacing:.2em;" />
-              <button type="button" id="regVerifyBtn" class="outline-btn" style="white-space:nowrap;padding:11px 14px;flex-shrink:0;" onclick="regVerifyOtp()">확인</button>
-            </div>
-            <p style="font-size:.78rem;color:var(--text-muted);margin-top:6px;">인증 완료 후 약관 동의 화면으로 이동합니다</p>
+          <div id="regMailSentBox" style="display:none;background:var(--surface);border:1.5px solid var(--border);border-radius:var(--radius);padding:16px 14px;margin-top:4px;">
+            <p style="font-size:.9rem;font-weight:600;color:var(--text);margin-bottom:6px;">📧 인증 메일을 발송했습니다</p>
+            <p style="font-size:.83rem;color:var(--text-muted);line-height:1.6;margin-bottom:10px;"><span id="regSentEmail" style="color:var(--text);font-weight:500;"></span> 으로 메일을 보냈어요.<br>메일 속 <strong style="color:var(--primary);">"Confirm email address"</strong> 링크를 클릭하면 자동으로 가입이 완료됩니다.</p>
+            <p style="font-size:.78rem;color:var(--text-muted);">메일이 안 보이면 스팸함도 확인해 주세요. &nbsp;<span class="text-link" onclick="regSendMagicLink()" style="font-size:.78rem;">재발송</span></p>
           </div>
         </form>
       </div>
@@ -4110,12 +4107,9 @@ document.getElementById('loginForm').addEventListener('submit', (e) => {
 });
 
 /* ════════════════════════════════════════════════
-  회원가입 이메일 OTP 인증
+  회원가입 매직링크 인증
 ════════════════════════════════════════════════ */
-let _regOtpEmail = null;
-let _regOtpTimerId = null;
-
-async function regSendOtp() {
+async function regSendMagicLink() {
   const email = document.getElementById('regEmail').value.trim();
   if (!/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
     showToast('올바른 이메일을 입력해 주세요');
@@ -4131,71 +4125,23 @@ async function regSendOtp() {
 
   const { error } = await _supabase.auth.signInWithOtp({
     email,
-    options: { shouldCreateUser: true }
+    options: {
+      shouldCreateUser: true,
+      emailRedirectTo: 'https://clavi-web.vercel.app/'
+    }
   });
 
+  btn.disabled = false;
   if (error) {
     showToast('발송 실패: ' + error.message);
-    btn.disabled = false;
-    btn.textContent = '인증번호 발송';
+    btn.textContent = '인증 메일 발송';
     return;
   }
 
-  _regOtpEmail = email;
   document.getElementById('regEmail').readOnly = true;
-  btn.disabled = false;
+  document.getElementById('regSentEmail').textContent = email;
+  document.getElementById('regMailSentBox').style.display = '';
   btn.textContent = '재발송';
-  document.getElementById('regOtpField').style.display = '';
-  regStartOtpTimer();
-  showToast('인증번호가 발송되었습니다 📧');
-}
-
-function regStartOtpTimer() {
-  clearInterval(_regOtpTimerId);
-  let sec = 180;
-  const el = document.getElementById('regOtpTimer');
-  el.style.color = 'var(--primary)';
-  const tick = () => {
-    const m = String(Math.floor(sec / 60)).padStart(2, '0');
-    const s = String(sec % 60).padStart(2, '0');
-    el.textContent = `(${m}:${s})`;
-    if (sec-- <= 0) {
-      clearInterval(_regOtpTimerId);
-      el.textContent = '(만료됨)';
-      el.style.color = '#e53935';
-    }
-  };
-  tick();
-  _regOtpTimerId = setInterval(tick, 1000);
-}
-
-async function regVerifyOtp() {
-  const code = document.getElementById('regOtpCode').value.trim();
-  if (code.length !== 6) { showToast('6자리 코드를 입력해 주세요'); return; }
-  const btn = document.getElementById('regVerifyBtn');
-  btn.disabled = true;
-  btn.textContent = '확인 중…';
-
-  const { error } = await _supabase.auth.verifyOtp({
-    email: _regOtpEmail,
-    token: code,
-    type: 'email'
-  });
-
-  if (error) {
-    showToast('인증 실패: 코드를 다시 확인해 주세요');
-    btn.disabled = false;
-    btn.textContent = '확인';
-    return;
-  }
-
-  clearInterval(_regOtpTimerId);
-  const timerEl = document.getElementById('regOtpTimer');
-  timerEl.textContent = '✓ 인증 완료';
-  timerEl.style.color = '#4caf50';
-  document.getElementById('regOtpCode').disabled = true;
-  btn.textContent = '완료';
-  // onAuthStateChange가 SIGNED_IN 이벤트로 약관 모달 자동 호출
 }
 
 /* ════════════════════════════════════════════════
