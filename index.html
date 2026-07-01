@@ -4240,7 +4240,10 @@ async function saveAcademyConditions() {
   const weekday_nego  = weekdays.includes('협의');
   const weekday_any   = weekdays.includes('요일무관');
   const employ_types  = getChecked('aEmploy');
-  const pay_max       = parseInt(document.getElementById('aPayMax').value) || 0;
+  const pay_max       = parseInt(
+    document.getElementById('aPayMax_월급')?.value?.replace(/[^0-9]/g,'') ||
+    document.getElementById('aPayMax_시급')?.value?.replace(/[^0-9]/g,'') ||
+    document.getElementById('aPayMax_비율제')?.value?.replace(/[^0-9]/g,'') || '0') || 0;
   const intro         = document.getElementById('aIntro').value.trim();
   const time_start    = _aTimeNego ? null : (document.getElementById('aTimeStart').value || null);
   const time_end      = _aTimeNego ? null : (document.getElementById('aTimeEnd').value   || null);
@@ -5146,13 +5149,15 @@ function initAcademyForm() {
   if (academyInited) return;
   academyInited = true;
 
-  const renderAPayment = makePayRenderer('aPayTypeGroup', 'aPayAmountFields', 'aPayType');
+  const pgEl = document.getElementById('aPayTypeGroup');
+  if (pgEl) {
+    const renderAPayment = makePayRenderer('aPayTypeGroup', 'aPayAmountFields', 'aPayType');
+    renderAPayment();
+  }
 
-  document.getElementById('aIndustryChips').addEventListener('change', (e) => {
+  document.getElementById('aIndustryChips')?.addEventListener('change', (e) => {
     if (e.target.name === 'aIndustry') renderSpecialPanel('aSpecialPanel', e.target.value, 'a');
   });
-
-  renderAPayment();
 
   document.getElementById('academyForm').addEventListener('submit', (e) => {
     e.preventDefault();
