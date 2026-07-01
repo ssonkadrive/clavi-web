@@ -4220,7 +4220,7 @@ async function saveAcademyConditions() {
   const meta = session.user.user_metadata || {};
   const academy_name = meta.full_name || meta.name || meta.nickname || session.user.email || '';
 
-  const { error } = await _supabase.from('academy_conditions').upsert({
+  let { error } = await _supabase.from('academy_conditions').upsert({
     user_id: session.user.id,
     academy_name,
     subjects, selected_skills, selected_preferred,
@@ -4230,7 +4230,20 @@ async function saveAcademyConditions() {
     updated_at: new Date().toISOString()
   }, { onConflict: 'user_id' });
 
-  if (error) { showToast('저장 오류: ' + error.message); return; }
+  // selected_skills/selected_preferred 컬럼 없을 때 fallback
+  if (error && error.message && error.message.includes('selected_')) {
+    const fb = await _supabase.from('academy_conditions').upsert({
+      user_id: session.user.id,
+      academy_name, subjects,
+      regions, weekdays, employ_types, pay_max, intro,
+      subject_pays: getAPaySubjects(),
+      schedules, weekday_nego, weekday_any, time_start, time_end, time_nego, fulltime_only,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id' });
+    error = fb.error;
+  }
+
+  if (error) { showToast('저장 오류: ' + error.message); console.error('saveAcademyConditions error:', error); return; }
 
   try {
     const { data: ics } = await _supabase.from('instructor_conditions').select('user_id,selected_skills');
@@ -4275,7 +4288,7 @@ async function saveInstructorConditions() {
   if (!regions.length)  { showToast('출강 가능 지역을 하나 이상 선택해 주세요.'); return; }
   if (!time_nego && time_start && time_end && time_start >= time_end) { showToast('종료 시간은 시작 시간보다 늦어야 합니다.'); return; }
 
-  const { error } = await _supabase.from('instructor_conditions').upsert({
+  let { error } = await _supabase.from('instructor_conditions').upsert({
     user_id: session.user.id,
     subjects, selected_skills, selected_preferred,
     required_skills, preferred_skills,
@@ -4284,7 +4297,19 @@ async function saveInstructorConditions() {
     updated_at: new Date().toISOString()
   }, { onConflict: 'user_id' });
 
-  if (error) { showToast('저장 오류: ' + error.message); return; }
+  // selected_skills/selected_preferred 컬럼 없을 때 fallback
+  if (error && error.message && error.message.includes('selected_')) {
+    const fb = await _supabase.from('instructor_conditions').upsert({
+      user_id: session.user.id,
+      subjects, required_skills, preferred_skills,
+      regions, weekdays, employ_types, pay_min, intro,
+      time_start, time_end, time_nego, fulltime_only, weekday_nego, weekday_any,
+      updated_at: new Date().toISOString()
+    }, { onConflict: 'user_id' });
+    error = fb.error;
+  }
+
+  if (error) { showToast('저장 오류: ' + error.message); console.error('saveInstructorConditions error:', error); return; }
 
   try {
     const { data: acs } = await _supabase.from('academy_conditions').select('user_id,selected_skills');
