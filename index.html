@@ -1020,6 +1020,14 @@
     .rtag-x:hover { background:rgba(0,0,0,.25); }
     .sp-result-empty { text-align:center;padding:12px 0;color:var(--text-muted);font-size:.82rem; }
     .sp-result-tags  { display:flex;flex-wrap:wrap;gap:6px; }
+    .sp-accordion-btn {
+      display:flex;justify-content:space-between;align-items:center;
+      width:100%;padding:10px 14px;border-radius:var(--radius);
+      border:1.5px dashed var(--border);background:var(--bg);
+      font-size:.85rem;color:var(--text-muted);font-family:var(--font);
+      cursor:pointer;transition:border-color .15s,color .15s;
+    }
+    .sp-accordion-btn:hover { border-color:var(--primary);color:var(--primary); }
     .sp-common-group {
       font-size:.74rem;color:var(--text-muted);text-transform:uppercase;
       letter-spacing:.05em;margin:16px 0 7px;padding-bottom:4px;
@@ -3143,15 +3151,17 @@ function ipRemoveSkill(skill) {
 function ipToggleAccordion() {
   const body  = document.getElementById('ipAccordionBody');
   const arrow = document.getElementById('ipAccordionArrow');
-  const isOpen = body.style.maxHeight !== '0px' && body.style.maxHeight !== '';
+  const isOpen = body.dataset.open === '1';
   if (isOpen) {
     body.style.maxHeight = body.scrollHeight + 'px';
-    requestAnimationFrame(() => { body.style.maxHeight = '0'; });
+    requestAnimationFrame(() => { body.style.maxHeight = '0px'; });
     arrow.style.transform = '';
+    body.dataset.open = '0';
   } else {
     body.style.maxHeight = body.scrollHeight + 'px';
     arrow.style.transform = 'rotate(180deg)';
     setTimeout(() => { body.style.maxHeight = 'none'; }, 360);
+    body.dataset.open = '1';
   }
 }
 
@@ -3271,15 +3281,17 @@ function apRemoveSkill(skill) {
 function apToggleAccordion() {
   const body  = document.getElementById('apAccordionBody');
   const arrow = document.getElementById('apAccordionArrow');
-  const isOpen = body.style.maxHeight !== '0px' && body.style.maxHeight !== '';
+  const isOpen = body.dataset.open === '1';
   if (isOpen) {
     body.style.maxHeight = body.scrollHeight + 'px';
-    requestAnimationFrame(() => { body.style.maxHeight = '0'; });
+    requestAnimationFrame(() => { body.style.maxHeight = '0px'; });
     arrow.style.transform = '';
+    body.dataset.open = '0';
   } else {
     body.style.maxHeight = body.scrollHeight + 'px';
     arrow.style.transform = 'rotate(180deg)';
     setTimeout(() => { body.style.maxHeight = 'none'; }, 360);
+    body.dataset.open = '1';
   }
 }
 
