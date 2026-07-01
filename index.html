@@ -6398,9 +6398,11 @@ function _treeNav(containerId, path, skillSel, prefSel, onUpdate) {
 
 /* ══ 어드민 스킬트리 에디터 ══ */
 let _stPath = [];
+let _stFocusId = null; // 교육과목/우대조건 편집 포커스 노드 (네비와 독립)
 
 function renderAdminSkillDef() {
   _stPath = [];
+  _stFocusId = null;
   _stRender();
 }
 
@@ -6453,9 +6455,10 @@ function _stRender() {
       const acts = document.createElement('div'); acts.style.cssText = 'display:none;gap:2px;flex-shrink:0;';
       row.addEventListener('mouseenter', () => acts.style.display = 'flex');
       row.addEventListener('mouseleave', () => acts.style.display = 'none');
-      const editB = document.createElement('button'); editB.type='button'; editB.title='수정'; editB.textContent='✏'; editB.style.cssText='background:none;border:none;cursor:pointer;font-size:.7rem;padding:2px 3px;border-radius:3px;'; editB.onclick = e => { e.stopPropagation(); _stEditName(node.id, nameEl); };
+      const editB = document.createElement('button'); editB.type='button'; editB.title='이름 수정'; editB.textContent='✏'; editB.style.cssText='background:none;border:none;cursor:pointer;font-size:.7rem;padding:2px 3px;border-radius:3px;'; editB.onclick = e => { e.stopPropagation(); _stEditName(node.id, nameEl); };
+      const cntB  = document.createElement('button'); cntB.type='button'; cntB.title='교육과목/우대조건 편집'; cntB.textContent='📝'; cntB.style.cssText='background:none;border:none;cursor:pointer;font-size:.7rem;padding:2px 3px;border-radius:3px;'; cntB.onclick = e => { e.stopPropagation(); _stFocusId = (_stFocusId === node.id) ? null : node.id; _stRenderContent(); };
       const delB  = document.createElement('button'); delB.type='button'; delB.title='삭제'; delB.textContent='🗑'; delB.style.cssText='background:none;border:none;cursor:pointer;font-size:.7rem;padding:2px 3px;border-radius:3px;'; delB.onclick = e => { e.stopPropagation(); _stDelete(node.id, pid); };
-      acts.appendChild(editB); acts.appendChild(delB);
+      acts.appendChild(editB); acts.appendChild(cntB); acts.appendChild(delB);
       row.appendChild(nameEl); row.appendChild(acts);
       if (hasKids) { const arr = document.createElement('span'); arr.textContent = '›'; arr.style.cssText = 'font-size:.78rem;opacity:.5;flex-shrink:0;'; row.appendChild(arr); }
       row.onclick = () => { _stPath = _stPath.slice(0, depth).concat([node.id]); _stRender(); };
@@ -6469,53 +6472,77 @@ function _stRender() {
     colsWrap.appendChild(col);
   });
   tree.appendChild(colsWrap);
+  _stRenderContent();
+}
 
-  const deepId = _stPath[_stPath.length - 1];
-  if (deepId) {
-    const node = nodes[deepId];
-    const panel = document.createElement('div');
-    panel.style.cssText = 'margin-top:14px;display:grid;grid-template-columns:1fr 1fr;gap:12px;';
-    const mkSec = (title, items, placeholder, onDel, onAdd) => {
-      const sec = document.createElement('div'); sec.style.cssText = 'border:1px solid var(--border);border-radius:10px;padding:12px;background:var(--surface);';
-      const h = document.createElement('p'); h.style.cssText = 'font-size:.83rem;font-weight:700;margin-bottom:8px;'; h.textContent = title; sec.appendChild(h);
-      const list = document.createElement('div'); list.style.cssText = 'display:flex;flex-direction:column;gap:4px;margin-bottom:8px;max-height:180px;overflow-y:auto;';
-      let dragSrc = null;
-      const rebuild = () => {
-        list.innerHTML = '';
-        items.forEach((item, idx) => {
-          const row = document.createElement('div'); row.style.cssText = 'display:flex;align-items:center;gap:4px;'; row.draggable = true;
-          const handle = document.createElement('span'); handle.textContent = '⠿'; handle.style.cssText = 'color:var(--text-muted);cursor:grab;font-size:.9rem;flex-shrink:0;user-select:none;';
-          const sp = document.createElement('span'); sp.style.cssText = 'flex:1;font-size:.8rem;padding:4px 7px;background:var(--bg);border:1px solid var(--border);border-radius:5px;'; sp.textContent = item;
-          const inp = document.createElement('input'); inp.type='text'; inp.value=item; inp.style.cssText='flex:1;font-size:.8rem;padding:4px 7px;border:1.5px solid var(--primary);border-radius:5px;font-family:var(--font);background:var(--bg);color:var(--text);display:none;';
-          const eBtn = document.createElement('button'); eBtn.type='button'; eBtn.textContent='수정'; eBtn.style.cssText='padding:2px 7px;border:none;background:#e0e7ff;color:#4338ca;border-radius:4px;font-size:.72rem;cursor:pointer;flex-shrink:0;';
-          const sBtn = document.createElement('button'); sBtn.type='button'; sBtn.textContent='저장'; sBtn.style.cssText='padding:2px 7px;border:none;background:#dcfce7;color:#16a34a;border-radius:4px;font-size:.72rem;cursor:pointer;flex-shrink:0;display:none;';
-          const dBtn = document.createElement('button'); dBtn.type='button'; dBtn.textContent='삭제'; dBtn.style.cssText='padding:2px 7px;border:none;background:#fee2e2;color:#dc2626;border-radius:4px;font-size:.72rem;cursor:pointer;flex-shrink:0;';
-          eBtn.onclick = () => { sp.style.display='none'; inp.style.display=''; eBtn.style.display='none'; sBtn.style.display=''; inp.focus(); inp.select(); };
-          const doSave = () => { const v=inp.value.trim(); if(!v)return; items[idx]=v; sp.textContent=v; sp.style.display=''; inp.style.display='none'; eBtn.style.display=''; sBtn.style.display='none'; };
-          sBtn.onclick = doSave; inp.addEventListener('keydown', e => { if(e.key==='Enter')doSave(); if(e.key==='Escape')eBtn.click(); });
-          dBtn.onclick = () => { onDel(idx); rebuild(); };
-          row.addEventListener('dragstart', e => { dragSrc=idx; row.style.opacity='.4'; e.dataTransfer.effectAllowed='move'; });
-          row.addEventListener('dragend', () => { row.style.opacity=''; });
-          row.addEventListener('dragover', e => { e.preventDefault(); row.style.outline='2px solid var(--primary)'; });
-          row.addEventListener('dragleave', () => { row.style.outline=''; });
-          row.addEventListener('drop', e => { e.preventDefault(); row.style.outline=''; if(dragSrc===null||dragSrc===idx)return; const[m]=items.splice(dragSrc,1); items.splice(idx,0,m); dragSrc=null; rebuild(); });
-          row.appendChild(handle); row.appendChild(sp); row.appendChild(inp); row.appendChild(eBtn); row.appendChild(sBtn); row.appendChild(dBtn);
-          list.appendChild(row);
-        });
-      };
-      rebuild(); sec.appendChild(list);
-      const addRow = document.createElement('div'); addRow.style.cssText = 'display:flex;gap:5px;';
-      const addInp = document.createElement('input'); addInp.type='text'; addInp.placeholder=placeholder; addInp.style.cssText='flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:.78rem;font-family:var(--font);background:var(--bg);color:var(--text);';
-      const addOk = document.createElement('button'); addOk.type='button'; addOk.textContent='+ 추가'; addOk.style.cssText='padding:5px 9px;border:none;background:var(--primary);color:#fff;border-radius:5px;font-size:.75rem;cursor:pointer;white-space:nowrap;';
-      const doAdd = () => { const v=addInp.value.trim(); if(!v)return; onAdd(v); addInp.value=''; rebuild(); };
-      addOk.onclick=doAdd; addInp.addEventListener('keydown', e => { if(e.key==='Enter')doAdd(); });
-      addRow.appendChild(addInp); addRow.appendChild(addOk); sec.appendChild(addRow);
-      return sec;
-    };
-    panel.appendChild(mkSec('📚 교육 과목', node.skills, '새 과목 (예: 플루트)', idx => node.skills.splice(idx,1), v => node.skills.push(v)));
-    panel.appendChild(mkSec('⭐ 우대 조건', node.preferred, '새 우대 조건 (예: 콩쿠르 동행 가능)', idx => node.preferred.splice(idx,1), v => node.preferred.push(v)));
-    tree.appendChild(panel);
+function _stRenderContent() {
+  const tree = document.getElementById('skillTreeAdmin');
+  if (!tree) return;
+  // 마지막 자식이 콘텐츠 패널 플레이스홀더
+  const cp = tree.querySelector('.st-content-panel') || (() => { const d = document.createElement('div'); d.className='st-content-panel'; tree.appendChild(d); return d; })();
+  cp.innerHTML = '';
+
+  const nodes = SKILL_TREE.nodes;
+  const focusId = _stFocusId || _stPath[_stPath.length - 1];
+  if (!focusId) return;
+  const node = nodes[focusId];
+  if (!node) return;
+
+  const label = document.createElement('p');
+  label.style.cssText = 'font-size:.82rem;font-weight:700;color:var(--primary);margin:14px 0 10px;';
+  label.textContent = `📝 "${node.name}" 교육과목 · 우대조건`;
+  if (_stFocusId) {
+    const clr = document.createElement('button'); clr.type='button'; clr.textContent='✕ 닫기'; clr.style.cssText='margin-left:10px;font-size:.72rem;color:var(--text-muted);background:none;border:none;cursor:pointer;';
+    clr.onclick = () => { _stFocusId = null; _stRenderContent(); };
+    label.appendChild(clr);
   }
+  cp.appendChild(label);
+
+  const grid = document.createElement('div');
+  grid.style.cssText = 'display:grid;grid-template-columns:1fr 1fr;gap:12px;';
+
+  const mkSec = (title, items, placeholder, onDel, onAdd) => {
+    const sec = document.createElement('div'); sec.style.cssText = 'border:1px solid var(--border);border-radius:10px;padding:12px;background:var(--surface);';
+    const h = document.createElement('p'); h.style.cssText = 'font-size:.83rem;font-weight:700;margin-bottom:8px;'; h.textContent = title; sec.appendChild(h);
+    const list = document.createElement('div'); list.style.cssText = 'display:flex;flex-direction:column;gap:4px;margin-bottom:8px;';
+    let dragSrc = null;
+    const rebuild = () => {
+      list.innerHTML = '';
+      items.forEach((item, idx) => {
+        const row = document.createElement('div'); row.style.cssText = 'display:flex;align-items:center;gap:4px;'; row.draggable = true;
+        const handle = document.createElement('span'); handle.textContent = '⠿'; handle.style.cssText = 'color:var(--text-muted);cursor:grab;font-size:1rem;flex-shrink:0;user-select:none;padding:0 3px;';
+        const sp = document.createElement('span'); sp.style.cssText = 'flex:1;font-size:.8rem;padding:4px 7px;background:var(--bg);border:1px solid var(--border);border-radius:5px;'; sp.textContent = item;
+        const inp = document.createElement('input'); inp.type='text'; inp.value=item; inp.style.cssText='flex:1;font-size:.8rem;padding:4px 7px;border:1.5px solid var(--primary);border-radius:5px;font-family:var(--font);background:var(--bg);color:var(--text);display:none;';
+        const eBtn = document.createElement('button'); eBtn.type='button'; eBtn.textContent='수정'; eBtn.style.cssText='padding:2px 7px;border:none;background:#e0e7ff;color:#4338ca;border-radius:4px;font-size:.72rem;cursor:pointer;flex-shrink:0;';
+        const sBtn = document.createElement('button'); sBtn.type='button'; sBtn.textContent='저장'; sBtn.style.cssText='padding:2px 7px;border:none;background:#dcfce7;color:#16a34a;border-radius:4px;font-size:.72rem;cursor:pointer;flex-shrink:0;display:none;';
+        const dBtn = document.createElement('button'); dBtn.type='button'; dBtn.textContent='삭제'; dBtn.style.cssText='padding:2px 7px;border:none;background:#fee2e2;color:#dc2626;border-radius:4px;font-size:.72rem;cursor:pointer;flex-shrink:0;';
+        eBtn.onclick = () => { sp.style.display='none'; inp.style.display=''; eBtn.style.display='none'; sBtn.style.display=''; inp.focus(); inp.select(); };
+        const doSave = () => { const v=inp.value.trim(); if(!v)return; items[idx]=v; sp.textContent=v; sp.style.display=''; inp.style.display='none'; eBtn.style.display=''; sBtn.style.display='none'; };
+        sBtn.onclick = doSave; inp.addEventListener('keydown', e => { if(e.key==='Enter')doSave(); if(e.key==='Escape')eBtn.click(); });
+        dBtn.onclick = () => { onDel(idx); rebuild(); };
+        handle.addEventListener('mousedown', () => { row.draggable = true; });
+        row.addEventListener('dragstart', e => { dragSrc=idx; row.style.opacity='.4'; e.dataTransfer.effectAllowed='move'; });
+        row.addEventListener('dragend', () => { row.style.opacity=''; dragSrc=null; });
+        row.addEventListener('dragover', e => { e.preventDefault(); row.style.background='var(--primary-soft)'; });
+        row.addEventListener('dragleave', () => { row.style.background=''; });
+        row.addEventListener('drop', e => { e.preventDefault(); row.style.background=''; if(dragSrc===null||dragSrc===idx)return; const[m]=items.splice(dragSrc,1); items.splice(idx,0,m); dragSrc=null; rebuild(); });
+        row.appendChild(handle); row.appendChild(sp); row.appendChild(inp); row.appendChild(eBtn); row.appendChild(sBtn); row.appendChild(dBtn);
+        list.appendChild(row);
+      });
+    };
+    rebuild(); sec.appendChild(list);
+    const addRow = document.createElement('div'); addRow.style.cssText = 'display:flex;gap:5px;';
+    const addInp = document.createElement('input'); addInp.type='text'; addInp.placeholder=placeholder; addInp.style.cssText='flex:1;padding:5px 8px;border:1px solid var(--border);border-radius:5px;font-size:.78rem;font-family:var(--font);background:var(--bg);color:var(--text);';
+    const addOk = document.createElement('button'); addOk.type='button'; addOk.textContent='+ 추가'; addOk.style.cssText='padding:5px 9px;border:none;background:var(--primary);color:#fff;border-radius:5px;font-size:.75rem;cursor:pointer;white-space:nowrap;';
+    const doAdd = () => { const v=addInp.value.trim(); if(!v)return; onAdd(v); addInp.value=''; rebuild(); };
+    addOk.onclick=doAdd; addInp.addEventListener('keydown', e => { if(e.key==='Enter')doAdd(); });
+    addRow.appendChild(addInp); addRow.appendChild(addOk); sec.appendChild(addRow);
+    return sec;
+  };
+
+  grid.appendChild(mkSec('📚 교육 과목', node.skills, '새 과목 (예: 플루트)', idx => node.skills.splice(idx,1), v => node.skills.push(v)));
+  grid.appendChild(mkSec('⭐ 우대 조건', node.preferred, '새 우대 조건 (예: 콩쿠르 동행 가능)', idx => node.preferred.splice(idx,1), v => node.preferred.push(v)));
+  cp.appendChild(grid);
 }
 
 function _stEditName(nodeId, nameEl) {
