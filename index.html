@@ -6545,7 +6545,12 @@ function _stShowAdd(pid, footEl) {
   const doAdd = () => {
     const v = inp.value.trim(); if (!v) return;
     const id = 'node_' + Date.now();
-    SKILL_TREE.nodes[id] = { id, name: v, children: [], skills: [], preferred: [] };
+    const parent = pid !== 'ROOT' ? SKILL_TREE.nodes[pid] : null;
+    SKILL_TREE.nodes[id] = {
+      id, name: v, children: [],
+      skills:    parent?.skills?.length    ? [...parent.skills]    : [],
+      preferred: parent?.preferred?.length ? [...parent.preferred] : []
+    };
     if (pid === 'ROOT') { SKILL_TREE.rootIds.push(id); }
     else if (SKILL_TREE.nodes[pid]) { SKILL_TREE.nodes[pid].children.push(id); }
     _stRender();
