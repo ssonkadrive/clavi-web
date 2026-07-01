@@ -2710,7 +2710,7 @@ function drawerGo(menu) {
                  'notifications','interview'];
   if (!ready.includes(menu)) { showToast('🚧 준비 중인 기능입니다'); return; }
   if (menu === 'academy-home')      { setActiveMenu('menuAcademyHome');      showPage('academyHome'); }
-  if (menu === 'academy-post')      { setActiveMenu('menuAcademyPost');      showPage('academyPage');           loadApSkillDef(); apInitCats(); renderPayNow('aPayTypeGroup','aPayAmountFields','aPayType'); }
+  if (menu === 'academy-post')      { setActiveMenu('menuAcademyPost');      showPage('academyPage');           renderPayNow('aPayTypeGroup','aPayAmountFields','aPayType'); loadApSkillDef().then(() => apInitCats()); }
   if (menu === 'academy-profile')   { setActiveMenu('menuAcademyProfile');   showPage('academyProfilePage');    initAcademyVerify(); initAcademyPhotoGrid(); }
   if (menu === 'academy-match')     { setActiveMenu('menuAcademyMatch');     showPage('academyMatchPage');      renderAcademyMatch(); }
   if (menu === 'instructor-home')   { setActiveMenu('menuInstructorHome');   showPage('instructorHome'); }
