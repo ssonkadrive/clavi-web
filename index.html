@@ -4222,7 +4222,9 @@ function getChecked(name) {
 
 /* ── 학원 조건 저장 ── */
 async function saveAcademyConditions() {
-  const { data: { session } } = await _supabase.auth.getSession();
+  try {
+  const { data: authData } = await _supabase.auth.getSession();
+  const session = authData?.session;
   if (!session?.user) { showToast('로그인이 필요합니다.'); return; }
 
   // 드롭다운에 값이 있으면 자동으로 태그에 추가
@@ -4293,6 +4295,12 @@ async function saveAcademyConditions() {
   } catch(e) {}
 
   showMatchingAnim('academy');
+  } catch(err) {
+    console.error('[saveAcademyConditions]', err);
+    const el = document.getElementById('aFormErr');
+    if (el) { el.textContent = '⚠ 오류: ' + (err.message || err); el.style.display = 'block'; el.scrollIntoView({behavior:'smooth',block:'center'}); }
+    else alert('저장 오류: ' + (err.message || err));
+  }
 }
 
 /* ── 강사 조건 저장 ── */
