@@ -2945,36 +2945,53 @@ const SP_COMMON = {
   '기타': ['영어 소통 가능','아동 안전 교육 이수','입시 포트폴리오 디렉팅 가능']
 };
 
-/* ── 구인공고 종목별 우대 조건 정의 (어드민에서 수정 가능) ── */
+/* ── 구인공고 종목별 우대 조건 (중분류 키별 오브젝트, 어드민 수정 가능) ── */
 const AP_SKILL_DEF = {
-  sports: {
-    preferred: ['차량 운행 가능 (통학버스)','사범 자격증 보유','아동 안전 교육 이수','협회 심사 동행 가능','전국 대회 인솔 가능','주말 행사 참여 가능','2년 이상 장기 계약 선호','스타렉스 운행 가능','아침 돌봄 가능','학부모 상담 가능','수업 일지 작성 가능']
-  },
-  music: {
-    preferred: ['입시 레슨 지도 가능','악보 독보 지도 가능','콩쿠르 동행 가능','주말 레슨 가능','2년 이상 장기 계약 선호','전문연주 활동 병행 가능','학원 SNS 운영 가능','학부모 상담 가능','수업 일지 작성 가능']
-  },
-  art: {
-    preferred: ['입시 지도 가능','포트폴리오 디렉팅 가능','아동 수업 가능','실기 대회 인솔 가능','2년 이상 장기 계약 선호','주말 수업 가능','학원 SNS 운영 가능','학부모 상담 가능','수업 일지 작성 가능']
-  },
-  etc: {
-    preferred: {
-      '연기/뮤지컬': ['청소년독백대회 동행 가능','DIMF 동행 가능','입시 포트폴리오 디렉팅 가능','주말 행사 참여 가능','2년 이상 장기 계약 선호','학부모 상담 가능','수업 일지 작성 가능']
-    }
-  }
+  sports: { preferred: {
+    '태권도': ['차량 운행 가능 (통학버스)','사범 자격증 보유','아동 안전 교육 이수','협회 심사 동행 가능','전국 대회 인솔 가능','주말 행사 참여 가능','2년 이상 장기 계약 선호','스타렉스 운행 가능','아침 돌봄 가능','학부모 상담 가능','수업 일지 작성 가능']
+  }},
+  music: { preferred: {
+    '건반/피아노': ['콩쿠르 동행 가능','주말 레슨 가능','2년 이상 장기 계약 선호','전문연주 활동 병행 가능','학원 SNS 운영 가능','학부모 상담 가능','수업 일지 작성 가능'],
+    '관악':        ['콩쿠르 동행 가능','주말 레슨 가능','2년 이상 장기 계약 선호','학부모 상담 가능','수업 일지 작성 가능'],
+    '현악':        ['콩쿠르 동행 가능','주말 레슨 가능','2년 이상 장기 계약 선호','학부모 상담 가능','수업 일지 작성 가능'],
+    '타악':        ['콩쿠르 동행 가능','주말 레슨 가능','2년 이상 장기 계약 선호','학부모 상담 가능'],
+    '보컬/성악':   ['공연 동행 가능','주말 레슨 가능','2년 이상 장기 계약 선호','학부모 상담 가능','수업 일지 작성 가능']
+  }},
+  art: { preferred: {
+    '입시미술':        ['입시 지도 가능','포트폴리오 디렉팅 가능','실기 대회 인솔 가능','2년 이상 장기 계약 선호','주말 수업 가능','학원 SNS 운영 가능','학부모 상담 가능','수업 일지 작성 가능'],
+    '아동/초등미술':   ['아동 수업 가능','2년 이상 장기 계약 선호','주말 수업 가능','학부모 상담 가능','수업 일지 작성 가능'],
+    '취미/성인미술':   ['2년 이상 장기 계약 선호','주말 수업 가능','학부모 상담 가능'],
+    '웹툰/디지털드로잉':['2년 이상 장기 계약 선호','주말 수업 가능','학부모 상담 가능','수업 일지 작성 가능']
+  }},
+  etc: { preferred: {
+    '연기/뮤지컬': ['청소년독백대회 동행 가능','DIMF 동행 가능','입시 포트폴리오 디렉팅 가능','주말 행사 참여 가능','2년 이상 장기 계약 선호','학부모 상담 가능','수업 일지 작성 가능']
+  }}
 };
-let _apSkillDefLoaded = false;
+
+let _platformConfigLoaded = false;
 async function loadApSkillDef() {
-  if (_apSkillDefLoaded) return;
-  _apSkillDefLoaded = true;
+  if (_platformConfigLoaded) return;
+  _platformConfigLoaded = true;
   try {
-    const { data } = await _supabase.from('platform_config').select('value').eq('key','AP_SKILL_DEF').maybeSingle();
-    if (data?.value) Object.keys(data.value).forEach(k => { AP_SKILL_DEF[k] = data.value[k]; });
-  } catch(e) { /* 테이블 없으면 기본값 사용 */ }
+    const { data } = await _supabase.from('platform_config').select('key,value').in('key',['SP_CATS','AP_SKILL_DEF']);
+    if (!data) return;
+    data.forEach(row => {
+      if (row.key === 'SP_CATS')      Object.keys(row.value).forEach(k => { SP_CATS[k]      = row.value[k]; });
+      if (row.key === 'AP_SKILL_DEF') Object.keys(row.value).forEach(k => { AP_SKILL_DEF[k] = row.value[k]; });
+    });
+  } catch(e) {}
 }
 async function saveApSkillDef() {
-  const { error } = await _supabase.from('platform_config').upsert({ key:'AP_SKILL_DEF', value: AP_SKILL_DEF, updated_at: new Date().toISOString() });
-  if (error) { showToast('저장 실패: ' + error.message); return false; }
-  showToast('조건 목록 저장 완료 ✓');
+  const ts = new Date().toISOString();
+  const results = await Promise.all([
+    _supabase.from('platform_config').upsert({ key:'SP_CATS',      value: SP_CATS,      updated_at: ts }),
+    _supabase.from('platform_config').upsert({ key:'AP_SKILL_DEF', value: AP_SKILL_DEF, updated_at: ts })
+  ]);
+  const err = results.find(r => r.error);
+  if (err) { showToast('저장 실패: ' + err.error.message); return false; }
+  // 모든 피커 탭 초기화 → 다음 진입 시 새 데이터로 렌더
+  ['spCatTabs','ipCatTabs','apCatTabs'].forEach(id => { const el = document.getElementById(id); if (el) el.innerHTML = ''; });
+  showToast('저장 완료 ✓  학원/강사 화면에 바로 적용됩니다');
   return true;
 }
 
@@ -3360,17 +3377,10 @@ function apRenderPreferred(key, mid) {
   const container = document.getElementById('apCommonSkillList');
   if (!container || !def) return;
   container.innerHTML = '';
-  let items = [];
-  if (Array.isArray(def.preferred)) {
-    items = def.preferred;
-  } else if (def.preferred && typeof def.preferred === 'object') {
-    if (mid && def.preferred[mid]) {
-      items = def.preferred[mid];
-    } else {
-      // mid 미선택 시 전체 sub-key 항목 합산
-      items = [...new Set(Object.values(def.preferred).flat())];
-    }
-  }
+  const pref = def.preferred || {};
+  const items = (mid && pref[mid])
+    ? pref[mid]
+    : [...new Set(Object.values(pref).flat())];
   items.forEach(item => apMakeCheckItem(container, item, _apCsel, 'preferred', apUpdateResult));
 }
 
@@ -6468,11 +6478,37 @@ async function acceptTerms() {
 
     <!-- ── 공고 설정 탭 ── -->
     <div id="adminTab-skilldef" class="admin-tab-panel" style="display:none;">
-      <p style="font-size:.88rem;color:var(--text-muted);margin-bottom:16px;">종목별 우대 조건 항목을 관리합니다. 변경 후 <strong>저장</strong>하면 즉시 공고 등록 화면에 반영됩니다.</p>
-      <div id="adminSkillDefCards" style="display:flex;flex-direction:column;gap:16px;"></div>
-      <button class="submit-btn" style="margin-top:20px;padding:12px 32px;" onclick="adminSaveSkillDef()">💾 저장하기</button>
-      <p style="font-size:.78rem;color:var(--text-muted);margin-top:8px;">※ Supabase에 <code>platform_config</code> 테이블이 없으면 저장이 실패합니다. <a href="#" onclick="adminShowSql();return false;" style="color:var(--primary);">SQL 보기</a></p>
-      <div id="adminSqlBox" style="display:none;margin-top:10px;padding:12px;background:var(--surface);border-radius:var(--radius);border:1px solid var(--border);font-size:.78rem;font-family:monospace;white-space:pre-wrap;color:var(--text);">CREATE TABLE IF NOT EXISTS platform_config (
+      <p style="font-size:.85rem;color:var(--text-muted);margin-bottom:16px;">대분류 → 중분류 → 세부스킬·우대조건 순으로 클릭해서 관리하세요. <strong>저장하기</strong>를 누르면 학원/강사 화면에 즉시 반영됩니다.</p>
+
+      <!-- 3패널 레이아웃 -->
+      <div style="display:grid;grid-template-columns:1fr 1fr 1.4fr;gap:14px;align-items:start;">
+
+        <!-- 패널1: 대분류 -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;">
+          <p style="font-size:.82rem;font-weight:700;color:var(--text-muted);margin-bottom:10px;">① 대분류</p>
+          <div id="adeCatList" style="display:flex;flex-direction:column;gap:6px;"></div>
+        </div>
+
+        <!-- 패널2: 중분류 -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;">
+          <div id="adeMidList" style="display:flex;flex-direction:column;gap:0;">
+            <p style="color:var(--text-muted);font-size:.85rem;">← 대분류를 먼저 선택하세요</p>
+          </div>
+        </div>
+
+        <!-- 패널3: 세부 스킬 + 우대 조건 -->
+        <div style="background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;">
+          <div id="adeDetail">
+            <p style="color:var(--text-muted);font-size:.85rem;">← 중분류를 선택하면 세부 항목을 편집할 수 있어요</p>
+          </div>
+        </div>
+      </div>
+
+      <div style="margin-top:18px;display:flex;align-items:center;gap:12px;flex-wrap:wrap;">
+        <button class="submit-btn" style="padding:12px 32px;" onclick="adminSaveSkillDef()">💾 저장하기</button>
+        <a href="#" onclick="adminShowSql();return false;" style="font-size:.82rem;color:var(--primary);">Supabase SQL 보기</a>
+      </div>
+      <div id="adminSqlBox" style="display:none;margin-top:10px;padding:12px;background:#1e293b;border-radius:var(--radius);font-size:.78rem;font-family:monospace;white-space:pre-wrap;color:#e2e8f0;">CREATE TABLE IF NOT EXISTS platform_config (
   key        TEXT PRIMARY KEY,
   value      JSONB NOT NULL,
   updated_at TIMESTAMPTZ DEFAULT now()
@@ -6551,90 +6587,164 @@ function switchAdminTab(tab) {
   if (tab === 'skilldef')    renderAdminSkillDef();
 }
 
-/* ── 공고 설정 탭 ── */
-const _catLabels = { sports:'⚽ 체육', music:'🎵 음악', art:'🎨 미술', etc:'🎭 기타' };
+/* ── 공고 설정 탭 — 3단계 트리 에디터 ── */
+let _ade = { cat: null, mid: null }; // admin editor state
 
 function renderAdminSkillDef() {
-  const wrap = document.getElementById('adminSkillDefCards');
+  _renderAdeCats();
+  _renderAdeMids();
+  _renderAdeDetail();
+}
+
+function _adeTag(txt, onDel) {
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;align-items:center;gap:6px;';
+  const sp = document.createElement('span');
+  sp.style.cssText = 'flex:1;font-size:.85rem;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);';
+  sp.textContent = txt;
+  const del = document.createElement('button');
+  del.type = 'button';
+  del.style.cssText = 'padding:4px 10px;border:none;background:#fee2e2;color:#dc2626;border-radius:6px;font-size:.78rem;cursor:pointer;white-space:nowrap;flex-shrink:0;';
+  del.textContent = '삭제';
+  del.onclick = onDel;
+  row.appendChild(sp); row.appendChild(del);
+  return row;
+}
+
+function _adeAddRow(placeholder, onAdd) {
+  const row = document.createElement('div');
+  row.style.cssText = 'display:flex;gap:6px;margin-top:4px;';
+  const inp = document.createElement('input');
+  inp.type = 'text'; inp.placeholder = placeholder;
+  inp.style.cssText = 'flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;font-family:var(--font);background:var(--bg);color:var(--text);';
+  const btn = document.createElement('button');
+  btn.type = 'button';
+  btn.style.cssText = 'padding:7px 14px;border:none;background:var(--primary);color:#fff;border-radius:6px;font-size:.82rem;font-weight:600;cursor:pointer;white-space:nowrap;';
+  btn.textContent = '+ 추가';
+  const go = () => { const v = inp.value.trim(); if (!v) return; onAdd(v); inp.value = ''; };
+  btn.onclick = go;
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+  row.appendChild(inp); row.appendChild(btn);
+  return row;
+}
+
+function _renderAdeCats() {
+  const wrap = document.getElementById('adeCatList');
+  if (!wrap) return;
   wrap.innerHTML = '';
-  Object.entries(AP_SKILL_DEF).forEach(([catKey, catDef]) => {
-    // etc는 sub-key별로 분리
-    const sections = [];
-    if (Array.isArray(catDef.preferred)) {
-      sections.push({ subKey: null, items: catDef.preferred });
-    } else if (typeof catDef.preferred === 'object') {
-      Object.entries(catDef.preferred).forEach(([sk, items]) => sections.push({ subKey: sk, items }));
-    }
-
-    const card = document.createElement('div');
-    card.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:var(--radius);padding:16px;';
-    const title = document.createElement('p');
-    title.style.cssText = 'font-size:.95rem;font-weight:700;margin-bottom:12px;';
-    title.textContent = _catLabels[catKey] || catKey;
-    card.appendChild(title);
-
-    sections.forEach(({ subKey, items }) => {
-      if (subKey) {
-        const sub = document.createElement('p');
-        sub.style.cssText = 'font-size:.82rem;color:var(--text-muted);margin-bottom:8px;font-weight:600;';
-        sub.textContent = '└ ' + subKey;
-        card.appendChild(sub);
-      }
-      const list = document.createElement('div');
-      list.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-bottom:10px;';
-      items.forEach((item, idx) => {
-        const row = document.createElement('div');
-        row.style.cssText = 'display:flex;align-items:center;gap:6px;';
-        const sp = document.createElement('span');
-        sp.style.cssText = 'flex:1;font-size:.85rem;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;';
-        sp.textContent = item;
-        const del = document.createElement('button');
-        del.type = 'button';
-        del.style.cssText = 'padding:4px 10px;border:none;background:#fee2e2;color:#dc2626;border-radius:6px;font-size:.8rem;cursor:pointer;white-space:nowrap;';
-        del.textContent = '삭제';
-        del.onclick = () => {
-          if (Array.isArray(catDef.preferred)) catDef.preferred.splice(idx, 1);
-          else catDef.preferred[subKey].splice(idx, 1);
-          renderAdminSkillDef();
-        };
-        row.appendChild(sp); row.appendChild(del);
-        list.appendChild(row);
-      });
-      // 추가 입력
-      const addRow = document.createElement('div');
-      addRow.style.cssText = 'display:flex;gap:6px;margin-top:4px;';
-      const inp = document.createElement('input');
-      inp.type = 'text'; inp.placeholder = '새 항목 입력 후 추가';
-      inp.style.cssText = 'flex:1;padding:7px 10px;border:1px solid var(--border);border-radius:6px;font-size:.85rem;font-family:var(--font);background:var(--bg);color:var(--text);';
-      const addBtn = document.createElement('button');
-      addBtn.type = 'button';
-      addBtn.style.cssText = 'padding:7px 14px;border:none;background:var(--primary);color:#fff;border-radius:6px;font-size:.82rem;font-weight:600;cursor:pointer;white-space:nowrap;';
-      addBtn.textContent = '+ 추가';
-      addBtn.onclick = () => {
-        const val = inp.value.trim();
-        if (!val) return;
-        if (Array.isArray(catDef.preferred)) catDef.preferred.push(val);
-        else { if (!catDef.preferred[subKey]) catDef.preferred[subKey] = []; catDef.preferred[subKey].push(val); }
-        inp.value = '';
-        renderAdminSkillDef();
-      };
-      inp.addEventListener('keydown', e => { if (e.key === 'Enter') addBtn.click(); });
-      addRow.appendChild(inp); addRow.appendChild(addBtn);
-      card.appendChild(list); card.appendChild(addRow);
-    });
-    wrap.appendChild(card);
+  Object.entries(SP_CATS).forEach(([catKey, cat]) => {
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    const isActive = _ade.cat === catKey;
+    btn.style.cssText = `padding:8px 16px;border-radius:8px;border:2px solid ${isActive?'var(--primary)':'var(--border)'};background:${isActive?'var(--primary)':'var(--bg)'};color:${isActive?'#fff':'var(--text)'};font-size:.88rem;font-weight:600;cursor:pointer;white-space:nowrap;font-family:var(--font);`;
+    btn.textContent = cat.label;
+    btn.onclick = () => { _ade.cat = catKey; _ade.mid = null; _renderAdeCats(); _renderAdeMids(); _renderAdeDetail(); };
+    wrap.appendChild(btn);
   });
+  // + 대분류 추가
+  wrap.appendChild(_adeAddRow('새 대분류 이름 (예: 🤸 체조)', v => {
+    const key = 'cat_' + Date.now();
+    SP_CATS[key] = { label: v, subjects: {} };
+    AP_SKILL_DEF[key] = { preferred: {} };
+    _ade.cat = key; _ade.mid = null;
+    renderAdminSkillDef();
+  }));
 }
 
-async function adminSaveSkillDef() {
-  await loadApSkillDef(); // 테이블 확인
-  await saveApSkillDef();
+function _renderAdeMids() {
+  const wrap = document.getElementById('adeMidList');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  if (!_ade.cat) { wrap.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem;">← 대분류를 먼저 선택하세요</p>'; return; }
+  const cat = SP_CATS[_ade.cat];
+  const label = document.createElement('p');
+  label.style.cssText = 'font-size:.82rem;font-weight:700;color:var(--text-muted);margin-bottom:8px;';
+  label.textContent = cat.label + ' — 중분류';
+  wrap.appendChild(label);
+  Object.keys(cat.subjects).forEach(mid => {
+    const row = document.createElement('div');
+    row.style.cssText = 'display:flex;align-items:center;gap:6px;margin-bottom:6px;';
+    const btn = document.createElement('button');
+    btn.type = 'button';
+    const isActive = _ade.mid === mid;
+    btn.style.cssText = `flex:1;text-align:left;padding:8px 12px;border-radius:8px;border:2px solid ${isActive?'var(--primary)':'var(--border)'};background:${isActive?'#ede9fe':'var(--bg)'};color:${isActive?'var(--primary)':'var(--text)'};font-size:.85rem;font-weight:600;cursor:pointer;font-family:var(--font);`;
+    btn.textContent = mid;
+    btn.onclick = () => { _ade.mid = mid; _renderAdeMids(); _renderAdeDetail(); };
+    const del = document.createElement('button');
+    del.type = 'button';
+    del.style.cssText = 'padding:5px 10px;border:none;background:#fee2e2;color:#dc2626;border-radius:6px;font-size:.78rem;cursor:pointer;flex-shrink:0;';
+    del.textContent = '삭제';
+    del.onclick = () => {
+      if (!confirm(`"${mid}" 중분류와 하위 항목을 삭제할까요?`)) return;
+      delete cat.subjects[mid];
+      const pref = AP_SKILL_DEF[_ade.cat]?.preferred;
+      if (pref && pref[mid]) delete pref[mid];
+      if (_ade.mid === mid) _ade.mid = null;
+      _renderAdeMids(); _renderAdeDetail();
+    };
+    row.appendChild(btn); row.appendChild(del);
+    wrap.appendChild(row);
+  });
+  wrap.appendChild(_adeAddRow('새 중분류 (예: 태권도)', v => {
+    cat.subjects[v] = [];
+    if (!AP_SKILL_DEF[_ade.cat]) AP_SKILL_DEF[_ade.cat] = { preferred: {} };
+    if (!AP_SKILL_DEF[_ade.cat].preferred) AP_SKILL_DEF[_ade.cat].preferred = {};
+    AP_SKILL_DEF[_ade.cat].preferred[v] = [];
+    _ade.mid = v; _renderAdeMids(); _renderAdeDetail();
+  }));
 }
 
-function adminShowSql() {
-  const box = document.getElementById('adminSqlBox');
-  box.style.display = box.style.display === 'none' ? 'block' : 'none';
+function _renderAdeDetail() {
+  const wrap = document.getElementById('adeDetail');
+  if (!wrap) return;
+  wrap.innerHTML = '';
+  if (!_ade.cat || !_ade.mid) {
+    wrap.innerHTML = '<p style="color:var(--text-muted);font-size:.85rem;">← 중분류를 선택하면 세부 항목을 편집할 수 있어요</p>';
+    return;
+  }
+  const cat = SP_CATS[_ade.cat];
+  const skills = cat.subjects[_ade.mid] || [];
+  const pref = (AP_SKILL_DEF[_ade.cat]?.preferred || {})[_ade.mid] || [];
+
+  const makeSection = (title, items, onDel, addPlaceholder, onAdd) => {
+    const sec = document.createElement('div');
+    sec.style.cssText = 'background:var(--surface);border:1px solid var(--border);border-radius:10px;padding:14px;margin-bottom:12px;';
+    const h = document.createElement('p');
+    h.style.cssText = 'font-size:.85rem;font-weight:700;margin-bottom:10px;color:var(--text);';
+    h.textContent = title;
+    sec.appendChild(h);
+    const list = document.createElement('div');
+    list.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-bottom:8px;';
+    items.forEach((item, idx) => list.appendChild(_adeTag(item, () => { onDel(idx); _renderAdeDetail(); })));
+    sec.appendChild(list);
+    sec.appendChild(_adeAddRow(addPlaceholder, v => { onAdd(v); _renderAdeDetail(); }));
+    return sec;
+  };
+
+  const title = document.createElement('p');
+  title.style.cssText = 'font-size:.9rem;font-weight:700;margin-bottom:12px;color:var(--primary);';
+  title.textContent = `${cat.label} > ${_ade.mid}`;
+  wrap.appendChild(title);
+
+  wrap.appendChild(makeSection(
+    '📚 세부 스킬 (강사 프로필·공고 과목 선택에 표시)',
+    skills,
+    idx => skills.splice(idx, 1),
+    '새 스킬 (예: 품새 지도)',
+    v => skills.push(v)
+  ));
+
+  wrap.appendChild(makeSection(
+    '✅ 우대 조건 (학원 공고 등록 시 체크리스트)',
+    pref,
+    idx => pref.splice(idx, 1),
+    '새 우대 조건 (예: 협회 심사 동행 가능)',
+    v => { if (!AP_SKILL_DEF[_ade.cat]) AP_SKILL_DEF[_ade.cat] = { preferred: {} }; if (!AP_SKILL_DEF[_ade.cat].preferred[_ade.mid]) AP_SKILL_DEF[_ade.cat].preferred[_ade.mid] = []; AP_SKILL_DEF[_ade.cat].preferred[_ade.mid].push(v); }
+  ));
 }
+
+async function adminSaveSkillDef() { await saveApSkillDef(); }
+function adminShowSql() { const box = document.getElementById('adminSqlBox'); box.style.display = box.style.display === 'none' ? 'block' : 'none'; }
 
 /* ── 클라이언트사이드 필터 (강사/학원 탭용) ── */
 function filterAdminTable(tableId, q) {
