@@ -4261,12 +4261,8 @@ async function saveAcademyConditions() {
   if (!regions.length)  { _aErr('지역을 하나 이상 선택해 주세요.'); return; }
   if (!weekday_nego && !weekday_any && !weekdays.length) { _aErr('수업 요일을 하나 이상 선택해 주세요.'); return; }
 
-  const meta = session.user.user_metadata || {};
-  const academy_name = meta.full_name || meta.name || meta.nickname || session.user.email || '';
-
   let { error } = await _supabase.from('academy_conditions').upsert({
     user_id: session.user.id,
-    academy_name,
     subjects, selected_skills, selected_preferred,
     regions, weekdays, employ_types, pay_max, intro,
     subject_pays: getAPaySubjects(),
