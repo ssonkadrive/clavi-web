@@ -333,6 +333,27 @@
     .submit-btn:hover { transform:translateY(-2px); box-shadow:0 20px 56px rgba(91,108,255,0.22); background-position:100% 0; }
     .submit-hint { text-align:center; font-size:.85rem; color:var(--text-muted); margin-top:14px; }
 
+    /* ── 매칭 애니메이션 오버레이 ─────────────────── */
+    #matchingOverlay {
+      display:none; position:fixed; inset:0; z-index:9999;
+      background:linear-gradient(135deg,#5b6cff 0%,#7b5cff 50%,#ff7eb3 100%);
+      flex-direction:column; align-items:center; justify-content:center;
+      color:#fff; text-align:center;
+    }
+    #matchingOverlay.show { display:flex; animation:overlayIn .35s ease; }
+    @keyframes overlayIn { from{opacity:0;transform:scale(1.04)} to{opacity:1;transform:scale(1)} }
+    .mo-logo { font-size:4rem; animation:moPulse 1.2s ease-in-out infinite; }
+    @keyframes moPulse { 0%,100%{transform:scale(1)} 50%{transform:scale(1.15)} }
+    .mo-title { font-size:1.6rem; font-weight:700; margin:18px 0 8px; letter-spacing:-.01em; }
+    .mo-sub   { font-size:1rem; opacity:.85; margin-bottom:32px; }
+    .mo-dots  { display:flex; gap:10px; }
+    .mo-dot   { width:10px; height:10px; border-radius:50%; background:rgba(255,255,255,.5); animation:moDot 1.4s ease-in-out infinite; }
+    .mo-dot:nth-child(2){ animation-delay:.2s; }
+    .mo-dot:nth-child(3){ animation-delay:.4s; }
+    @keyframes moDot { 0%,80%,100%{transform:scale(.7);opacity:.4} 40%{transform:scale(1);opacity:1} }
+    .mo-done  { font-size:3rem; animation:moDone .5s ease; }
+    @keyframes moDone { from{transform:scale(0) rotate(-20deg)} to{transform:scale(1) rotate(0)} }
+
     /* ── 약관 모달 ──────────────────────────────── */
     .terms-overlay {
       display:none; position:fixed; inset:0; z-index:9999;
@@ -2481,6 +2502,18 @@
 
 <div class="toast" id="toast" role="status" aria-live="polite"></div>
 
+<!-- 매칭 애니메이션 오버레이 -->
+<div id="matchingOverlay">
+  <div id="moIcon" class="mo-logo">🔍</div>
+  <div class="mo-title" id="moTitle">매칭 중...</div>
+  <div class="mo-sub" id="moSub">조건에 맞는 강사를 찾고 있습니다</div>
+  <div class="mo-dots" id="moDots">
+    <div class="mo-dot"></div>
+    <div class="mo-dot"></div>
+    <div class="mo-dot"></div>
+  </div>
+</div>
+
 <!-- 급여 확인 팝업 -->
 <div id="payConfirmModal" style="display:none;position:fixed;inset:0;z-index:9999;background:rgba(0,0,0,.45);align-items:center;justify-content:center;padding:20px;">
   <div style="background:var(--bg);border-radius:14px;padding:28px 24px;max-width:340px;width:100%;box-shadow:0 8px 32px rgba(0,0,0,.18);text-align:center;">
@@ -2652,6 +2685,30 @@ async function handleLogout() {
 /* ════════════════════════════════════════════════
   공용 유틸
 ════════════════════════════════════════════════ */
+function showMatchingAnim(role) {
+  const ov = document.getElementById('matchingOverlay');
+  ov.classList.add('show');
+  // 2초 후 완료 상태
+  setTimeout(() => {
+    document.getElementById('moIcon').className = 'mo-done';
+    document.getElementById('moIcon').textContent = '🎉';
+    document.getElementById('moTitle').textContent = '매칭 시작!';
+    document.getElementById('moSub').textContent = '조건에 맞는 상대를 찾았습니다';
+    document.getElementById('moDots').style.display = 'none';
+  }, 2000);
+  // 3초 후 이동
+  setTimeout(() => {
+    ov.classList.remove('show');
+    // 상태 초기화
+    document.getElementById('moIcon').className = 'mo-logo';
+    document.getElementById('moIcon').textContent = '🔍';
+    document.getElementById('moTitle').textContent = '매칭 중...';
+    document.getElementById('moSub').textContent = '조건에 맞는 강사를 찾고 있습니다';
+    document.getElementById('moDots').style.display = 'flex';
+    drawerGo(role === 'academy' ? 'academy-match' : 'instructor-match');
+  }, 3200);
+}
+
 function showToast(msg) {
   const toast = document.getElementById('toast');
   toast.textContent = msg;
@@ -4227,8 +4284,7 @@ async function saveAcademyConditions() {
     }
   } catch(e) {}
 
-  showToast('조건이 저장되었습니다! 매칭을 시작합니다 🎉');
-  setTimeout(() => drawerGo('academy-match'), 800);
+  showMatchingAnim('academy');
 }
 
 /* ── 강사 조건 저장 ── */
@@ -4293,8 +4349,7 @@ async function saveInstructorConditions() {
     }
   } catch(e) {}
 
-  showToast('조건이 저장되었습니다! 매칭을 시작합니다 🎉');
-  setTimeout(() => drawerGo('instructor-match'), 800);
+  showMatchingAnim('instructor');
 }
 
 /* ════════════════════════════════════════════════
