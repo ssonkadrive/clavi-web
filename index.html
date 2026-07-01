@@ -2136,6 +2136,7 @@
       </section>
 
       <div class="submit-wrap">
+        <div id="aFormErr" style="display:none;background:#fff0f3;border:1.5px solid #ff4d6d;border-radius:10px;padding:12px 16px;color:#cc1133;font-size:.92rem;margin-bottom:12px;"></div>
         <button type="button" class="submit-btn" onclick="saveAcademyConditions()">✨ 조건 저장하고 매칭 시작</button>
         <p class="submit-hint">저장 후 CLAVI가 조건에 맞는 강사를 자동으로 찾아드립니다</p>
       </div>
@@ -2329,6 +2330,7 @@
       </section>
 
       <div class="submit-wrap">
+        <div id="iFormErr" style="display:none;background:#fff0f3;border:1.5px solid #ff4d6d;border-radius:10px;padding:12px 16px;color:#cc1133;font-size:.92rem;margin-bottom:12px;"></div>
         <button type="button" class="submit-btn" onclick="saveInstructorConditions()">✨ 조건 저장하고 매칭 시작</button>
         <p class="submit-hint">저장 후 CLAVI가 조건에 맞는 학원을 자동으로 찾아드립니다</p>
       </div>
@@ -4244,9 +4246,15 @@ async function saveAcademyConditions() {
   const fulltime_only = document.getElementById('aFulltime').checked;
   const schedules     = [];
 
-  if (!selected_skills.length) { showToast('교육 과목을 하나 이상 선택해 주세요.'); return; }
-  if (!regions.length)  { showToast('지역을 하나 이상 선택해 주세요.'); return; }
-  if (!weekday_nego && !weekday_any && !weekdays.length) { showToast('수업 요일을 하나 이상 선택해 주세요.'); return; }
+  const _aErr = (msg) => {
+    const el = document.getElementById('aFormErr');
+    if (el) { el.textContent = '⚠ ' + msg; el.style.display = 'block'; el.scrollIntoView({behavior:'smooth',block:'center'}); }
+    else showToast(msg);
+  };
+  document.getElementById('aFormErr')?.style && (document.getElementById('aFormErr').style.display = 'none');
+  if (!selected_skills.length) { _aErr('교육 과목을 하나 이상 선택해 주세요.'); return; }
+  if (!regions.length)  { _aErr('지역을 하나 이상 선택해 주세요.'); return; }
+  if (!weekday_nego && !weekday_any && !weekdays.length) { _aErr('수업 요일을 하나 이상 선택해 주세요.'); return; }
 
   const meta = session.user.user_metadata || {};
   const academy_name = meta.full_name || meta.name || meta.nickname || session.user.email || '';
@@ -4314,9 +4322,15 @@ async function saveInstructorConditions() {
   const weekday_nego = weekdays.includes('협의');
   const weekday_any  = weekdays.includes('요일무관');
 
-  if (!selected_skills.length) { showToast('전문 과목을 하나 이상 선택해 주세요.'); return; }
-  if (!regions.length)  { showToast('출강 가능 지역을 하나 이상 선택해 주세요.'); return; }
-  if (!time_nego && time_start && time_end && time_start >= time_end) { showToast('종료 시간은 시작 시간보다 늦어야 합니다.'); return; }
+  const _iErr = (msg) => {
+    const el = document.getElementById('iFormErr');
+    if (el) { el.textContent = '⚠ ' + msg; el.style.display = 'block'; el.scrollIntoView({behavior:'smooth',block:'center'}); }
+    else showToast(msg);
+  };
+  document.getElementById('iFormErr')?.style && (document.getElementById('iFormErr').style.display = 'none');
+  if (!selected_skills.length) { _iErr('전문 과목을 하나 이상 선택해 주세요.'); return; }
+  if (!regions.length)  { _iErr('출강 가능 지역을 하나 이상 선택해 주세요.'); return; }
+  if (!time_nego && time_start && time_end && time_start >= time_end) { _iErr('종료 시간은 시작 시간보다 늦어야 합니다.'); return; }
 
   let { error } = await _supabase.from('instructor_conditions').upsert({
     user_id: session.user.id,
