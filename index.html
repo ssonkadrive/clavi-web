@@ -6584,7 +6584,7 @@ function switchAdminTab(tab) {
   if (tab === 'instructors') loadAdminInstructors();
   if (tab === 'academies')   loadAdminAcademies();
   if (tab === 'logs')        loadAdminLogs();
-  if (tab === 'skilldef')    renderAdminSkillDef();
+  if (tab === 'skilldef')    { _platformConfigLoaded = false; loadApSkillDef().then(() => renderAdminSkillDef()); }
 }
 
 /* ── 공고 설정 탭 — 3단계 트리 에디터 ── */
