@@ -6599,6 +6599,13 @@ function renderAdminSkillDef() {
 function _adeTag(txt, onDel, onEdit) {
   const row = document.createElement('div');
   row.style.cssText = 'display:flex;align-items:center;gap:5px;';
+  row.draggable = true;
+
+  // 드래그 핸들
+  const handle = document.createElement('span');
+  handle.textContent = '⠿';
+  handle.style.cssText = 'color:var(--text-muted);font-size:1rem;cursor:grab;padding:0 4px;flex-shrink:0;user-select:none;';
+  handle.title = '드래그해서 순서 변경';
 
   const sp = document.createElement('span');
   sp.style.cssText = 'flex:1;font-size:.85rem;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);';
@@ -6639,7 +6646,7 @@ function _adeTag(txt, onDel, onEdit) {
   inp.addEventListener('keydown', e => { if (e.key === 'Enter') doSave(); if (e.key === 'Escape') editBtn.click(); });
   del.onclick = onDel;
 
-  row.appendChild(sp); row.appendChild(inp);
+  row.appendChild(handle); row.appendChild(sp); row.appendChild(inp);
   row.appendChild(editBtn); row.appendChild(saveBtn); row.appendChild(del);
   return row;
 }
@@ -6748,9 +6755,36 @@ function _renderAdeDetail() {
     sec.appendChild(h);
     const list = document.createElement('div');
     list.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-bottom:8px;';
-    items.forEach((item, idx) => list.appendChild(_adeTag(item, () => { onDel(idx); _renderAdeDetail(); }, v => { items[idx] = v; })));
+
+    let dragSrc = null;
+    const rebuildList = () => {
+      list.innerHTML = '';
+      items.forEach((item, idx) => {
+        const row = _adeTag(item, () => { onDel(idx); _renderAdeDetail(); }, v => { items[idx] = v; });
+        row.dataset.idx = idx;
+        row.addEventListener('dragstart', e => {
+          dragSrc = idx;
+          row.style.opacity = '.4';
+          e.dataTransfer.effectAllowed = 'move';
+        });
+        row.addEventListener('dragend', () => { row.style.opacity = ''; });
+        row.addEventListener('dragover', e => { e.preventDefault(); e.dataTransfer.dropEffect = 'move'; row.style.outline = '2px solid var(--primary)'; });
+        row.addEventListener('dragleave', () => { row.style.outline = ''; });
+        row.addEventListener('drop', e => {
+          e.preventDefault(); row.style.outline = '';
+          if (dragSrc === null || dragSrc === idx) return;
+          const [moved] = items.splice(dragSrc, 1);
+          items.splice(idx, 0, moved);
+          dragSrc = null;
+          rebuildList();
+        });
+        list.appendChild(row);
+      });
+    };
+    rebuildList();
+
     sec.appendChild(list);
-    sec.appendChild(_adeAddRow(addPlaceholder, v => { onAdd(v); _renderAdeDetail(); }));
+    sec.appendChild(_adeAddRow(addPlaceholder, v => { onAdd(v); rebuildList(); }));
     return sec;
   };
 
