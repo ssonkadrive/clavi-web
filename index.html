@@ -4446,8 +4446,12 @@ async function saveAcademyConditions() {
   if (!regions.length)  { showToast('지역을 하나 이상 선택해 주세요.'); return; }
   if (!weekday_nego && !schedules.length) { showToast('수업 요일/시간을 하나 이상 추가하거나 협의를 선택해 주세요.'); return; }
 
+  const meta = session.user.user_metadata || {};
+  const academy_name = meta.full_name || meta.name || meta.nickname || session.user.email || '';
+
   const { error } = await _supabase.from('academy_conditions').upsert({
     user_id: session.user.id,
+    academy_name,
     subjects, regions, employ_types, pay_max, intro,
     subject_pays: getAPaySubjects(),
     schedules, weekday_nego, fulltime_only,
@@ -6122,13 +6126,14 @@ async function renderJobList() {
     container.innerHTML = '<div style="text-align:center;padding:40px 0;color:var(--text-muted);font-size:.9rem;">불러오는 중...</div>';
     const { data, error } = await _supabase
       .from('academy_conditions')
-      .select('*, users(name)')
+      .select('*')
       .order('updated_at', { ascending: false });
-    if (error || !data) {
-      container.innerHTML = '<div class="job-empty">❌ 불러오기 실패. 잠시 후 다시 시도해 주세요.</div>';
+    if (error) {
+      console.error('[renderJobList] 쿼리 오류:', error);
+      container.innerHTML = `<div class="job-empty">❌ 불러오기 실패. 잠시 후 다시 시도해 주세요.<br><small style="color:var(--text-muted)">${error.message}</small></div>`;
       return;
     }
-    _jobListCache = data;
+    _jobListCache = data || [];
   }
 
   const SUBJECT_KEY = { '연기/뮤지컬':'acting','체육/태권도':'taekwondo','무용/발레':'ballet','음악/악기':'music','미술/창의':'art','일반/학습':'general' };
@@ -6143,7 +6148,7 @@ async function renderJobList() {
 
   const EMPLOY_LABEL = { fulltime:'정규직', parttime:'파트타임', per_class:'강의별' };
   container.innerHTML = filtered.map(c => {
-    const name  = c.users?.name || '학원';
+    const name  = c.academy_name || '학원';
     const subs  = (c.subjects||[]).join(' · ') || '분야 미지정';
     const regs  = (c.regions||[]).join(', ')   || '지역 미지정';
     const days  = (c.weekdays||[]).join(' ')   || '';
