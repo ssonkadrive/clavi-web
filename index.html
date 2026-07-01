@@ -6596,18 +6596,51 @@ function renderAdminSkillDef() {
   _renderAdeDetail();
 }
 
-function _adeTag(txt, onDel) {
+function _adeTag(txt, onDel, onEdit) {
   const row = document.createElement('div');
-  row.style.cssText = 'display:flex;align-items:center;gap:6px;';
+  row.style.cssText = 'display:flex;align-items:center;gap:5px;';
+
   const sp = document.createElement('span');
   sp.style.cssText = 'flex:1;font-size:.85rem;padding:6px 10px;background:var(--bg);border:1px solid var(--border);border-radius:6px;color:var(--text);';
   sp.textContent = txt;
+
+  const inp = document.createElement('input');
+  inp.type = 'text'; inp.value = txt;
+  inp.style.cssText = 'flex:1;font-size:.85rem;padding:6px 10px;border:1.5px solid var(--primary);border-radius:6px;font-family:var(--font);background:var(--bg);color:var(--text);display:none;';
+
+  const editBtn = document.createElement('button');
+  editBtn.type = 'button';
+  editBtn.style.cssText = 'padding:4px 10px;border:none;background:#e0e7ff;color:#4338ca;border-radius:6px;font-size:.78rem;cursor:pointer;white-space:nowrap;flex-shrink:0;';
+  editBtn.textContent = '수정';
+
+  const saveBtn = document.createElement('button');
+  saveBtn.type = 'button';
+  saveBtn.style.cssText = 'padding:4px 10px;border:none;background:#dcfce7;color:#16a34a;border-radius:6px;font-size:.78rem;cursor:pointer;white-space:nowrap;flex-shrink:0;display:none;';
+  saveBtn.textContent = '저장';
+
   const del = document.createElement('button');
   del.type = 'button';
   del.style.cssText = 'padding:4px 10px;border:none;background:#fee2e2;color:#dc2626;border-radius:6px;font-size:.78rem;cursor:pointer;white-space:nowrap;flex-shrink:0;';
   del.textContent = '삭제';
+
+  editBtn.onclick = () => {
+    sp.style.display = 'none'; inp.style.display = '';
+    editBtn.style.display = 'none'; saveBtn.style.display = '';
+    inp.focus(); inp.select();
+  };
+  const doSave = () => {
+    const v = inp.value.trim(); if (!v) return;
+    onEdit(v);
+    sp.textContent = v; inp.value = v;
+    sp.style.display = ''; inp.style.display = 'none';
+    editBtn.style.display = ''; saveBtn.style.display = 'none';
+  };
+  saveBtn.onclick = doSave;
+  inp.addEventListener('keydown', e => { if (e.key === 'Enter') doSave(); if (e.key === 'Escape') editBtn.click(); });
   del.onclick = onDel;
-  row.appendChild(sp); row.appendChild(del);
+
+  row.appendChild(sp); row.appendChild(inp);
+  row.appendChild(editBtn); row.appendChild(saveBtn); row.appendChild(del);
   return row;
 }
 
@@ -6715,7 +6748,7 @@ function _renderAdeDetail() {
     sec.appendChild(h);
     const list = document.createElement('div');
     list.style.cssText = 'display:flex;flex-direction:column;gap:6px;margin-bottom:8px;';
-    items.forEach((item, idx) => list.appendChild(_adeTag(item, () => { onDel(idx); _renderAdeDetail(); })));
+    items.forEach((item, idx) => list.appendChild(_adeTag(item, () => { onDel(idx); _renderAdeDetail(); }, v => { items[idx] = v; })));
     sec.appendChild(list);
     sec.appendChild(_adeAddRow(addPlaceholder, v => { onAdd(v); _renderAdeDetail(); }));
     return sec;
