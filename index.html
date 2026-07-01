@@ -1036,6 +1036,19 @@
       transition:border-color .15s,color .15s;
     }
     .info-btn:hover { border-color:var(--primary);color:var(--primary); }
+    .ap-step-row { display:flex;align-items:center;gap:8px;margin-bottom:10px;margin-top:18px; }
+    .ap-step-row:first-of-type { margin-top:0; }
+    .ap-step-num {
+      width:22px;height:22px;border-radius:50%;background:var(--primary);
+      color:#fff;font-size:.75rem;font-weight:700;display:inline-flex;
+      align-items:center;justify-content:center;flex-shrink:0;
+    }
+    .ap-step-num--opt { background:var(--surface);color:var(--text-muted);border:1.5px solid var(--border); }
+    .ap-step-title { font-size:.88rem;font-weight:700;color:var(--text); }
+    .ap-step-title small { font-size:.78rem;font-weight:400;color:var(--text-muted);margin-left:4px; }
+    .ap-req-check { display:flex;align-items:center;gap:8px;padding:9px 12px;border-radius:var(--radius);background:var(--surface);border:1px solid var(--border);cursor:pointer;font-size:.85rem;color:var(--text); }
+    .ap-req-check input[type=checkbox] { accent-color:var(--primary);width:15px;height:15px;flex-shrink:0; }
+    .ap-req-check:has(input:checked) { border-color:var(--primary);background:#ede9fe22; }
     .sp-common-group {
       font-size:.74rem;color:var(--text-muted);text-transform:uppercase;
       letter-spacing:.05em;margin:16px 0 7px;padding-bottom:4px;
@@ -2034,32 +2047,48 @@
 
       <section class="card">
         <h2 class="card-title">🎯 원하는 강사 분야</h2>
-        <p class="card-desc">대분류 선택 후 세부 과목과 필수/우대를 설정하세요.</p>
 
-        <!-- 대분류 탭 -->
+        <!-- STEP 1: 종목 -->
+        <div class="ap-step-row" style="margin-top:0;">
+          <span class="ap-step-num">1</span>
+          <span class="ap-step-title">종목 선택</span>
+        </div>
         <div class="sp-cat-tab-row" id="apCatTabs"></div>
 
-        <!-- 중분류 -->
-        <div id="apMidCard" style="display:none;margin-top:12px;">
-          <p class="sp-mid-label">세부 분야</p>
+        <!-- STEP 2: 수업 과목 & 필수 역량 -->
+        <div id="apStep2" style="display:none;">
+          <div class="ap-step-row">
+            <span class="ap-step-num">2</span>
+            <span class="ap-step-title">수업 과목 선택</span>
+          </div>
           <div class="sp-mid-chips" id="apMidChips"></div>
+          <div id="apSkillCard" style="display:none;margin-top:10px;">
+            <p class="sp-mid-label" id="apSkillCardTitle">과목 선택</p>
+            <div class="sp-skill-list" id="apSkillList"></div>
+          </div>
+
+          <!-- 필수 역량 체크리스트 -->
+          <div id="apJobReqSection" style="display:none;margin-top:16px;">
+            <p class="sp-mid-label" style="margin-bottom:8px;">📋 필수 업무 조건 <span style="font-size:.78rem;font-weight:400;color:var(--text-muted);">체크한 항목이 강사에게 필수로 안내됩니다</span></p>
+            <div id="apJobReqList" style="display:flex;flex-direction:column;gap:6px;"></div>
+          </div>
         </div>
 
-        <!-- 소분류 스킬 -->
-        <div id="apSkillCard" style="display:none;margin-top:12px;">
-          <p class="sp-mid-label" id="apSkillCardTitle">과목 선택</p>
-          <div class="sp-skill-list" id="apSkillList"></div>
-        </div>
-
-        <!-- 공통 업무 아코디언 -->
-        <button type="button" class="sp-accordion-btn" onclick="apToggleAccordion()" style="margin-top:12px;">
-          <span>＋ 공통조건 · 세부역량 추가 <span id="apCommonBadge" style="display:none;margin-left:6px;background:var(--primary);color:#fff;font-size:.72rem;font-weight:700;padding:2px 7px;border-radius:99px;"></span></span>
-          <span id="apAccordionArrow" style="transition:transform .3s;display:inline-block;">▾</span>
-        </button>
-        <div id="apAccordionBody" style="overflow:hidden;max-height:0;transition:max-height .35s ease;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);margin-top:-1px;">
-          <div id="apCommonSkillList" style="padding:12px;"></div>
-          <div style="padding:0 12px 14px;">
-            <button type="button" onclick="apToggleAccordion()" style="width:100%;padding:9px;border-radius:var(--radius);border:1.5px solid var(--primary);background:var(--primary);color:#fff;font-family:var(--font);font-size:.85rem;font-weight:600;cursor:pointer;">완료 ✓</button>
+        <!-- STEP 3: 우대 및 부가 조건 -->
+        <div id="apStep3" style="display:none;">
+          <div class="ap-step-row">
+            <span class="ap-step-num ap-step-num--opt">3</span>
+            <span class="ap-step-title">우대 및 부가 조건 <small>선택</small></span>
+          </div>
+          <button type="button" class="sp-accordion-btn" onclick="apToggleAccordion()" style="margin-top:0;">
+            <span>조건 펼치기 <span id="apCommonBadge" style="display:none;margin-left:6px;background:var(--primary);color:#fff;font-size:.72rem;font-weight:700;padding:2px 7px;border-radius:99px;"></span></span>
+            <span id="apAccordionArrow" style="transition:transform .3s;display:inline-block;">▾</span>
+          </button>
+          <div id="apAccordionBody" style="overflow:hidden;max-height:0;transition:max-height .35s ease;border:1px solid var(--border);border-top:none;border-radius:0 0 var(--radius) var(--radius);margin-top:-1px;" data-open="0">
+            <div id="apCommonSkillList" style="padding:12px;display:flex;flex-direction:column;gap:6px;"></div>
+            <div style="padding:0 12px 14px;">
+              <button type="button" onclick="apToggleAccordion()" style="width:100%;padding:9px;border-radius:var(--radius);border:1.5px solid var(--primary);background:var(--primary);color:#fff;font-family:var(--font);font-size:.85rem;font-weight:600;cursor:pointer;">완료 ✓</button>
+            </div>
           </div>
         </div>
 
@@ -2921,6 +2950,29 @@ const SP_COMMON = {
   '기타': ['영어 소통 가능','아동 안전 교육 이수','입시 포트폴리오 디렉팅 가능']
 };
 
+/* ── 구인공고 종목별 필수/우대 조건 정의 ── */
+const AP_SKILL_DEF = {
+  sports: {
+    jobReq: ['차량 운행 가능 (통학버스)','사범 자격증 보유','아동 안전 교육 이수','학부모 상담 가능','수업 준비·정리 가능'],
+    preferred: ['협회 심사 동행 가능','전국 대회 인솔 가능','주말 행사 참여 가능','2년 이상 장기 계약 선호','스타렉스 운행 가능','아침 돌봄 가능']
+  },
+  music: {
+    jobReq: ['입시 레슨 지도 가능','악보 독보 지도 가능','학부모 상담 가능','수업 일지 작성 가능'],
+    preferred: ['콩쿠르 동행 가능','주말 레슨 가능','2년 이상 장기 계약 선호','전문연주 활동 병행 가능','학원 SNS 운영 가능']
+  },
+  art: {
+    jobReq: ['입시 지도 가능','포트폴리오 디렉팅 가능','아동 수업 가능','학부모 상담 가능'],
+    preferred: ['실기 대회 인솔 가능','2년 이상 장기 계약 선호','주말 수업 가능','학원 SNS 운영 가능']
+  },
+  etc: {
+    jobReq: ['학부모 상담 가능','수업 일지 작성 가능'],
+    preferred: {
+      '연기/뮤지컬': ['청소년독백대회 동행 가능','DIMF 동행 가능','입시 포트폴리오 디렉팅 가능','주말 행사 참여 가능','2년 이상 장기 계약 선호']
+    },
+    preferredDefault: ['주말 행사 참여 가능','2년 이상 장기 계약 선호','입시 포트폴리오 디렉팅 가능']
+  }
+};
+
 let _spCat = null, _spMid = null;
 const _spSel  = {};   // { '피아노': 'required' | 'preferred' }
 const _spCsel = {};   // 공통 스킬 별도 상태
@@ -3222,36 +3274,58 @@ function apInitCats() {
     btn.onclick = () => apSelectCat(key, btn);
     tabs.appendChild(btn);
   });
-  apRenderCommonSkills();
 }
 
 function apSelectCat(key, btn) {
+  const isChange = _apCat && _apCat !== key;
   _apCat = key; _apMid = null;
+
+  // 종목 변경 시 역량 선택만 초기화 (급여·지역 유지)
+  if (isChange) {
+    Object.keys(_apSel).forEach(k => delete _apSel[k]);
+    Object.keys(_apCsel).forEach(k => delete _apCsel[k]);
+    showToast(`${SP_CATS[key].label} 종목으로 변경 — 역량 조건이 초기화되었습니다`);
+  }
+
   document.querySelectorAll('#apCatTabs .sp-cat-tab').forEach(b => b.classList.remove('active'));
   btn.classList.add('active');
+
+  // 중분류 칩 렌더
   const chips = document.getElementById('apMidChips');
   chips.innerHTML = '';
-  Object.keys(SP_CATS[key].subjects).forEach(subj => {
+  const midKeys = Object.keys(SP_CATS[key].subjects);
+  midKeys.forEach(subj => {
     const c = document.createElement('button');
-    c.type = 'button';
-    c.className = 'sp-mid-chip';
-    c.textContent = subj;
+    c.type = 'button'; c.className = 'sp-mid-chip'; c.textContent = subj;
     c.onclick = () => apSelectMid(subj, c);
     chips.appendChild(c);
   });
-  document.getElementById('apMidCard').style.display = 'block';
+
   document.getElementById('apSkillCard').style.display = 'none';
-  // 과목별 시급 드롭다운에 해당 대분류 과목 채우기
+  document.getElementById('apStep2').style.display = 'block';
+  document.getElementById('apStep3').style.display = 'block';
+
+  // 단과형 (중분류 1개): 자동 선택
+  if (midKeys.length === 1) {
+    const autoChip = chips.querySelector('.sp-mid-chip');
+    autoChip.classList.add('active');
+    _apMid = midKeys[0];
+    apRenderSkills();
+    document.getElementById('apSkillCard').style.display = 'block';
+    document.getElementById('apSkillCardTitle').textContent = midKeys[0];
+  }
+
+  apRenderJobReq(key);
+  apRenderPreferred(key, _apMid);
+
+  // aPaySubjectPick 채우기
   const el = document.getElementById('aPaySubjectPick');
   if (el) {
     const subjects = Object.values(SP_CATS[key].subjects).flat();
     el.innerHTML = '<option value="">과목 선택</option>';
-    subjects.forEach(s => {
-      const o = document.createElement('option');
-      o.value = s; o.textContent = s;
-      el.appendChild(o);
-    });
+    subjects.forEach(s => { const o = document.createElement('option'); o.value = s; o.textContent = s; el.appendChild(o); });
   }
+  apUpdateResult();
 }
 
 function apSelectMid(subj, btn) {
@@ -3261,6 +3335,7 @@ function apSelectMid(subj, btn) {
   document.getElementById('apSkillCardTitle').textContent = subj;
   apRenderSkills();
   document.getElementById('apSkillCard').style.display = 'block';
+  apRenderPreferred(_apCat, subj);
 }
 
 function apRenderSkills() {
@@ -3269,26 +3344,52 @@ function apRenderSkills() {
   (SP_CATS[_apCat]?.subjects[_apMid] || []).forEach(s => spMakeSkillItem(list, s, _apSel, apUpdateResult));
 }
 
-function apRenderCommonSkills() {
+function apMakeCheckItem(container, label, stateObj, type, onchange) {
+  const wrap = document.createElement('label');
+  wrap.className = 'ap-req-check';
+  const cb = document.createElement('input');
+  cb.type = 'checkbox';
+  cb.checked = !!stateObj[label];
+  cb.onchange = () => {
+    if (cb.checked) stateObj[label] = type;
+    else delete stateObj[label];
+    if (onchange) onchange();
+  };
+  const sp = document.createElement('span');
+  sp.textContent = label;
+  wrap.appendChild(cb); wrap.appendChild(sp);
+  container.appendChild(wrap);
+}
+
+function apRenderJobReq(key) {
+  const def = AP_SKILL_DEF[key];
+  const section = document.getElementById('apJobReqSection');
+  const list = document.getElementById('apJobReqList');
+  if (!def?.jobReq?.length) { if (section) section.style.display = 'none'; return; }
+  section.style.display = 'block';
+  list.innerHTML = '';
+  def.jobReq.forEach(item => apMakeCheckItem(list, item, _apCsel, 'required', apUpdateResult));
+}
+
+function apRenderPreferred(key, mid) {
+  const def = AP_SKILL_DEF[key];
   const container = document.getElementById('apCommonSkillList');
-  if (!container) return;
+  if (!container || !def) return;
   container.innerHTML = '';
-  Object.entries(SP_COMMON).forEach(([group, items]) => {
-    const title = document.createElement('div');
-    title.className = 'sp-common-group';
-    title.textContent = group;
-    container.appendChild(title);
-    const list = document.createElement('div');
-    list.className = 'sp-skill-list';
-    items.forEach(s => spMakeSkillItem(list, s, _apCsel, apUpdateResult));
-    container.appendChild(list);
-  });
+  let items = [];
+  if (Array.isArray(def.preferred)) {
+    items = def.preferred;
+  } else if (def.preferred && mid && def.preferred[mid]) {
+    items = def.preferred[mid];
+  } else if (def.preferredDefault) {
+    items = def.preferredDefault;
+  }
+  items.forEach(item => apMakeCheckItem(container, item, _apCsel, 'preferred', apUpdateResult));
 }
 
 function apUpdateResult() {
   const panel = document.getElementById('apResultPanel');
   if (!panel) return;
-  // 공통 뱃지 카운트
   const cCount = Object.keys(_apCsel).length;
   const badge = document.getElementById('apCommonBadge');
   if (badge) { badge.textContent = cCount; badge.style.display = cCount ? '' : 'none'; }
@@ -3304,9 +3405,7 @@ function apUpdateResult() {
     tag.className = 'rtag ' + (t === 'required' ? 'rtag-req' : 'rtag-pref');
     tag.innerHTML = `${t === 'required' ? '🔵 필수' : '✅ 우대'} ${s} `;
     const x = document.createElement('button');
-    x.type = 'button';
-    x.className = 'rtag-x';
-    x.textContent = '×';
+    x.type = 'button'; x.className = 'rtag-x'; x.textContent = '×';
     x.onclick = () => apRemoveSkill(s);
     tag.appendChild(x);
     div.appendChild(tag);
@@ -3317,7 +3416,7 @@ function apUpdateResult() {
 
 function apRemoveSkill(skill) {
   if (_apSel[skill])  { delete _apSel[skill];  apRenderSkills(); }
-  if (_apCsel[skill]) { delete _apCsel[skill]; apRenderCommonSkills(); }
+  if (_apCsel[skill]) { delete _apCsel[skill]; apRenderJobReq(_apCat); apRenderPreferred(_apCat, _apMid); }
   apUpdateResult();
 }
 
