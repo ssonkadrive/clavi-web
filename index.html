@@ -4192,6 +4192,11 @@ async function saveAcademyConditions() {
   const { data: { session } } = await _supabase.auth.getSession();
   if (!session?.user) { showToast('로그인이 필요합니다.'); return; }
 
+  // 드롭다운에 값이 있으면 자동으로 태그에 추가
+  const _aSido = document.getElementById('aRegionSelector_sido')?.value;
+  const _aSigungu = document.getElementById('aRegionSelector_sigungu')?.value;
+  if (_aSido && _aSigungu) addRegion('aRegionSelector');
+
   const selected_skills    = Object.keys(_apSkillSel);
   const selected_preferred = Object.keys(_apPrefSel);
   const subjects           = selected_skills;
@@ -4243,6 +4248,11 @@ async function saveAcademyConditions() {
 async function saveInstructorConditions() {
   const { data: { session } } = await _supabase.auth.getSession();
   if (!session?.user) { showToast('로그인이 필요합니다.'); return; }
+
+  // 드롭다운에 값이 있으면 자동으로 태그에 추가
+  const _iSido = document.getElementById('iRegionSelector_sido')?.value;
+  const _iSigungu = document.getElementById('iRegionSelector_sigungu')?.value;
+  if (_iSido && _iSigungu) addRegion('iRegionSelector');
 
   const selected_skills    = Object.keys(_ipSkillSel);
   const selected_preferred = Object.keys(_ipPrefSel);
