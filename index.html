@@ -6620,14 +6620,15 @@ async function loadAdminUsers(page = 0) {
   const dateTo    = document.getElementById('adminFilterDateTo')?.value           || null;
   const verifiedBool = verified === 'true' ? true : verified === 'false' ? false : null;
 
-  const { data, error } = await _supabase.rpc('admin_list_users', {
+  // RPC 호출 — role/verified는 DB 쪽에서 안 걸리므로 클라이언트에서 처리
+  const { data: raw, error } = await _supabase.rpc('admin_list_users', {
     p_search:    search,
-    p_role:      role,
-    p_verified:  verifiedBool,
+    p_role:      null,
+    p_verified:  null,
     p_date_from: dateFrom,
     p_date_to:   dateTo,
-    p_page:      page,
-    p_page_size: _adminPs.pageSize,
+    p_page:      0,
+    p_page_size: 2000,
   });
 
   if (error) {
@@ -6635,11 +6636,20 @@ async function loadAdminUsers(page = 0) {
     return;
   }
 
-  const total = data?.[0]?.total_count ?? 0;
-  _adminPs.page  = page;
-  _adminPs.total = Number(total);
+  // 클라이언트 필터 (role, verified)
+  let filtered = raw || [];
+  if (role)                filtered = filtered.filter(u => u.role === role);
+  if (verifiedBool !== null) filtered = filtered.filter(u => Boolean(u.email_verified) === verifiedBool);
 
-  if (!data?.length) {
+  // 수동 페이지네이션
+  const total = filtered.length;
+  const ps    = _adminPs.pageSize;
+  const data  = filtered.slice(page * ps, (page + 1) * ps);
+
+  _adminPs.page  = page;
+  _adminPs.total = total;
+
+  if (!data.length) {
     tbody.innerHTML = `<tr><td colspan="7" class="admin-loading">검색 결과가 없습니다.</td></tr>`;
   } else {
     tbody.innerHTML = data.map(u => {
