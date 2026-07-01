@@ -1824,12 +1824,13 @@
     <div class="home-section-title">빠른 실행</div>
     <div class="quick-row" style="margin-bottom:24px;">
       <button class="quick-btn" onclick="drawerGo('academy-post')">
-        <span class="q-icon">✏️</span>새 공고 등록
+        <span class="q-icon">✏️</span>조건 수정
       </button>
-      <button class="quick-btn" onclick="drawerGo('academy-post')">
+      <button class="quick-btn" onclick="showAcademyPostSummary()">
         <span class="q-icon">👁</span>공고 보기
       </button>
     </div>
+    <div id="aPostSummaryBox" style="display:none;margin-bottom:16px;"></div>
 
     <!-- 최근 알림 -->
     <div class="home-section-title">
@@ -4168,7 +4169,7 @@ async function saveAcademyConditions() {
   // 드롭다운에 값이 있으면 자동으로 태그에 추가
   const _aSido = document.getElementById('aRegionSelector_sido')?.value;
   const _aSigungu = document.getElementById('aRegionSelector_sigungu')?.value;
-  if (_aSido && _aSigungu) addRegion('aRegionSelector');
+  if (_aSido && _aSigungu && !getRegionSelectorValues('aRegionSelector').includes(_aSido + ' ' + _aSigungu)) addRegion('aRegionSelector');
 
   const selected_skills    = Object.keys(_apSkillSel);
   const selected_preferred = Object.keys(_apPrefSel);
@@ -4238,7 +4239,7 @@ async function saveInstructorConditions() {
   // 드롭다운에 값이 있으면 자동으로 태그에 추가
   const _iSido = document.getElementById('iRegionSelector_sido')?.value;
   const _iSigungu = document.getElementById('iRegionSelector_sigungu')?.value;
-  if (_iSido && _iSigungu) addRegion('iRegionSelector');
+  if (_iSido && _iSigungu && !getRegionSelectorValues('iRegionSelector').includes(_iSido + ' ' + _iSigungu)) addRegion('iRegionSelector');
 
   const selected_skills    = Object.keys(_ipSkillSel);
   const selected_preferred = Object.keys(_ipPrefSel);
@@ -5422,6 +5423,49 @@ function initNotifications() {
   const saved = localStorage.getItem('CLAVI_NOTI_' + currentUserRole);
   notifications = saved ? JSON.parse(saved) : [];
   updateNotiBadge();
+}
+
+async function showAcademyPostSummary() {
+  const box = document.getElementById('aPostSummaryBox');
+  if (!box) return;
+  if (box.style.display !== 'none') { box.style.display = 'none'; return; }
+  box.style.display = 'block';
+  box.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:16px;">로딩 중...</div>';
+
+  const { data: { session } } = await _supabase.auth.getSession();
+  if (!session?.user) { box.innerHTML = '<div style="text-align:center;color:var(--text-muted);padding:16px;">로그인이 필요합니다</div>'; return; }
+
+  const { data: c } = await _supabase.from('academy_conditions').select('*').eq('user_id', session.user.id).maybeSingle();
+  if (!c) {
+    box.innerHTML = '<div style="background:var(--card-bg);border-radius:14px;padding:20px;text-align:center;color:var(--text-muted);">등록된 공고가 없습니다.<br><button onclick="drawerGo(\'academy-post\')" style="margin-top:10px;padding:8px 20px;background:var(--primary);color:#fff;border:none;border-radius:8px;cursor:pointer;">지금 등록하기</button></div>';
+    return;
+  }
+
+  const skills = (c.selected_skills || c.subjects || []);
+  const prefs  = c.selected_preferred || [];
+  const regions = (c.regions || []).join(', ') || '미지정';
+  const days    = (c.weekdays || []).join(', ') || (c.weekday_nego ? '협의' : '미지정');
+  const time    = c.time_nego ? '시간 협의' : (c.time_start && c.time_end ? `${c.time_start} ~ ${c.time_end}` : '미지정');
+  const pay     = c.pay_max ? `최대 ${Number(c.pay_max).toLocaleString()}원/월` : '협의';
+  const updated = c.updated_at ? _timeAgo(c.updated_at) : '';
+
+  box.innerHTML = `
+    <div style="background:var(--card-bg);border-radius:14px;padding:18px;border:1.5px solid var(--primary);">
+      <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:12px;">
+        <strong style="font-size:1rem;">📋 등록된 구인 공고</strong>
+        <span style="font-size:.78rem;color:var(--text-muted);">${updated ? '수정 ' + updated : ''}</span>
+      </div>
+      ${skills.length ? `<div style="margin-bottom:8px;"><span style="font-size:.8rem;color:var(--text-muted);">📚 교육과목</span><br><span style="font-size:.9rem;">${skills.join(', ')}</span></div>` : ''}
+      ${prefs.length  ? `<div style="margin-bottom:8px;"><span style="font-size:.8rem;color:var(--text-muted);">⭐ 우대조건</span><br><span style="font-size:.9rem;">${prefs.join(', ')}</span></div>` : ''}
+      <div style="display:flex;gap:16px;flex-wrap:wrap;margin-top:8px;font-size:.88rem;">
+        <span>📍 ${regions}</span>
+        <span>📅 ${days}</span>
+        <span>🕐 ${time}</span>
+        <span>💰 ${pay}</span>
+      </div>
+      ${c.intro ? `<div style="margin-top:10px;padding:10px;background:#f5f6ff;border-radius:8px;font-size:.85rem;color:var(--text-muted);">${c.intro}</div>` : ''}
+      <button onclick="drawerGo('academy-post')" style="margin-top:12px;width:100%;padding:10px;background:var(--primary);color:#fff;border:none;border-radius:10px;cursor:pointer;font-size:.9rem;">✏️ 수정하기</button>
+    </div>`;
 }
 
 async function renderAcademyHome() {
